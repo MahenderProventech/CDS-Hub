@@ -1,0 +1,6 @@
+@CDS_Hub_Elog_HostAddress = http://localhost:5037
+
+GET {{CDS_Hub_Elog_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

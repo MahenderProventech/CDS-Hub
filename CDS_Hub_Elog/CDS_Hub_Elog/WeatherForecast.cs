@@ -1,4 +1,4 @@
-namespace CDS_Hub
+namespace CDS_Hub_Elog
 {
     public class WeatherForecast
     {

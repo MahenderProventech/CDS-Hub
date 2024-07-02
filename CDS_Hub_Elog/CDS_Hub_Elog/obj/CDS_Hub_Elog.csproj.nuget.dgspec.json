@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\CDS_Hub\\CDS_Hub\\CDS_Hub\\CDS_Hub.csproj": {}
+    "D:\\CDS_Hub\\CDS_Hub_Elog\\CDS_Hub_Elog\\CDS_Hub_Elog.csproj": {}
   },
   "projects": {
-    "D:\\CDS_Hub\\CDS_Hub\\CDS_Hub\\CDS_Hub.csproj": {
+    "D:\\CDS_Hub\\CDS_Hub_Elog\\CDS_Hub_Elog\\CDS_Hub_Elog.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\CDS_Hub\\CDS_Hub\\CDS_Hub\\CDS_Hub.csproj",
-        "projectName": "CDS_Hub",
-        "projectPath": "D:\\CDS_Hub\\CDS_Hub\\CDS_Hub\\CDS_Hub.csproj",
+        "projectUniqueName": "D:\\CDS_Hub\\CDS_Hub_Elog\\CDS_Hub_Elog\\CDS_Hub_Elog.csproj",
+        "projectName": "CDS_Hub_Elog",
+        "projectPath": "D:\\CDS_Hub\\CDS_Hub_Elog\\CDS_Hub_Elog\\CDS_Hub_Elog.csproj",
         "packagesPath": "C:\\Users\\Pavan\\.nuget\\packages\\",
-        "outputPath": "D:\\CDS_Hub\\CDS_Hub\\CDS_Hub\\obj\\",
+        "outputPath": "D:\\CDS_Hub\\CDS_Hub_Elog\\CDS_Hub_Elog\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Pavan\\AppData\\Roaming\\NuGet\\NuGet.Config",

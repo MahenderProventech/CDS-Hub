@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace CDS_Hub.Controllers
+namespace CDS_Hub_Elog.Controllers
 {
     [ApiController]
     [Route("[controller]")]
