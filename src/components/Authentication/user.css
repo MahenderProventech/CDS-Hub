@@ -1,0 +1,88 @@
+.card {
+  padding: 0%;
+  width: 100%;
+}
+
+.Cardtitle {
+  background-color: #d1d8e6;
+}
+
+.mbb-3 {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+
+  width: 100%;
+}
+
+
+.search-control {
+
+  align-self: center;
+  font-size: 1rem;
+}
+
+.tableSelect {
+  display: flex;
+}
+
+.tableS {
+  margin: 10% 0%;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  /* Enable horizontal scrolling */
+  max-width: 100%;
+  /* Limit the width to the container's width */
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ......................edit modal.......... */
+.edit-modal-body {
+
+  border-radius: 20px;
+
+}
+
+/* .modal-dialog {
+  max-width: 900px;
+} */
+.custom-modal .modal-dialog {
+  max-width: 96%;
+}
+
+.edit-form {
+  display: flex;
+  /* justify-content: space-between; */
+  flex-wrap: wrap;
+  /* margin: 2%; */
+}
+
+.printBtn {
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  justify-content: space-between;
+  font-size: 1rem;
+  margin: 5%;
+}
+
+.print-head {
+  display: flex;
+  flex-direction: row;
+
+  justify-content: space-between;
+  font-size: 1rem;
+
+}
+
+.print-img {
+  height: 50px;
+  width: 50px;
+  border: 2px solid black;
+}

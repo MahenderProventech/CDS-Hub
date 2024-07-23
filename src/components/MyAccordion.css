@@ -1,0 +1,17 @@
+input#exampleFormControlTextarea1 {
+    border-color: white;
+    box-shadow: none;
+  }
+  
+  button.accordion-button {
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  .form-control:focus {
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    border-color: white !important;
+    outline: 0;
+    box-shadow: none !important;
+}

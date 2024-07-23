@@ -1,0 +1,33 @@
+[
+    {
+      "Id": 1,
+      "FormulaDisplayName": "Sum",
+      "Formula": "SUM",
+      "IsActive": true
+    },
+    {
+      "Id": 2,
+      "FormulaDisplayName": "Average",
+      "Formula": "AVERAGE",
+      "IsActive": true
+    },
+    {
+      "Id": 3,
+      "FormulaDisplayName": "Count",
+      "Formula": "COUNT",
+      "IsActive": true
+    },
+    {
+      "Id": 4,
+      "FormulaDisplayName": "Maximum",
+      "Formula": "MAX",
+      "IsActive": true
+    },
+    {
+      "Id": 5,
+      "FormulaDisplayName": "Minimum",
+      "Formula": "MIN",
+      "IsActive": true
+    }
+  ]
+  
