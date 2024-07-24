@@ -60,6 +60,15 @@ const ColumnLog_List = () => {
     setFilteredData(filtered);
   };
 
+  const handleReset = () => {
+    setFromDate("");
+    setToDate("");
+    setInstrumentId("");
+    setProductName("");
+    setBatchNumbers("");
+    setFilteredData(peaksData); // Reset filteredData to show all data
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '', 'height=600,width=800');
   
@@ -108,25 +117,29 @@ const ColumnLog_List = () => {
     const csvContent = [
       [
         "S.No",
-        "Date",
-        "AR Number",
+        "Date Acquired",
+        "Acquired By",
+        "Column Number",
         "Instrument Number",
         "Product Name",
         "Test Name",
-        "Column Number",
+        "AR Number",
         "Batch no.",
         "Injection Id",
         "Sample Set Start Date",
         "Sample Set Finish Date",
+        // "No.of Injections",
+        // "Runtime",
       ],
       ...filteredData.map((peak, index) => [
         index + 1,
-        peak.sampleSetStartDate,
-        peak.a_R_No,
+        peak.dateAcquired,
+        peak.sampleSetAcquiredBy,
+        peak.column_No,
         peak.instrument_No,
         peak.product_Name,
         peak.test_Name,
-        peak.column_No,
+        peak.a_R_No,
         peak.batch_No,
         peak.injectionId,
         peak.sampleSetStartDate
@@ -159,7 +172,7 @@ const ColumnLog_List = () => {
             <Link to={"/home/Column_Dashboard"}>
               <button type="button">
                 <img src={dash} alt="Dashboard" title="Dashboard" />
-                <p>Dashboard</p>
+                <p>Column Dashboard</p>
               </button>
             </Link>
           </div><br />
@@ -293,6 +306,14 @@ const ColumnLog_List = () => {
                     >
                       Search <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary ms-2"
+                      onClick={handleReset}
+                    >
+                      Reset
+                    </button>
                   </div>
                   </div>
 
@@ -308,7 +329,8 @@ const ColumnLog_List = () => {
                         <th width="" className="text-center">
                           S.No
                         </th>
-                        <th className="text-center">Date</th>
+                        <th className="text-center">Date Acquired</th>
+                        <th className="text-center">Acquired By</th>
                         <th className="text-center">Column Number</th>
                         <th className="text-center">Instrument Number</th>
                         <th className="text-center">Product Name</th>
@@ -330,6 +352,7 @@ const ColumnLog_List = () => {
                           <td className="text-center">
                             {peak.dateAcquired}
                           </td>
+                          <td className="text-center">{peak.sampleSetAcquiredBy}</td>
                           <td className="text-center">{peak.column_No}</td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
@@ -352,7 +375,7 @@ const ColumnLog_List = () => {
                               : "NULL"}
                           </td>
                           <td className="text-center"></td>
-                          <td className="text-center"></td>
+                          <td className="text-center">10</td>
                         </tr>
                       ))}
                     </tbody>

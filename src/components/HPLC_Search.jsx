@@ -158,64 +158,50 @@ const HPLC_Search = () => {
 
   return (
     <div>
-      <aside className="col-md-1 p_sideNav">
+     <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">
-            <Link to={"/home/Hplc_Dashboard"}>
+            <Link to={"/home/HPLC_Dashboard"}>
               <button type="button">
-                <img src={dash} alt="Dashboard" title="Dashboard" />
-                <p>Dashboard</p>
+                <img src={dash} alt="HPLCDashboard" title="HPLCDashboard" />
+                <p>HPLC Dashboard</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
-            <Link to={"/home/HplcLog_List"}>
+            <Link to={"/home/HPLCLog_List"}>
               <button type="button">
-                <img
-                  src={HplcLogList}
-                  alt="Column Log List"
-                  title="Hplc Log List"
-                />
-                <p>Hplc Log List</p>
+                <img src={HplcLogList} alt="HPLC Log List" title="HPLC Log List" />
+                <p>HPLC Log List</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
-            <Link to={"/home/Hplc_Search"}>
+            <Link to={"/home/HPLC_Search"}>
               <button type="button">
                 <img src={search} alt="Search" title="Search" />
                 <p>Search</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
-            <Link to={"/home/Hplc_AuditTrail"}>
+            <Link to={"/home/HPLC_AuditTrail"}>
               <button type="button">
                 <img src={report} alt="Audit Trial" title="Audit Trial" />
                 <p>Audit Trial</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
-            <Link to={"/home/Hplc_UserManagement"}>
+            <Link to={"/home/HPLC_UserManagement"}>
               <button type="button">
-                <img
-                  src={usermanagement}
-                  alt="User Management"
-                  title="User Management"
-                />
+                <img src={usermanagement} alt="User Management" title="User Management" />
                 <p>User Management</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
         </div>
       </aside>
-
       <section className="full_screen" style={{ backgroundColor: "#e9ecef" }}>
         <div className="container-fluid">
           <nav aria-label="breadcrumb">
@@ -339,7 +325,8 @@ const HPLC_Search = () => {
                         <th width="" className="text-center">
                           S.No
                         </th>
-                        <th className="text-center">Date</th>
+                        <th className="text-center">Date Acquired</th>
+                        <th className="text-center">Acquired By</th>
                         <th className="text-center">Instrument Number</th>
                         <th className="text-center">Product Name</th>
                         <th className="text-center">Test Name</th>
@@ -361,6 +348,7 @@ const HPLC_Search = () => {
                           <td className="text-center">
                             {peak.dateAcquired}
                           </td>
+                          <td className="text-center">{peak.sampleSetAcquiredBy}</td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
                           <td className="text-center">{peak.test_Name}</td>
@@ -383,7 +371,7 @@ const HPLC_Search = () => {
                               : "NULL"}
                           </td>
                           <td className="text-center"></td>
-                          <td className="text-center"></td>
+                          <td className="text-center">10</td>
                         </tr>
                       ))}
                     </tbody>

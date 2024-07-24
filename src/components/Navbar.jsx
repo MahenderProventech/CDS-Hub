@@ -122,7 +122,7 @@ const NavbarComponent = () => {
                             </Link>
                         </div>
                     }
-                    <div className="btn-group dropend" style={{ marginTop: "150px" }}>
+                    <div className="btn-group dropend" style={{ marginTop: "120px" }}>
                         <Link to={"/"}>
                             <button type="button" title='Logout'>
                                 <img src={po} alt="Logout" />

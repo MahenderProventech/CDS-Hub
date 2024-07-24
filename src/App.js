@@ -27,7 +27,7 @@ import DataTable from './components/DataTable';
 import ConfigurationEdit from './components/ConfigurationEdit';
 import TableDataComponent from './components/TableData';
 import InputVariableTable from './components/InputVariables';
-import HPLC_Dashboard from './components/HPLC_Dasboard';
+import HPLC_Dashboard from './components/HPLC_Dashboard';
 import HPLCLog_List from './components/HPLCLog_List';
 import ColumnLog_List from './components/ColumnLog_List';
 import Column_Dashboard from './components/Column_Dashboard';

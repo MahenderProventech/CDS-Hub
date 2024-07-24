@@ -200,18 +200,18 @@ console.log("counterData",counterData)
           </nav>
  
           <div className="row">
-            <div className="col-lg-12">
-              <div className="card mt-3">
+            <div className="col-lg-12" >
+              <div className="card mt-3"  style={{ padding: "1.7rem", width: "99%", marginLeft: "5px" }}>
                 <div className="row">
                   <div className="col-sm-3">
                     <div className="mb-3">
-                      <label htmlFor="fromDate" className="form-label">From Date<span className="red">*</span></label>
+                      <label htmlFor="fromDate" className="form-label"><b>From Date</b><span style={{ color: "red" }}>*</span></label>
                       <input type="date" id="fromDate" className="form-control" aria-label="From Date" aria-describedby="basic-addon1" />
                     </div>
                   </div>
                   <div className="col-sm-3">
                     <div className="mb-3">
-                      <label htmlFor="toDate" className="form-label">To Date<span className="red">*</span></label>
+                      <label htmlFor="toDate" className="form-label"><b>To Date</b><span style={{ color: "red" }}>*</span></label>
                       <input type="date" id="toDate" className="form-control" aria-label="To Date" aria-describedby="basic-addon1" />
                     </div>
                   </div>

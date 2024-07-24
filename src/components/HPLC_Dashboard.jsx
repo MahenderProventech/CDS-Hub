@@ -7,6 +7,8 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link } from 'react-router-dom';
 import http from './Http';
+import po from '../img/po.svg';
+
  
 const HPLC_Dashboard = () => {
   const [peaksData, setPeaksData] = useState([]);
@@ -134,7 +136,7 @@ console.log("counterData",counterData)
           plugins: {
             title: {
               display: true,
-              text: "Monthly Report"
+              text: "Weekly Report"
             }
           }
         }
@@ -189,6 +191,13 @@ console.log("counterData",counterData)
               </button>
             </Link>
           </div><br />
+          <div className="btn-group dropend" style={{ marginTop: "20px" }}>
+                        <Link to={"/"}>
+                            <button type="button" title='Logout'>
+                                <img src={po} alt="Logout" />
+                            </button>
+                        </Link>
+                    </div>
         </div>
       </aside>
       <section className="full_screen">
@@ -201,17 +210,17 @@ console.log("counterData",counterData)
  
           <div className="row">
             <div className="col-lg-12">
-              <div className="card mt-3">
+              <div className="card mt-3" style={{ padding: "1.7rem", width: "99%", marginLeft: "5px" }}>
                 <div className="row">
                   <div className="col-sm-3">
                     <div className="mb-3">
-                      <label htmlFor="fromDate" className="form-label">From Date<span className="red">*</span></label>
+                      <label htmlFor="fromDate" className="form-label"><b>From Date</b><span style={{ color: "red" }}>*</span></label>
                       <input type="date" id="fromDate" className="form-control" aria-label="From Date" aria-describedby="basic-addon1" />
                     </div>
                   </div>
                   <div className="col-sm-3">
                     <div className="mb-3">
-                      <label htmlFor="toDate" className="form-label">To Date<span className="red">*</span></label>
+                      <label htmlFor="toDate" className="form-label"><b>To Date</b><span style={{ color: "red" }}>*</span></label>
                       <input type="date" id="toDate" className="form-control" aria-label="To Date" aria-describedby="basic-addon1" />
                     </div>
                   </div>

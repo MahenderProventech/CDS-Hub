@@ -282,51 +282,50 @@ import Select from 'react-select';
   
   return (
     <div>
-         <aside className="col-md-1 p_sideNav">
-          <div className="main">
-            <div className="btn-group dropend">
+        <aside className="col-md-1 p_sideNav">
+        <div className="main">
+          <div className="btn-group dropend">
             <Link to={"/home/HPLC_Dashboard"}>
-            <button type="button">
-                  <img src={dash} alt="Dashboard" title="Dashboard" />
-                  <p>Dashboard</p>
-                </button>
-              </Link>
-            </div><br/>
-            <div className="btn-group dropend">
+              <button type="button">
+                <img src={dash} alt="HPLCDashboard" title="HPLCDashboard" />
+                <p>HPLC Dashboard</p>
+              </button>
+            </Link>
+          </div><br />
+          <div className="btn-group dropend">
             <Link to={"/home/HPLCLog_List"}>
-            <button type="button">
-                  <img src={HplcLogList} alt="HPLC Log List" title="HPLC Log List" />
-                  <p>HPLC Log List</p>
-                </button>
-              </Link>
-            </div><br/>
-            <div className="btn-group dropend">
+              <button type="button">
+                <img src={HplcLogList} alt="HPLC Log List" title="HPLC Log List" />
+                <p>HPLC Log List</p>
+              </button>
+            </Link>
+          </div><br />
+          <div className="btn-group dropend">
             <Link to={"/home/HPLC_Search"}>
-                <button type="button">
-                  <img src={search} alt="Search" title="Search" />
-                  <p>Search</p>
-                </button>
-              </Link>
-            </div><br/>
-            <div className="btn-group dropend">
+              <button type="button">
+                <img src={search} alt="Search" title="Search" />
+                <p>Search</p>
+              </button>
+            </Link>
+          </div><br />
+          <div className="btn-group dropend">
             <Link to={"/home/HPLC_AuditTrail"}>
-                <button type="button">
-                  <img src={report} alt="Audit Trial" title="Audit Trial" />
-                  <p>Audit Trial</p>
-                </button>
-              </Link>
-            </div><br/>
-            <div className="btn-group dropend">
+              <button type="button">
+                <img src={report} alt="Audit Trial" title="Audit Trial" />
+                <p>Audit Trial</p>
+              </button>
+            </Link>
+          </div><br />
+          <div className="btn-group dropend">
             <Link to={"/home/HPLC_UserManagement"}>
-                <button type="button">
-                  <img src={usermanagement} alt="User Management" title="User Management" />
-                  <p>User Management</p>
-                </button>
-              </Link>
-            </div><br/>
-          </div>
-
-          </aside>  
+              <button type="button">
+                <img src={usermanagement} alt="User Management" title="User Management" />
+                <p>User Management</p>
+              </button>
+            </Link>
+          </div><br />
+        </div>
+      </aside>
           <section className="full_screen">
       <div style={{ padding: "30px" }}>
         {/* <Row>
