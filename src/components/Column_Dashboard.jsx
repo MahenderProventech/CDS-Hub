@@ -195,7 +195,7 @@ console.log("counterData",counterData)
         <div className="container-fluid">
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb cooseText mb-2">
-              <li className="breadcrumb-item active" aria-current="page">Dashboard</li>
+              <li className="breadcrumb-item active" aria-current="page">Column Dashboard</li>
             </ol>
           </nav>
  
