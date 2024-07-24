@@ -425,7 +425,7 @@ const UserList = () => {
                 </div>
               </div>
               <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
                       Role
@@ -446,10 +446,9 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+          
+              <div className="col-md-6">
+              <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Department
                     </Form.Label>
@@ -468,7 +467,7 @@ const UserList = () => {
                 </div>
               </div>
               <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Plants
@@ -488,9 +487,7 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Groups

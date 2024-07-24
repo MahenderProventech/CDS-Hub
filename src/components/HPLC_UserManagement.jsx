@@ -485,7 +485,7 @@ import Select from 'react-select';
                 </div>
               </div>
               <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
                       Role
@@ -506,10 +506,9 @@ import Select from 'react-select';
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+          
+              <div className="col-md-6">
+              <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Department
                     </Form.Label>
@@ -528,7 +527,7 @@ import Select from 'react-select';
                 </div>
               </div>
               <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Plants
@@ -548,9 +547,7 @@ import Select from 'react-select';
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Groups
@@ -634,9 +631,7 @@ import Select from 'react-select';
                 </div>
 
               }
-
-
-
+              
             </Form>
           </Modal.Body>
           <Modal.Footer>

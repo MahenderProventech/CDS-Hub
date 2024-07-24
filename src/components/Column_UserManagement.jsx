@@ -487,7 +487,7 @@ const Column_UserManagement = () => {
                 </div>
               </div>
               <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
                       Role
@@ -508,10 +508,9 @@ const Column_UserManagement = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+          
+              <div className="col-md-6">
+              <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Department
                     </Form.Label>
@@ -530,7 +529,7 @@ const Column_UserManagement = () => {
                 </div>
               </div>
               <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Plants
@@ -550,9 +549,7 @@ const Column_UserManagement = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Groups
@@ -634,8 +631,7 @@ const Column_UserManagement = () => {
                     </Form.Group>
                   </div>
                 </div>
-
-              }
+      }
 
 
 
