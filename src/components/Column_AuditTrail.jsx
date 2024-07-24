@@ -11,6 +11,8 @@ import { Form, Row, Col, Table } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import http from './Http';
 import CustomPagination from './core/CustomPagination';
+import po from '../img/po.svg';
+
  
 const Column_AuditTrail = () => {
   const [roleAssignments, setRoleAssignments] = useState([]);
@@ -202,6 +204,15 @@ const Column_AuditTrail = () => {
               </button>
             </Link>
           </div><br />
+          
+
+                    <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+                        <Link to={"/"}>
+                            <button type="button" title='Logout'>
+                                <img src={po} alt="Logout" />
+                            </button>
+                        </Link>
+                    </div>
         </div>
       </aside>
           <section className="full_screen">

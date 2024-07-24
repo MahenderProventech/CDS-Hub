@@ -4,6 +4,8 @@ import search from '../img/search.png';
 import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link, useNavigate } from 'react-router-dom';
+import po from '../img/po.svg';
+
  
 // Define any necessary functions or state here
 import React, { useEffect, useState, useMemo } from 'react';
@@ -324,6 +326,13 @@ import Select from 'react-select';
               </button>
             </Link>
           </div><br />
+          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+                        <Link to={"/"}>
+                            <button type="button" title='Logout'>
+                                <img src={po} alt="Logout" />
+                            </button>
+                        </Link>
+                    </div>
         </div>
       </aside>
           <section className="full_screen">

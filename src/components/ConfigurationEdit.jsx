@@ -145,8 +145,7 @@ const showChildAlert = () => {
                       <th width="60" className="">S. No.</th>
                       <th width="300">Id</th>
                       <th width="300">Description</th>
-                      <th></th>
-                      <th></th>
+                     
                     </tr>
                   </thead>
                   <tbody>

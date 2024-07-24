@@ -6,6 +6,8 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link } from 'react-router-dom';
 import './print.css';
+import po from '../img/po.svg';
+
 
 const ColumnLog_List = () => {
   const [peaksData, setPeaksData] = useState([]);
@@ -208,6 +210,13 @@ const ColumnLog_List = () => {
               </button>
             </Link>
           </div><br />
+          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+                        <Link to={"/"}>
+                            <button type="button" title='Logout'>
+                                <img src={po} alt="Logout" />
+                            </button>
+                        </Link>
+                    </div>
         </div>
       </aside>
 

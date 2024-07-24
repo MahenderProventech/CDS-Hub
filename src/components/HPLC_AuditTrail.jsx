@@ -204,7 +204,7 @@ const HPLC_AuditTrail = () => {
               </button>
             </Link>
           </div><br />
-          <div className="btn-group dropend" style={{ marginTop: "20px" }}>
+          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
                         <Link to={"/"}>
                             <button type="button" title='Logout'>
                                 <img src={po} alt="Logout" />
