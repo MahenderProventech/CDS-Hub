@@ -164,7 +164,7 @@ const HPLC_Search = () => {
             <Link to={"/home/HPLC_Dashboard"}>
               <button type="button">
                 <img src={dash} alt="HPLCDashboard" title="HPLCDashboard" />
-                <p>HPLC Dashboard</p>
+                <p>Dashboard</p>
               </button>
             </Link>
           </div><br />

@@ -168,7 +168,7 @@ const HPLC_AuditTrail = () => {
             <Link to={"/home/HPLC_Dashboard"}>
               <button type="button">
                 <img src={dash} alt="HPLCDashboard" title="HPLCDashboard" />
-                <p>HPLC Dashboard</p>
+                <p>Dashboard</p>
               </button>
             </Link>
           </div><br />
@@ -222,7 +222,7 @@ const HPLC_AuditTrail = () => {
         <Row>
           <Col sm={3}>
 
-            <Form.Label>Masters</Form.Label>
+            <Form.Label>Categories</Form.Label>
 
             <select
               className="form-control1"
@@ -230,7 +230,7 @@ const HPLC_AuditTrail = () => {
               value={searchedData ? searchedData.components : ''}
               onChange={updateSearchObject}
             >
-              <option value="" disabled selected> --Select Master--  </option>
+              <option value="" disabled selected> --Select Category--  </option>
               {masterData.map((each, i) => (
                 <option key={i} value={each}>
                   {each}

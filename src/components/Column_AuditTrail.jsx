@@ -166,7 +166,7 @@ const Column_AuditTrail = () => {
             <Link to={"/home/Column_Dashboard"}>
               <button type="button">
                 <img src={dash} alt="Dashboard" title="Dashboard" />
-                <p>Column Dashboard</p>
+                <p>Dashboard</p>
               </button>
             </Link>
           </div><br />
@@ -212,7 +212,7 @@ const Column_AuditTrail = () => {
         <Row>
           <Col sm={3}>
 
-            <Form.Label>Masters</Form.Label>
+            <Form.Label>Categories</Form.Label>
 
             <select
               className="form-control1"
@@ -220,7 +220,7 @@ const Column_AuditTrail = () => {
               value={searchedData ? searchedData.components : ''}
               onChange={updateSearchObject}
             >
-              <option value="" disabled selected> --Select Master--  </option>
+              <option value="" disabled selected> --Select Category--  </option>
               {masterData.map((each, i) => (
                 <option key={i} value={each}>
                   {each}

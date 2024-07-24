@@ -155,7 +155,7 @@ console.log("counterData",counterData)
             <Link to={"/home/HPLC_Dashboard"}>
               <button type="button">
                 <img src={dash} alt="HPLCDashboard" title="HPLCDashboard" />
-                <p>HPLC Dashboard</p>
+                <p>Dashboard</p>
               </button>
             </Link>
           </div><br />
@@ -204,7 +204,7 @@ console.log("counterData",counterData)
         <div className="container-fluid">
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb cooseText mb-2">
-              <li className="breadcrumb-item active" aria-current="page">Dashboard</li>
+              <li className="breadcrumb-item active" aria-current="page">HPLC Dashboard</li>
             </ol>
           </nav>
  

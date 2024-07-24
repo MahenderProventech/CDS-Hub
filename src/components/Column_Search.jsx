@@ -179,7 +179,7 @@ const Column_Search = () => {
             <Link to={"/home/Column_Dashboard"}>
               <button type="button">
                 <img src={dash} alt="Dashboard" title="Dashboard" />
-                <p>Column Dashboard</p>
+                <p>Dashboard</p>
               </button>
             </Link>
           </div><br />
