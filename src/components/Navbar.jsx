@@ -26,7 +26,7 @@ const NavbarComponent = () => {
     const handleLogout = () => {
         sessionStorage.clear();
         console.log("hiiiiiiiiiiiiiiii")
-        // http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+         http.get(`Login/Logout?employeeId=${userData.employeeId}`);
         navigate('/');
  
     }
