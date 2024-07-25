@@ -18,6 +18,8 @@ const HPLC_Search = () => {
   const [instrumentId, setInstrumentId] = useState("");
   const [productName, setProductName] = useState("");
   const [batchNumbers, setBatchNumbers] = useState("");
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,11 +28,10 @@ const HPLC_Search = () => {
           "http://localhost:58747/api/Peaks/GetPeaksDetails"
         );
         const data = await response.json();
-        console.log("Fetched data:", data); // Log the fetched data
+        console.log("Fetched data:", data);
 
         if (Array.isArray(data.item2)) {
           setPeaksData(data.item2);
-          setFilteredData([]); // Initialize filteredData as empty
           const uniqueInstruments = [
             ...new Set(data.item2.map((item) => item.instrument_No)),
           ];
@@ -65,51 +66,87 @@ const HPLC_Search = () => {
     });
 
     setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-  
-    // Create the CSS styles to be included in the print window
-    const printStyles = `
-      <style>
+  const handleReset = () => {
+    setFromDate("");
+    setToDate("");
+    setInstrumentId("");
+    setProductName("");
+    setBatchNumbers("");
+    setFilteredData([]);
+    setCurrentPage(1); // Reset to first page on reset
+  };
+ const handlePrint = () => {
+  // Create a hidden iframe for printing
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'absolute';
+  iframe.style.width = '0px';
+  iframe.style.height = '0px';
+  iframe.style.border = 'none';
+  document.body.appendChild(iframe);
+
+  // Get iframe document
+  const iframeDoc = iframe.contentWindow.document;
+
+  // Create CSS styles to be included in the iframe
+  const printStyles = `
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table th, .table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      .table th {
+        background-color: #463E96;
+        color: white;
+      }
+      .thead-dark th {
+        background-color: #463E96;
+        color: white;
+      }
+      @media print {
         body {
-          font-family: Arial, sans-serif;
+          margin: 0;
         }
         .table {
           width: 100%;
           border-collapse: collapse;
+          page-break-inside: auto;
         }
         .table th, .table td {
-          border: 1px solid #ddd;
-          padding: 8px;
-          text-align: left;
+          page-break-inside: avoid;
         }
-        .table th {
-          background-color: #463E96;
-          color: white;
-        }
-        .thead-dark th {
-          background-color: #463E96;
-          color: white;
-        }
-      </style>
-    `;
-  
-    // Write the content to the print window
-    printWindow.document.open();
-    printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write(printStyles); // Inject CSS styles
-    printWindow.document.write('</head><body >');
-    printWindow.document.write('<h1>HPLC Search</h1>');
-    printWindow.document.write(document.querySelector('.cus-Table').outerHTML); // Use outerHTML for full table structure
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-  
-    printWindow.focus();
-    printWindow.print();
-  };
-  
+      }
+    </style>
+  `;
+
+  // Write content to the iframe document
+  iframeDoc.open();
+  iframeDoc.write('<html><head><title>Print</title>');
+  iframeDoc.write(printStyles); // Inject CSS styles
+  iframeDoc.write('</head><body>');
+  iframeDoc.write('<h1>HPLC Search</h1>');
+  iframeDoc.write(document.querySelector('.cus-Table').outerHTML); // Use outerHTML for full table structure
+  iframeDoc.write('</body></html>');
+  iframeDoc.close();
+
+  // Print the iframe content
+  iframe.contentWindow.focus();
+  iframe.contentWindow.print();
+
+  // Remove iframe after printing
+  document.body.removeChild(iframe);
+};
 
   const handleExport = () => {
     const csvContent = [
@@ -157,6 +194,29 @@ const HPLC_Search = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const totalRows = filteredData.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Check if the current page is the first or the last page
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
+
+  // Determine which pages to display
+  const pagesToShow = [];
+  if (totalPages > 1) {
+    if (!isFirstPage) pagesToShow.push(currentPage - 1);
+    pagesToShow.push(currentPage);
+    if (!isLastPage) pagesToShow.push(currentPage + 1);
+  }
+
 
   return (
     <div>
@@ -318,15 +378,47 @@ const HPLC_Search = () => {
                     >
                       Search <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary ms-2"
+                      onClick={handleReset}
+                    >
+                      Reset
+                    </button>
                   </div>
                  
                 </div>
               </div>
               <div>
+
               <div
                 className="card mt-3"
                 style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
               >
+                 <div className="row">
+                  <div className="col-sm-2">
+                    <div className="mb-2">
+                      <label htmlFor="rowsPerPage" className="form-label">
+                        <b>Rows Per Page</b>
+                      </label>
+                      <select
+                        className="form-select"
+                        id="rowsPerPage"
+                        value={rowsPerPage}
+                        onChange={(e) => setRowsPerPage(parseInt(e.target.value))}
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+
+              
                 <div className="cus-Table table-responsive">
                   <table className="table table-bordered" id="example">
                     <thead>
@@ -351,9 +443,15 @@ const HPLC_Search = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData.map((peak, index) => (
-                        <tr key={peak.ID}>
-                          <td className="text-center">{index + 1}</td>
+                     {filteredData.length === 0 ? (
+                      <tr>
+                        <td colSpan="12" className="text-center">
+                        </td>
+                      </tr>
+                    ) : (
+                      currentData.map((peak, index) => (
+                        <tr key={index}>
+                          <td>{startIndex + index + 1}</td> 
                           <td className="text-center">
                             {peak.dateAcquired}
                           </td>
@@ -382,12 +480,51 @@ const HPLC_Search = () => {
                           <td className="text-center"></td>
                           <td className="text-center">10</td>
                         </tr>
-                      ))}
-                    </tbody>
+ ))
+)}                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
+            <div>
+              <div>
+                <br></br>
+                <div className="row">
+                  <div className="col-sm-12">
+                    <nav aria-label="Page navigation">
+                      <ul className="pagination justify-content-center">
+                        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => !isFirstPage && handlePageChange(currentPage - 1)}
+                          >
+                            Previous
+                          </button>
+                        </li>
+                        {pagesToShow.map(pageNumber => (
+                          <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
+                            <button
+                              className="page-link"
+                              onClick={() => handlePageChange(pageNumber)}
+                            >
+                              {pageNumber}
+                            </button>
+                          </li>
+                        ))}
+                        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
+                          >
+                            Next
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
+                  </div>
+                </div>
             <div
                 className="d-flex justify-content-end align-items-center my-3"
                 style={{ marginRight: "20px" }}
@@ -403,8 +540,8 @@ const HPLC_Search = () => {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div> 
+     );
 };
 
 export default HPLC_Search;

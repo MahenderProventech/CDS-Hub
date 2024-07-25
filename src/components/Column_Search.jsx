@@ -6,8 +6,6 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link } from 'react-router-dom';
 import './print.css';
-import po from '../img/po.svg';
-
 
 const Column_Search = () => {
   const [peaksData, setPeaksData] = useState([]);
@@ -18,6 +16,8 @@ const Column_Search = () => {
   const [instrumentId, setInstrumentId] = useState("");
   const [productName, setProductName] = useState("");
   const [batchNumbers, setBatchNumbers] = useState("");
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,11 +26,10 @@ const Column_Search = () => {
           "http://localhost:58747/api/Peaks/GetPeaksDetails"
         );
         const data = await response.json();
-        console.log("Fetched data:", data); // Log the fetched data
+        console.log("Fetched data:", data);
 
         if (Array.isArray(data.item2)) {
           setPeaksData(data.item2);
-          setFilteredData([]); // Initialize filteredData as empty
           const uniqueInstruments = [
             ...new Set(data.item2.map((item) => item.instrument_No)),
           ];
@@ -65,6 +64,7 @@ const Column_Search = () => {
     });
 
     setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleReset = () => {
@@ -73,13 +73,13 @@ const Column_Search = () => {
     setInstrumentId("");
     setProductName("");
     setBatchNumbers("");
-    setFilteredData(peaksData); // Reset filteredData to show all data
+    setFilteredData([]);
+    setCurrentPage(1); // Reset to first page on reset
   };
 
   const handlePrint = () => {
     const printWindow = window.open('', '', 'height=600,width=800');
   
-    // Create the CSS styles to be included in the print window
     const printStyles = `
       <style>
         body {
@@ -103,24 +103,20 @@ const Column_Search = () => {
       </style>
     `;
   
-    // Write the content to the print window
     printWindow.document.open();
     printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write(printStyles); // Inject CSS styles
+    printWindow.document.write(printStyles);
     printWindow.document.write('</head><body >');
     printWindow.document.write('<h1>Column Search</h1>');
-    printWindow.document.write(document.querySelector('.cus-Table').outerHTML); // Use outerHTML for full table structure
+    printWindow.document.write(document.querySelector('.cus-Table').outerHTML);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
   
-    // Wait until the document is fully loaded before printing
     printWindow.onload = () => {
-      printWindow.focus(); // Focus on the print window
-      printWindow.print(); // Trigger the print dialog
+      printWindow.focus();
+      printWindow.print();
     };
   };
-  
-  
 
   const handleExport = () => {
     const csvContent = [
@@ -137,8 +133,6 @@ const Column_Search = () => {
         "Injection Id",
         "Sample Set Start Date",
         "Sample Set Finish Date",
-        // "No.of Injections",
-        // "Runtime",
       ],
       ...filteredData.map((peak, index) => [
         index + 1,
@@ -172,6 +166,29 @@ const Column_Search = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const totalRows = filteredData.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Check if the current page is the first or the last page
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
+
+  // Determine which pages to display
+  const pagesToShow = [];
+  if (totalPages > 1) {
+    if (!isFirstPage) pagesToShow.push(currentPage - 1);
+    pagesToShow.push(currentPage);
+    if (!isLastPage) pagesToShow.push(currentPage + 1);
+  }
+
 
   return (
     <div>
@@ -217,13 +234,6 @@ const Column_Search = () => {
               </button>
             </Link>
           </div><br />
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-                        <Link to={"/"}>
-                            <button type="button" title='Logout'>
-                                <img src={po} alt="Logout" />
-                            </button>
-                        </Link>
-                    </div>
         </div>
       </aside>
 
@@ -345,10 +355,33 @@ const Column_Search = () => {
                 </div>
               </div>
               <div>
+
+             
               <div
                 className="card mt-3"
                 style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
               >
+                 <div className="row">
+                  <div className="col-sm-2">
+                    <div className="mb-2">
+                      <label htmlFor="rowsPerPage" className="form-label">
+                        <b>Rows Per Page</b>
+                      </label>
+                      <select
+                        className="form-select"
+                        id="rowsPerPage"
+                        value={rowsPerPage}
+                        onChange={(e) => setRowsPerPage(parseInt(e.target.value))}
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="cus-Table table-responsive">
                   <table className="table table-bordered" id="example">
                     <thead>
@@ -372,10 +405,18 @@ const Column_Search = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData.map((peak, index) => (
-                        <tr key={peak.ID}>
-                          <td className="text-center">{index + 1}</td>
-                          <td className="text-center">
+                      
+                    {filteredData.length === 0 ? (
+                      <tr>
+                        <td colSpan="12" className="text-center">
+                          No data available. Please apply filters and search.
+                        </td>
+                      </tr>
+                    ) : (
+                      currentData.map((peak, index) => (
+                        <tr key={index}>
+                          <td>{startIndex + index + 1}</td>              
+                                  <td className="text-center">
                             {peak.dateAcquired}
                           </td>
                           <td className="text-center">{peak.sampleSetAcquiredBy}</td>
@@ -403,12 +444,51 @@ const Column_Search = () => {
                           <td className="text-center"></td>
                           <td className="text-center">10</td>
                         </tr>
-                      ))}
-                    </tbody>
+  ))
+)}                    </tbody>
                   </table>
                 </div>
               </div>
             </div>
+            <div>
+              <div>
+                <br></br>
+                <div className="row">
+                  <div className="col-sm-12">
+                    <nav aria-label="Page navigation">
+                      <ul className="pagination justify-content-center">
+                        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => !isFirstPage && handlePageChange(currentPage - 1)}
+                          >
+                            Previous
+                          </button>
+                        </li>
+                        {pagesToShow.map(pageNumber => (
+                          <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
+                            <button
+                              className="page-link"
+                              onClick={() => handlePageChange(pageNumber)}
+                            >
+                              {pageNumber}
+                            </button>
+                          </li>
+                        ))}
+                        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
+                          >
+                            Next
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
+                  </div>
+                </div>
             <div
                 className="d-flex justify-content-end align-items-center my-3"
                 style={{ marginRight: "20px" }}

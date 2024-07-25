@@ -6,8 +6,6 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link } from 'react-router-dom';
 import './print.css';
-import po from '../img/po.svg';
-
 
 const ColumnLog_List = () => {
   const [peaksData, setPeaksData] = useState([]);
@@ -18,26 +16,33 @@ const ColumnLog_List = () => {
   const [instrumentId, setInstrumentId] = useState("");
   const [productName, setProductName] = useState("");
   const [batchNumbers, setBatchNumbers] = useState("");
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:58747/api/Peaks/GetPeaksDetails');
+        const response = await fetch(
+          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+        );
         const data = await response.json();
-        console.log('Fetched data:', data); // Log the fetched data
+        console.log("Fetched data:", data);
 
         if (Array.isArray(data.item2)) {
           setPeaksData(data.item2);
-          setFilteredData(data.item2); // Initialize filteredData with fetched data
+          setFilteredData(data.item2);
           const uniqueInstruments = [
             ...new Set(data.item2.map((item) => item.instrument_No)),
           ];
           setInstruments(uniqueInstruments);
         } else {
-          console.error('Fetched data does not contain the expected array:', data);
+          console.error(
+            "Fetched data does not contain the expected array:",
+            data
+          );
         }
       } catch (error) {
-        console.error('Error fetching or processing data:', error);
+        console.error("Error fetching or processing data:", error);
       }
     };
 
@@ -60,6 +65,7 @@ const ColumnLog_List = () => {
     });
 
     setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleReset = () => {
@@ -68,17 +74,19 @@ const ColumnLog_List = () => {
     setInstrumentId("");
     setProductName("");
     setBatchNumbers("");
-    setFilteredData(peaksData); // Reset filteredData to show all data
+    setFilteredData(peaksData);
+    setCurrentPage(1); // Reset to first page on reset
   };
 
   const handlePrint = () => {
     const printWindow = window.open('', '', 'height=600,width=800');
   
-    // Create the CSS styles to be included in the print window
     const printStyles = `
       <style>
         body {
           font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
         }
         .table {
           width: 100%;
@@ -93,27 +101,23 @@ const ColumnLog_List = () => {
           background-color: #463E96;
           color: white;
         }
-        .thead-dark th {
-          background-color: #463E96;
-          color: white;
-        }
       </style>
     `;
   
-    // Write the content to the print window
     printWindow.document.open();
     printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write(printStyles); // Inject CSS styles
+    printWindow.document.write(printStyles);
     printWindow.document.write('</head><body >');
-    printWindow.document.write('<h1>Column Log List</h1>');
-    printWindow.document.write(document.querySelector('.cus-Table').outerHTML); // Use outerHTML for full table structure
+    printWindow.document.write('<h1>Column Log Table</h1>');
+    printWindow.document.write(document.querySelector('.cus-Table').outerHTML);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
   
-    printWindow.focus();
-    printWindow.print();
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
   };
-  
 
   const handleExport = () => {
     const csvContent = [
@@ -130,8 +134,6 @@ const ColumnLog_List = () => {
         "Injection Id",
         "Sample Set Start Date",
         "Sample Set Finish Date",
-        // "No.of Injections",
-        // "Runtime",
       ],
       ...filteredData.map((peak, index) => [
         index + 1,
@@ -160,11 +162,33 @@ const ColumnLog_List = () => {
     const a = document.createElement("a");
     a.style.display = "none";
     a.href = url;
-    a.download = "ColumnLog_List.csv";
+    a.download = "Column_LogList.csv";
     document.body.appendChild(a);
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const totalRows = filteredData.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Check if the current page is the first or the last page
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
+
+  // Determine which pages to display
+  const pagesToShow = [];
+  if (totalPages > 1) {
+    if (!isFirstPage) pagesToShow.push(currentPage - 1);
+    pagesToShow.push(currentPage);
+    if (!isLastPage) pagesToShow.push(currentPage + 1);
+  }
 
   return (
     <div>
@@ -210,13 +234,6 @@ const ColumnLog_List = () => {
               </button>
             </Link>
           </div><br />
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-                        <Link to={"/"}>
-                            <button type="button" title='Logout'>
-                                <img src={po} alt="Logout" />
-                            </button>
-                        </Link>
-                    </div>
         </div>
       </aside>
 
@@ -229,12 +246,16 @@ const ColumnLog_List = () => {
           </nav>
           <div className="row">
             <div className="col-lg-12">
-              <div className="card mt-3" style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}>
+              <div
+                className="card mt-3"
+                style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
+              >
                 <div className="row">
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="fromDate" className="form-label">
-                        <b>From Date</b><span style={{ color: 'red' }}>*</span>
+                        <b>From Date</b>
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="date"
@@ -248,7 +269,8 @@ const ColumnLog_List = () => {
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="toDate" className="form-label">
-                        <b>To Date</b><span style={{ color: 'red' }}>*</span>
+                        <b>To Date</b>
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="date"
@@ -262,7 +284,8 @@ const ColumnLog_List = () => {
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="instrumentId" className="form-label">
-                        <b>Instrument ID</b><span style={{ color: 'red' }}>*</span>
+                        <b>Instrument ID</b>
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                       <select
                         className="form-select"
@@ -279,10 +302,12 @@ const ColumnLog_List = () => {
                       </select>
                     </div>
                   </div>
+
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="productName" className="form-label">
-                        <b>Product Name</b><span style={{ color: 'red' }}>*</span>
+                        <b>Product Name</b>
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="text"
@@ -293,10 +318,12 @@ const ColumnLog_List = () => {
                       />
                     </div>
                   </div>
+
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="batchNumbers" className="form-label">
-                        <b>Batch No.</b><span style={{ color: 'red' }}>*</span>
+                        <b>Batch Numbers</b>
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="text"
@@ -308,7 +335,7 @@ const ColumnLog_List = () => {
                     </div>
                   </div>
 
-                <div className="col-sm-3" style={{ marginTop: "28px" }}>
+                  <div className="col-sm-3" style={{ marginTop: "28px" }}>
                     <button
                       className="btn btn-primary ms-3 MinW200 mt29"
                       onClick={handleSearch}
@@ -324,13 +351,37 @@ const ColumnLog_List = () => {
                       Reset
                     </button>
                   </div>
-                  </div>
+                 
+                </div>
+              </div>
+              <div>
 
-
-                  <div
+             
+              <div
                 className="card mt-3"
                 style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
               >
+                 <div className="row">
+                  <div className="col-sm-2">
+                    <div className="mb-2">
+                      <label htmlFor="rowsPerPage" className="form-label">
+                        <b>Rows Per Page</b>
+                      </label>
+                      <select
+                        className="form-select"
+                        id="rowsPerPage"
+                        value={rowsPerPage}
+                        onChange={(e) => setRowsPerPage(parseInt(e.target.value))}
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="cus-Table table-responsive">
                   <table className="table table-bordered" id="example">
                     <thead>
@@ -351,14 +402,14 @@ const ColumnLog_List = () => {
                         <th className="text-center">Sample Set Finish Date</th>
                         <th className="text-center">No.of Injections</th>
                         <th className="text-center">Runtime</th>
-
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData.map((peak, index) => (
-                        <tr key={peak.ID}>
-                          <td className="text-center">{index + 1}</td>
-                          <td className="text-center">
+                      
+                      {currentData.map((peak, index) => (
+                      <tr key={index}>
+                        <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>                
+                                  <td className="text-center">
                             {peak.dateAcquired}
                           </td>
                           <td className="text-center">{peak.sampleSetAcquiredBy}</td>
@@ -391,8 +442,47 @@ const ColumnLog_List = () => {
                   </table>
                 </div>
               </div>
-              </div>
-              <div
+            </div>
+            <div>
+              <div>
+                <br></br>
+                <div className="row">
+                  <div className="col-sm-12">
+                    <nav aria-label="Page navigation">
+                      <ul className="pagination justify-content-center">
+                        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => !isFirstPage && handlePageChange(currentPage - 1)}
+                          >
+                            Previous
+                          </button>
+                        </li>
+                        {pagesToShow.map(pageNumber => (
+                          <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
+                            <button
+                              className="page-link"
+                              onClick={() => handlePageChange(pageNumber)}
+                            >
+                              {pageNumber}
+                            </button>
+                          </li>
+                        ))}
+                        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
+                          >
+                            Next
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
+                  </div>
+                </div>
+            <div
                 className="d-flex justify-content-end align-items-center my-3"
                 style={{ marginRight: "20px" }}
               >
@@ -403,7 +493,7 @@ const ColumnLog_List = () => {
                   Export
                 </button>
               </div>
-            </div>
+              </div>
           </div>
         </div>
       </section>
