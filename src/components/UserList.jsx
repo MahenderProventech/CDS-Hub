@@ -457,7 +457,7 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-
+</div>
                 <div className="row w-100">
               <div className="col-md-6">
               <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
@@ -519,7 +519,7 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
+              
               <div className="row w-100">
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
