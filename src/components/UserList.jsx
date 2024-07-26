@@ -309,7 +309,7 @@ const UserList = () => {
               <thead>
                 <tr>
 
-                  <th>#</th>
+                  <th>SNo</th>
                   <th onClick={() => handleSort('employeeId')} style={{ cursor: 'pointer' }}>
                     User ID {sortConfig.key === 'employeeId' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </th>
@@ -425,6 +425,17 @@ const UserList = () => {
                 </div>
               </div>
               <div className="row w-100">
+              <div className="col-md-6">
+                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+                    <Form.Label>
+                      Mobile Number
+                    </Form.Label>
+                    <Col>
+                      <Form.Control type="text" placeholder="Mobile Number" name="mobileNo" value={selectedUser?.mobileNo}
+                        onChange={handleFormData} disabled={isEdit} />
+                    </Col>
+                  </Form.Group>
+                </div>
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
@@ -446,11 +457,12 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-          
+
+                <div className="row w-100">
               <div className="col-md-6">
               <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
-                      Department
+                    Department
                     </Form.Label>
                     <Col>
                       <Select
@@ -465,8 +477,8 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              </div>
-              <div className="row w-100">
+              
+              
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
@@ -487,7 +499,8 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-                <div className="col-md-6">
+                </div>
+                <div hidden className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Groups
@@ -508,7 +521,7 @@ const UserList = () => {
                 </div>
               </div>
               <div className="row w-100">
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
                       Designation
@@ -527,7 +540,7 @@ const UserList = () => {
                   </Form.Group>
                 </div>
 
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
                       Status
