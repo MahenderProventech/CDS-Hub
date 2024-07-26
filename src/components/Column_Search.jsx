@@ -78,14 +78,23 @@ const Column_Search = () => {
   };
 
   const handlePrint = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
+    // Create a hidden iframe for printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
   
+    // Get iframe document
+    const iframeDoc = iframe.contentWindow.document;
+  
+    // Create CSS styles to be included in the iframe
     const printStyles = `
       <style>
         body {
           font-family: Arial, sans-serif;
-          margin: 0;
-          padding: 0;
+          margin: 20px;
         }
         .table {
           width: 100%;
@@ -100,23 +109,99 @@ const Column_Search = () => {
           background-color: #463E96;
           color: white;
         }
+        @media print {
+          @page {
+            size: A4 landscape; /* Change to landscape to increase width */
+            margin: 10mm;
+          }
+          body {
+            margin: 0;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+          }
+          .table th, .table td {
+            page-break-inside: avoid;
+          }
+        }
       </style>
     `;
   
-    printWindow.document.open();
-    printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write(printStyles);
-    printWindow.document.write('</head><body >');
-    printWindow.document.write('<h1>Column Search</h1>');
-    printWindow.document.write(document.querySelector('.cus-Table').outerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
+    // Write content to the iframe document
+    iframeDoc.open();
+    iframeDoc.write('<html><head><title>Print</title>');
+    iframeDoc.write(printStyles); // Inject CSS styles
+    iframeDoc.write('</head><body>');
+    iframeDoc.write('<h1>Column Search</h1>');
   
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-    };
+    // Add table headers
+    iframeDoc.write(`
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th class="text-center">S.No</th>
+            <th class="text-center">Date Acquired</th>
+            <th class="text-center">Acquired By</th>
+            <th className="text-center">Column Number</th>
+            <th className="text-center">Instrument Number</th>
+            <th className="text-center">Product Name</th>
+            <th className="text-center">Test Name</th>
+            <th className="text-center">AR Number</th>
+            <th className="text-center">Batch no.</th>
+            <th className="text-center">Injection Id</th>
+            <th className="text-center">Sample Set Start Date</th>
+            <th className="text-center">Sample Set Finish Date</th>
+            <th className="text-center">No.of Injections</th>
+            <th className="text-center">Runtime</th>
+          </tr>
+        </thead>
+        <tbody>
+    `);
+  
+    // Add table rows for all filtered data
+    filteredData.forEach((peak, index) => {
+      iframeDoc.write(`
+        <tr>
+          <td class="text-center">${index + 1}</td>
+          <td class="text-center">${peak.dateAcquired}</td>
+          <td class="text-center">${peak.sampleSetAcquiredBy}</td>
+          <td class="text-center">${peak.instrument_No}</td>
+          <td class="text-center">${peak.column_No}</td>
+          <td class="text-center">${peak.product_Name}</td>
+          <td class="text-center">${peak.test_Name}</td>
+          <td class="text-center">${peak.a_R_No}</td>
+          <td class="text-center">${peak.batch_No}</td>
+          <td class="text-center">${peak.injectionId}</td>
+          <td class="text-center">
+            ${peak.sampleSetStartDate
+              ? new Date(peak.sampleSetStartDate).toLocaleDateString()
+              : "NULL"}
+          </td>
+          <td class="text-center">
+            ${peak.sampleSetFinishDate
+              ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
+              : "NULL"}
+          </td>
+          <td class="text-center"></td>
+          <td class="text-center">10</td>
+        </tr>
+      `);
+    });
+  
+    iframeDoc.write('</tbody></table>');
+    iframeDoc.write('</body></html>');
+    iframeDoc.close();
+  
+    // Print the iframe content
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  
+    // Remove iframe after printing
+    document.body.removeChild(iframe);
   };
+  
 
   const handleExport = () => {
     const csvContent = [
@@ -409,7 +494,6 @@ const Column_Search = () => {
                     {filteredData.length === 0 ? (
                       <tr>
                         <td colSpan="12" className="text-center">
-                          No data available. Please apply filters and search.
                         </td>
                       </tr>
                     ) : (

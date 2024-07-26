@@ -78,76 +78,132 @@ const HPLC_Search = () => {
     setFilteredData([]);
     setCurrentPage(1); // Reset to first page on reset
   };
- const handlePrint = () => {
-  // Create a hidden iframe for printing
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'absolute';
-  iframe.style.width = '0px';
-  iframe.style.height = '0px';
-  iframe.style.border = 'none';
-  document.body.appendChild(iframe);
-
-  // Get iframe document
-  const iframeDoc = iframe.contentWindow.document;
-
-  // Create CSS styles to be included in the iframe
-  const printStyles = `
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      .table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .table th, .table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-      }
-      .table th {
-        background-color: #463E96;
-        color: white;
-      }
-      .thead-dark th {
-        background-color: #463E96;
-        color: white;
-      }
-      @media print {
+  const handlePrint = () => {
+    // Create a hidden iframe for printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+  
+    // Get iframe document
+    const iframeDoc = iframe.contentWindow.document;
+  
+    // Create CSS styles to be included in the iframe
+    const printStyles = `
+      <style>
         body {
-          margin: 0;
+          font-family: Arial, sans-serif;
+          margin: 20px;
         }
         .table {
           width: 100%;
           border-collapse: collapse;
-          page-break-inside: auto;
         }
         .table th, .table td {
-          page-break-inside: avoid;
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
         }
-      }
-    </style>
-  `;
-
-  // Write content to the iframe document
-  iframeDoc.open();
-  iframeDoc.write('<html><head><title>Print</title>');
-  iframeDoc.write(printStyles); // Inject CSS styles
-  iframeDoc.write('</head><body>');
-  iframeDoc.write('<h1>HPLC Search</h1>');
-  iframeDoc.write(document.querySelector('.cus-Table').outerHTML); // Use outerHTML for full table structure
-  iframeDoc.write('</body></html>');
-  iframeDoc.close();
-
-  // Print the iframe content
-  iframe.contentWindow.focus();
-  iframe.contentWindow.print();
-
-  // Remove iframe after printing
-  document.body.removeChild(iframe);
-};
-
+        .table th {
+          background-color: #463E96;
+          color: white;
+        }
+        @media print {
+          @page {
+            size: A4 landscape; /* Change to landscape to increase width */
+            margin: 10mm;
+          }
+          body {
+            margin: 0;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+          }
+          .table th, .table td {
+            page-break-inside: avoid;
+          }
+        }
+      </style>
+    `;
+  
+    // Write content to the iframe document
+    iframeDoc.open();
+    iframeDoc.write('<html><head><title>Print</title>');
+    iframeDoc.write(printStyles); // Inject CSS styles
+    iframeDoc.write('</head><body>');
+    iframeDoc.write('<h1>HPLC Search</h1>');
+  
+    // Add table headers
+    iframeDoc.write(`
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th class="text-center">S.No</th>
+            <th class="text-center">Date Acquired</th>
+            <th class="text-center">Acquired By</th>
+            <th class="text-center">Instrument Number</th>
+            <th class="text-center">Product Name</th>
+            <th class="text-center">Test Name</th>
+            <th class="text-center">AR Number</th>
+            <th class="text-center">Column Number</th>
+            <th class="text-center">Batch no.</th>
+            <th class="text-center">Injection Id</th>
+            <th class="text-center">Sample Set Start Date</th>
+            <th class="text-center">Sample Set Finish Date</th>
+            <th class="text-center">No.of Injections</th>
+            <th class="text-center">Runtime</th>
+          </tr>
+        </thead>
+        <tbody>
+    `);
+  
+    // Add table rows for all filtered data
+    filteredData.forEach((peak, index) => {
+      iframeDoc.write(`
+        <tr>
+          <td class="text-center">${index + 1}</td>
+          <td class="text-center">${peak.dateAcquired}</td>
+          <td class="text-center">${peak.sampleSetAcquiredBy}</td>
+          <td class="text-center">${peak.instrument_No}</td>
+          <td class="text-center">${peak.product_Name}</td>
+          <td class="text-center">${peak.test_Name}</td>
+          <td class="text-center">${peak.a_R_No}</td>
+          <td class="text-center">${peak.column_No}</td>
+          <td class="text-center">${peak.batch_No}</td>
+          <td class="text-center">${peak.injectionId}</td>
+          <td class="text-center">
+            ${peak.sampleSetStartDate
+              ? new Date(peak.sampleSetStartDate).toLocaleDateString()
+              : "NULL"}
+          </td>
+          <td class="text-center">
+            ${peak.sampleSetFinishDate
+              ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
+              : "NULL"}
+          </td>
+          <td class="text-center"></td>
+          <td class="text-center">10</td>
+        </tr>
+      `);
+    });
+  
+    iframeDoc.write('</tbody></table>');
+    iframeDoc.write('</body></html>');
+    iframeDoc.close();
+  
+    // Print the iframe content
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  
+    // Remove iframe after printing
+    document.body.removeChild(iframe);
+  };
+  
+  
   const handleExport = () => {
     const csvContent = [
       [
