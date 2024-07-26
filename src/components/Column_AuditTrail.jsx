@@ -18,6 +18,7 @@ const Column_AuditTrail = () => {
   const [roleAssignments, setRoleAssignments] = useState([]);
   const [getResponse, setResponse] = useState([]);
   const [masterData, setMasterData] = useState([]);
+  const [nameData, setNameData] = useState([]);
   const [actionsData, setActionsData] = useState([]);
   const [searchedData, setSearchData] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
@@ -51,8 +52,8 @@ const Column_AuditTrail = () => {
   useEffect(() => {
     // Actions
     if (searchedData) {
-      const actions = [...new Set(getResponse.filter(item => item.actions !== null && item.components == searchedData?.components).map(item => item.actions))];
-      setActionsData(actions)
+      const name = [...new Set(getResponse.filter(item => item.name !== null && item.components == searchedData?.components).map(item => item.name))];
+      setNameData(name)
     } else {
       setRoleAssignments([]);
 
@@ -241,18 +242,18 @@ const Column_AuditTrail = () => {
 
           </Col>
           <Col sm={3}>
-            <Form.Label>Actions</Form.Label>
+            <Form.Label>UserID</Form.Label>
 
             <select
               className="form-control1"
-              name="actions"
-              value={searchedData ? searchedData.actions : ''}
+              name="name"
+              value={searchedData ? searchedData.name: ''}
               onChange={updateSearchObject}
-              disabled={!searchedData?.components}
+              //disabled={!searchedData?.components}
             >
               <option value="" disabled selected>
-                --Select Actions--            </option>
-              {actionsData.map((each, i) => (
+                --Select UserID--            </option>
+              {nameData.map((each, i) => (
                 <option key={i} value={each}>
                   {each}
                 </option>
@@ -304,15 +305,15 @@ const Column_AuditTrail = () => {
               <Table striped bordered hover>
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th>SNo</th>
                     <th>Actions</th>
-                    <th onClick={() => handleSort('components')} style={{ cursor: 'pointer' }}>
-                      Components {sortConfig.key === 'components' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
                     <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
+                      UserID{sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}hidden>
                       Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => handleSort('createdBy')} style={{ cursor: 'pointer' }}>
+                    <th onClick={() => handleSort('createdBy')} style={{ cursor: 'pointer' }}hidden>
                       Created By {sortConfig.key === 'createdBy' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                     <th onClick={() => handleSort('reason')} style={{ cursor: 'pointer' }}>
@@ -331,9 +332,9 @@ const Column_AuditTrail = () => {
                       <tr key={index}>
                         <td>{index + 1}</td>
                         <td>{assignment.components}</td>
-                        <td>{assignment.actions}</td>
                         <td>{assignment.name}</td>
-                        <td>{assignment.createdBy}</td>
+                        <td hidden>{assignment.name}</td>
+                        <td hidden>{assignment.createdBy}</td>
                         <td>{assignment.reason}</td>
                         <td>{assignment.createdDate}</td>
                       </tr>

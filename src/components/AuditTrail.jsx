@@ -6,21 +6,22 @@ import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import http from './Http';
 import CustomPagination from './core/CustomPagination';
-
+ 
 const AuditTrail = () => {
   const [roleAssignments, setRoleAssignments] = useState([]);
   const [getResponse, setResponse] = useState([]);
   const [masterData, setMasterData] = useState([]);
   const [actionsData, setActionsData] = useState([]);
+  const [nameData, setNameData] = useState([]);
   const [searchedData, setSearchData] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items to show per page
-
+ 
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const navigate = useNavigate();
-
+ 
   const updateSearchObject = (e) => {
     const { name, value } = e.target;
     setSearchData({
@@ -28,7 +29,7 @@ const AuditTrail = () => {
       [name]: value
     });
   }
-
+ 
   const fetchRoleAssignments = async () => {
     try {
       setSearchData(null);
@@ -36,7 +37,7 @@ const AuditTrail = () => {
       setResponse(response.data.item1 || []);
       const columnNames = [...new Set(response.data.item1.filter(item => item.components !== null).map(item => item.components))];
       setMasterData(columnNames)
-
+ 
     } catch (error) {
       console.error('Error fetching role assignments:', error.response ? error.response.data : error.message);
     }
@@ -44,13 +45,13 @@ const AuditTrail = () => {
   useEffect(() => {
     // Actions
     if (searchedData) {
-      const actions = [...new Set(getResponse.filter(item => item.actions !== null && item.components == searchedData?.components).map(item => item.actions))];
-      setActionsData(actions)
+      const name= [...new Set(getResponse.filter(item => item.name !== null && item.components == searchedData?.components).map(item => item.name))];
+      setNameData(name)
     } else {
       setRoleAssignments([]);
-
+ 
     }
-
+ 
   }, [searchedData])
   const submitRole = async () => {
     try {
@@ -79,7 +80,7 @@ const AuditTrail = () => {
     }
     setSortConfig({ key, direction });
   };
-
+ 
   // Sorting logic based on sortConfig
   const sortedItems = useMemo(() => {
     let sortedData = [...roleAssignments];
@@ -100,7 +101,7 @@ const AuditTrail = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = sortedItems.slice(indexOfFirstItem, indexOfLastItem);
-
+ 
   const filterArrayOfObjects = (array, filterObject) => {
     console.log(array)
     console.log(filterObject)
@@ -137,13 +138,13 @@ const AuditTrail = () => {
       return true;
     });
   };
-
+ 
   useEffect(() => {
     fetchRoleAssignments();
   }, []);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState(null);
-
+ 
   const handleDateChange = (date, key) => {
     console.log(date.target.value);
     setSearchData({
@@ -152,8 +153,8 @@ const AuditTrail = () => {
     });
     // setStartDate(date.target.value);
   };
-
-
+ 
+ 
   return (
     <section className="full_screen">
       <div className="container-fluid" style={{ padding: "30px" }}>
@@ -161,10 +162,11 @@ const AuditTrail = () => {
           <h6>Audit Trail Search</h6>
         </Row>
         <Row>
+        
           <Col sm={3}>
-
+ 
             <Form.Label>Categories</Form.Label>
-
+ 
             <select
               className="form-control1"
               name="components"
@@ -178,21 +180,21 @@ const AuditTrail = () => {
                 </option>
               ))}
             </select>
-
+ 
           </Col>
           <Col sm={3}>
-            <Form.Label>Actions</Form.Label>
-
+            <Form.Label>UserID</Form.Label>
+ 
             <select
               className="form-control1"
-              name="actions"
-              value={searchedData ? searchedData.actions : ''}
+              name="name"
+              value={searchedData ? searchedData.name : ''}
               onChange={updateSearchObject}
-              disabled={!searchedData?.components}
+              //disabled={!searchedData?.name}
             >
               <option value="" disabled selected>
-                --Select Actions--            </option>
-              {actionsData.map((each, i) => (
+                --Select UserID--            </option>
+              {nameData.map((each, i) => (
                 <option key={i} value={each}>
                   {each}
                 </option>
@@ -238,21 +240,21 @@ const AuditTrail = () => {
         </Row>
         <Row>
           {(searchedData && roleAssignments.length > 0) ?
-
+ 
             <Col sm={12}>
               <h6 className="mt-5">Audit Details</h6>
               <Table striped bordered hover>
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th>S.No</th>
                     <th>Actions</th>
-                    <th onClick={() => handleSort('components')} style={{ cursor: 'pointer' }}>
-                      Components {sortConfig.key === 'components' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
                     <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
+                     User id {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }} hidden>
                       Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => handleSort('createdBy')} style={{ cursor: 'pointer' }}>
+                    <th onClick={() => handleSort('createdBy')} style={{ cursor: 'pointer' }}hidden>
                       Created By {sortConfig.key === 'createdBy' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                     <th onClick={() => handleSort('reason')} style={{ cursor: 'pointer' }}>
@@ -262,18 +264,18 @@ const AuditTrail = () => {
                       DateTime {sortConfig.key === 'dateTime' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   </tr>
-
+ 
                 </thead>
                 <tbody>
-
+ 
                   {currentItems.length > 0 && searchedData ? (
                     currentItems.map((assignment, index) => (
                       <tr key={index}>
                         <td>{index + 1}</td>
                         <td>{assignment.components}</td>
-                        <td>{assignment.actions}</td>
                         <td>{assignment.name}</td>
-                        <td>{assignment.createdBy}</td>
+                        <td hidden>{assignment.name}</td>
+                        <td hidden>{assignment.createdBy}</td>
                         <td>{assignment.reason}</td>
                         <td>{assignment.createdDate}</td>
                       </tr>
@@ -292,7 +294,7 @@ const AuditTrail = () => {
                 currentPage={currentPage}
                 style={{ display: 'flex', float: 'right' }}
               />
-
+ 
             </Col>
             : null}
         </Row>
@@ -300,5 +302,7 @@ const AuditTrail = () => {
     </section>
   );
 };
-
+ 
 export default AuditTrail;
+ 
+ 
