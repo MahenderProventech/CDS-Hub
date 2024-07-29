@@ -23,7 +23,6 @@ const UserList = () => {
     passwordError: '',
     confirmPasswordError: ''
   });
-
   const [isEdit, isEditMode] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [roleAssignments, setRoleAssignments] = useState([]);
@@ -431,7 +430,7 @@ const UserList = () => {
                       Mobile Number
                     </Form.Label>
                     <Col>
-                      <Form.Control type="text" placeholder="Mobile Number" name="mobileNo" value={selectedUser?.mobileNo}
+                      <Form.Control type="text" placeholder="Enter 10 Digits Number" name="mobileNo" value={selectedUser?.mobileNo}
                         onChange={handleFormData} disabled={isEdit} />
                     </Col>
                   </Form.Group>
@@ -443,7 +442,7 @@ const UserList = () => {
                     </Form.Label>
                     <Col>
 
-                      <MultiSelectComponent
+                      <Select
                         options={getRolesResponse.map(option => ({
                           value: option.configureId, label: option.configureValue
                         }))}
