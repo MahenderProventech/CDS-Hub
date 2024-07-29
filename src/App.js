@@ -28,6 +28,7 @@ import ConfigurationEdit from './components/ConfigurationEdit';
 import TableDataComponent from './components/TableData';
 import InputVariableTable from './components/InputVariables';
 import HPLC_Dashboard from './components/HPLC_Dashboard';
+import HPLC_Dashboard1 from './components/HPLC_Dashboard1';
 import HPLCLog_List from './components/HPLCLog_List';
 import ColumnLog_List from './components/ColumnLog_List';
 import Column_Dashboard from './components/Column_Dashboard';
@@ -59,6 +60,7 @@ function App() {
             <Route path='assignRole' element={<AssignRole />} />
             <Route path='userList' element={<UserList />} />
             <Route path='HPLC_Dashboard' element={<HPLC_Dashboard />} />
+            <Route path='HPLC_Dashboard1' element={<HPLC_Dashboard1 />} />
             <Route path='HPLCLog_List' element={<HPLCLog_List />} />
             <Route path='Column_Dashboard' element={<Column_Dashboard />} />
             <Route path='ColumnLog_List' element={<ColumnLog_List />} />
