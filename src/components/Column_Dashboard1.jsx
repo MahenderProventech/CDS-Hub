@@ -20,7 +20,7 @@ const Column_Dashboard1 = () => {
   const [sampleType, setSampleType] = useState('All');
   const [methodSet, setMethodSet] = useState('All');
   const [xColumn, setXColumn] = useState('');
-  const [yColumn, setYColumn] = useState([]);
+  const [yColumn, setYColumn] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,7 +75,7 @@ const Column_Dashboard1 = () => {
 
     const datasets = Object.values(groupedData).map(group => ({
       label: group.label,
-      data: group.x.map((x, index) => ({ x, y: group.y[index] })),
+      data: group.x.map((x, index) => ({ x, y: group.y[index], instrument: group.label })),
       backgroundColor: group.color,
     }));
 
@@ -98,6 +98,76 @@ const Column_Dashboard1 = () => {
       }]
     };
   };
+
+  const scatterChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      tooltip: {
+        callbacks: {
+          title: (tooltipItems) => {
+            const { dataset } = tooltipItems[0];
+            const instrument = dataset.data[tooltipItems[0].dataIndex].instrument;
+            return [`Instrument: ${instrument}`];
+          },
+          label: (tooltipItem) => {
+            const { raw } = tooltipItem;
+            const xValue = raw.x;
+            const yValue = raw.y;
+            return [
+              `${xColumn}: ${xValue}`,
+              `${yColumn}: ${yValue}`
+            ];
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: xColumn
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: yColumn
+        }
+      }
+    }
+  };
+
+  const barChartOptions = (titleText, xText, yText) => ({
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: titleText
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: xText
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: yText
+        }
+      }
+    }
+  });
 
   return (
     <div style={{ marginLeft: '14px' }}>
@@ -160,7 +230,7 @@ const Column_Dashboard1 = () => {
           </div>
         </div>
       </aside>
-     
+
       {/* Main Content */}
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
@@ -194,26 +264,19 @@ const Column_Dashboard1 = () => {
                 <Form.Label>Select Y-axis</Form.Label>
                 <Select options={getColumnOptions()} onChange={opt => setYColumn(opt.value)} />
               </Form.Group>
-              <Scatter data={getChartData(xColumn, yColumn)} options={{ 
-                plugins: {
-                  legend: {
-                    display: true,
-                    position: 'top'
-                  }
-                }
-              }} />
+              <Scatter data={getChartData(xColumn, yColumn)} options={scatterChartOptions} />
 
               <h4>Injection Status</h4>
-              <Bar data={getBarChartData('intType')} />
+              <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
 
               <h4>Processing Status</h4>
-              <Bar data={getBarChartData('peakType')} />
+              <Bar data={getBarChartData('peakType')} options={barChartOptions('Processing Status', 'Status Type', 'Count')} />
 
               <h4>Integration Status</h4>
-              <Bar data={getBarChartData('intType')} />
+              <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
 
               <h4>Sample Set</h4>
-              <Bar data={getBarChartData('sampleSetStartDate')} options={{ indexAxis: 'y' }} />
+              <Bar data={getBarChartData('sampleSetStartDate')} options={{ ...barChartOptions('Sample Set', 'Date', 'Count'), indexAxis: 'y' }} />
 
               <h4>Data Preview</h4>
               <table className="table">
