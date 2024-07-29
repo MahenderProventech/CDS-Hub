@@ -32,6 +32,7 @@ import HPLC_Dashboard1 from './components/HPLC_Dashboard1';
 import HPLCLog_List from './components/HPLCLog_List';
 import ColumnLog_List from './components/ColumnLog_List';
 import Column_Dashboard from './components/Column_Dashboard';
+import Column_Dashboard1 from './components/Column_Dashboard1';
 import Column_Search from './components/Column_Search';
 import Column_AuditTrail from './components/Column_AuditTrail';
 import Column_UserManagement from './components/Column_UserManagement';
@@ -63,6 +64,7 @@ function App() {
             <Route path='HPLC_Dashboard1' element={<HPLC_Dashboard1 />} />
             <Route path='HPLCLog_List' element={<HPLCLog_List />} />
             <Route path='Column_Dashboard' element={<Column_Dashboard />} />
+            <Route path='Column_Dashboard1' element={<Column_Dashboard1 />} />
             <Route path='ColumnLog_List' element={<ColumnLog_List />} />
             <Route path='Column_Search' element={<Column_Search />} />
             <Route path='Column_AuditTrail' element={<Column_AuditTrail />} />

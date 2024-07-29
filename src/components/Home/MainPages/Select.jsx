@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import './select.css';
+import check from '../../../img/check.png';
 import { Link, useNavigate } from 'react-router-dom';
 
 
@@ -66,7 +67,7 @@ const Select = () => {
     <div className="col col-lg-2" >
       <div className="card nc d-flex flex-column" style={{height:"250px"}}>
         <div className="checkIcon">
-          <img src="../img/check.png" alt="check" />
+          <img src={check} alt="check" />
         </div>
         <div className="titles flex-grow-1">
           <h3>Usage Log</h3>
@@ -109,7 +110,7 @@ const Select = () => {
             <div className="col col-lg-2">
               <div className="card nc d-flex flex-column" style={{height:"250px"}}>
                 <div className="checkIcon">
-                  <img src="../img/check.png" alt="check" />
+                  <img src={check} alt="check" />
                 </div>
                 <div className="titles flex-grow-1">
                   <h3>Column Failure Prediction</h3>

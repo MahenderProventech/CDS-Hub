@@ -151,6 +151,14 @@ console.log("counterData",counterData)
     <div style={{marginLeft:'14px'}}>
       <aside className="col-md-1 p_sideNav">
         <div className="main">
+        <div className="btn-group dropend">
+            <Link to={"/home/Column_Dashboard1"}>
+              <button type="button">
+                <img src={dash} alt="Dashboard1" title="Dashboard1" />
+                <p>Dashboard 1</p>
+              </button>
+            </Link>
+          </div><br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_Dashboard"}>
               <button type="button">
