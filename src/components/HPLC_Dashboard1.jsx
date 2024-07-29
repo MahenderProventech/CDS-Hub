@@ -62,14 +62,30 @@ const HPLC_Dashboard1 = () => {
     return data.length ? Object.keys(data[0]).map(col => ({ value: col, label: col })) : [];
   };
 
+  const convertToNumeric = (values) => {
+    const uniqueValues = [...new Set(values)];
+    const valueMap = uniqueValues.reduce((acc, value, index) => {
+      acc[value] = index + 1; // Start index from 1 to avoid 0
+      return acc;
+    }, {});
+
+    return values.map(value => valueMap[value]);
+  };
+
   const getChartData = (xCol, yCol) => {
-    const groupedData = filteredData.reduce((acc, row) => {
+    const isXNumeric = data.every(row => !isNaN(row[xCol]));
+    const isYNumeric = data.every(row => !isNaN(row[yCol]));
+
+    const xValues = isXNumeric ? filteredData.map(row => row[xCol]) : convertToNumeric(filteredData.map(row => row[xCol]));
+    const yValues = isYNumeric ? filteredData.map(row => row[yCol]) : convertToNumeric(filteredData.map(row => row[yCol]));
+
+    const groupedData = filteredData.reduce((acc, row, index) => {
       const instrument = row['instrument_No'];
       if (!acc[instrument]) {
         acc[instrument] = { x: [], y: [], label: `Instrument ${instrument}`, color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)` };
       }
-      acc[instrument].x.push(row[xCol]);
-      acc[instrument].y.push(row[yCol]);
+      acc[instrument].x.push(xValues[index]);
+      acc[instrument].y.push(yValues[index]);
       return acc;
     }, {});
 
