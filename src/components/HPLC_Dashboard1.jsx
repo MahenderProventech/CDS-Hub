@@ -35,8 +35,6 @@ const HPLC_Dashboard1 = () => {
           setSampleTypeOptions(['All', ...new Set(data.item2.map(row => row['peakType']))]);
           setMethodSetOptions(['All', ...new Set(data.item2.map(row => row['test_Name']))]);
           setFilteredData(data.item2);
-          setXColumn(Object.keys(data.item2[0])[0]);
-          setYColumn(Object.keys(data.item2[0])[1]);
         } else {
           console.error("Fetched data does not contain the expected array:", data);
         }
@@ -62,22 +60,9 @@ const HPLC_Dashboard1 = () => {
     return data.length ? Object.keys(data[0]).map(col => ({ value: col, label: col })) : [];
   };
 
-  const convertToNumeric = (values) => {
-    const uniqueValues = [...new Set(values)];
-    const valueMap = uniqueValues.reduce((acc, value, index) => {
-      acc[value] = index + 1; // Start index from 1 to avoid 0
-      return acc;
-    }, {});
-
-    return values.map(value => valueMap[value]);
-  };
-
   const getChartData = (xCol, yCol) => {
-    const isXNumeric = data.every(row => !isNaN(row[xCol]));
-    const isYNumeric = data.every(row => !isNaN(row[yCol]));
-
-    const xValues = isXNumeric ? filteredData.map(row => row[xCol]) : convertToNumeric(filteredData.map(row => row[xCol]));
-    const yValues = isYNumeric ? filteredData.map(row => row[yCol]) : convertToNumeric(filteredData.map(row => row[yCol]));
+    const xValues = filteredData.map(row => row[xCol]);
+    const yValues = filteredData.map(row => row[yCol]);
 
     const groupedData = filteredData.reduce((acc, row, index) => {
       const instrument = row['instrument_No'];
@@ -146,7 +131,8 @@ const HPLC_Dashboard1 = () => {
         title: {
           display: true,
           text: xColumn
-        }
+        },
+        type: xColumn && filteredData.every(row => isNaN(row[xColumn])) ? 'category' : 'linear', // Adjust type based on data
       },
       y: {
         title: {
@@ -206,7 +192,7 @@ const HPLC_Dashboard1 = () => {
             </Link>
           </div><br />
           <div className="btn-group dropend">
-            <Link to={"/home/ColumnLog_List"}>
+            <Link to={"/home/HPLCLog_List"}>
               <button type="button">
                 <img src={HplcLogList} alt="HPLC Log List" title="HPLC Log List" />
                 <p>HPLC Log List</p>
@@ -250,7 +236,7 @@ const HPLC_Dashboard1 = () => {
       {/* Main Content */}
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
-          <h1>HPLC Utilization Dashboard</h1>
+          <h1>Column Utilization Dashboard</h1>
           <Row>
             <Col md={3}>
               <h4>Filters</h4>
