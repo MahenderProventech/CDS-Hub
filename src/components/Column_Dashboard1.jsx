@@ -35,8 +35,6 @@ const Column_Dashboard1 = () => {
           setSampleTypeOptions(['All', ...new Set(data.item2.map(row => row['peakType']))]);
           setMethodSetOptions(['All', ...new Set(data.item2.map(row => row['test_Name']))]);
           setFilteredData(data.item2);
-          setXColumn(Object.keys(data.item2[0])[0]);
-          setYColumn(Object.keys(data.item2[0])[1]);
         } else {
           console.error("Fetched data does not contain the expected array:", data);
         }
@@ -63,13 +61,16 @@ const Column_Dashboard1 = () => {
   };
 
   const getChartData = (xCol, yCol) => {
-    const groupedData = filteredData.reduce((acc, row) => {
+    const xValues = filteredData.map(row => row[xCol]);
+    const yValues = filteredData.map(row => row[yCol]);
+
+    const groupedData = filteredData.reduce((acc, row, index) => {
       const instrument = row['instrument_No'];
       if (!acc[instrument]) {
         acc[instrument] = { x: [], y: [], label: `Instrument ${instrument}`, color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)` };
       }
-      acc[instrument].x.push(row[xCol]);
-      acc[instrument].y.push(row[yCol]);
+      acc[instrument].x.push(xValues[index]);
+      acc[instrument].y.push(yValues[index]);
       return acc;
     }, {});
 
@@ -130,7 +131,8 @@ const Column_Dashboard1 = () => {
         title: {
           display: true,
           text: xColumn
-        }
+        },
+        type: xColumn && filteredData.every(row => isNaN(row[xColumn])) ? 'category' : 'linear', // Adjust type based on data
       },
       y: {
         title: {
