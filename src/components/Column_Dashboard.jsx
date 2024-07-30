@@ -1,157 +1,193 @@
-import React, { useState, useEffect } from 'react';
-import Chart from 'chart.js/auto';
+import React, { useEffect, useState } from 'react';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import Select from 'react-select';
+import { Bar, Scatter } from 'react-chartjs-2';
 import dash from '../img/dashboard.png';
 import HplcLogList from '../img/hplc_loglist.png';
 import search from '../img/search.png';
 import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
-import { Link } from 'react-router-dom';
-import http from './Http';
 import po from '../img/po.svg';
+import { Link } from 'react-router-dom';
 
- 
-const Column_Dashboard = () => {
-  const [peaksData, setPeaksData] = useState([]);
-  const [productNameCounts, setProductNameCounts] = useState({});
-  const [arNumberCounts, setArNumberCounts] = useState({});
-  const [testNameCounts, setTestNameCounts] = useState({});
-  const [batchNumberCounts, setBatchNumberCounts] = useState({});
- 
-  const [counterData, setCounterData] = useState({
-    productNameCounts: {},
-    arNumberCounts: {},
-    testNameCounts: {},
-    batchNumberCounts: {}
-  });
- 
- 
-console.log("counterData",counterData)
- 
- 
+const Column_Dashboard1 = () => {
+  const [data, setData] = useState([]);
+  const [projectOptions, setProjectOptions] = useState([]);
+  const [sampleTypeOptions, setSampleTypeOptions] = useState([]);
+  const [methodSetOptions, setMethodSetOptions] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [project, setProject] = useState('All');
+  const [sampleType, setSampleType] = useState('All');
+  const [methodSet, setMethodSet] = useState('All');
+  const [xColumn, setXColumn] = useState('');
+  const [yColumn, setYColumn] = useState('');
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await http.get('/Peaks/GetPeaksDetails');
-        const data = response.data;
-        console.log('Fetched data:', data);
- 
+        const response = await fetch("http://localhost:58747/api/Peaks/GetPeaksDetails");
+        const data = await response.json();
+        console.log("Fetched data:", data);
+
         if (Array.isArray(data.item2)) {
-          const totalProductName = data.item2.length;
-          const totalBatchNumber = new Set(data.item2.map(item => item.batch_No)).size;
-          const totalArNumber = new Set(data.item2.map(item => item.a_R_No)).size;
-          const totalTestName = new Set(data.item2.map(item => item.test_Name)).size;
- 
-          setCounterData({
-            totalProductName,
-            totalBatchNumber,
-            totalArNumber,
-            totalTestName
-          });
+          setData(data.item2);
+          setProjectOptions(['All', ...new Set(data.item2.map(row => row['product_Name']))]);
+          setSampleTypeOptions(['All', ...new Set(data.item2.map(row => row['peakType']))]);
+          setMethodSetOptions(['All', ...new Set(data.item2.map(row => row['test_Name']))]);
+          setFilteredData(data.item2);
         } else {
-          console.error('Fetched data does not contain the expected array:', data);
+          console.error("Fetched data does not contain the expected array:", data);
         }
       } catch (error) {
-        console.error('Error fetching or processing data:', error);
+        console.error("Error fetching or processing data:", error);
       }
     };
- 
+
     fetchData();
   }, []);
- 
+
   useEffect(() => {
-    if (counterData.totalProductName !== undefined &&
-        counterData.totalBatchNumber !== undefined &&
-        counterData.totalArNumber !== undefined &&
-        counterData.totalTestName !== undefined) {
- 
-      const colors = ["#ACE9F5", "#F7B8A1", "#F9E7C4", "#A7E697"];
- 
-      // Chart 1: Pie chart for Category Counts
-      new Chart("myChart", {
-        type: "pie",
-        data: {
-          labels: ["Product Name", "Batch Number", "AR Number", "Test Name"],
-          datasets: [{
-            backgroundColor: ["#ACE9F5", "#F7B8A1", "#F9E7C4", "#A7E697"],
-            data: [
-              counterData.totalProductName,
-              counterData.totalBatchNumber,
-              counterData.totalArNumber,
-              counterData.totalTestName
-            ]
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: " Overall Report"
-            }
+    let filtered = data;
+
+    if (project !== 'All') filtered = filtered.filter(row => row['product_Name'] === project);
+    if (sampleType !== 'All') filtered = filtered.filter(row => row['peakType'] === sampleType);
+    if (methodSet !== 'All') filtered = filtered.filter(row => row['test_Name'] === methodSet);
+
+    setFilteredData(filtered);
+  }, [project, sampleType, methodSet, data]);
+
+  const getColumnOptions = () => {
+    return data.length ? Object.keys(data[0]).map(col => ({ value: col, label: col })) : [];
+  };
+
+  const getChartData = (xCol, yCol) => {
+    const xValues = filteredData.map(row => row[xCol]);
+    const yValues = filteredData.map(row => row[yCol]);
+
+    const groupedData = filteredData.reduce((acc, row, index) => {
+      const instrument = row['instrument_No'];
+      if (!acc[instrument]) {
+        acc[instrument] = { x: [], y: [], label: `Instrument ${instrument}`, color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)` };
+      }
+      acc[instrument].x.push(xValues[index]);
+      acc[instrument].y.push(yValues[index]);
+      return acc;
+    }, {});
+
+    const datasets = Object.values(groupedData).map(group => ({
+      label: group.label,
+      data: group.x.map((x, index) => ({ x, y: group.y[index], instrument: group.label })),
+      backgroundColor: group.color,
+    }));
+
+    return {
+      datasets
+    };
+  };
+
+  const getBarChartData = (column) => {
+    const counts = filteredData.reduce((acc, row) => {
+      acc[row[column]] = (acc[row[column]] || 0) + 1;
+      return acc;
+    }, {});
+    return {
+      labels: Object.keys(counts),
+      datasets: [{
+        label: `${column} Status`,
+        data: Object.values(counts),
+        backgroundColor: 'rgba(75, 192, 192, 0.6)'
+      }]
+    };
+  };
+
+  const scatterChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      tooltip: {
+        callbacks: {
+          title: (tooltipItems) => {
+            const { dataset } = tooltipItems[0];
+            const instrument = dataset.data[tooltipItems[0].dataIndex].instrument;
+            return [`Instrument: ${instrument}`];
+          },
+          label: (tooltipItem) => {
+            const { raw } = tooltipItem;
+            const xValue = raw.x;
+            const yValue = raw.y;
+            return [
+              `${xColumn}: ${xValue}`,
+              `${yColumn}: ${yValue}`
+            ];
           }
         }
-      },);
-     
-     
-      new Chart("myChart2", {
-        type: "bar",
-        data: {
-          labels: ["Product Name", "Batch Number", "AR Number", "Test Name"],
-          datasets: [{
-            backgroundColor: ["#ACE9F5", "#F7B8A1", "#F9E7C4", "#A7E697"],
-            data: [
-              counterData.totalProductName,
-              counterData.totalBatchNumber,
-              counterData.totalArNumber,
-              counterData.totalTestName
-            ]
-          }]
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: xColumn
         },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: "Monthly Report"
-            }
-          }
-        }
-      });
-      new Chart("myChart3", {
-        type: "bar",
-        data: {
-          labels: ["Product Name", "Batch Number", "AR Number", "Test Name"],
-          datasets: [{
-            backgroundColor: ["#ACE9F5", "#F7B8A1", "#F9E7C4", "#A7E697"],
-            data: [
-              counterData.totalProductName,
-              counterData.totalBatchNumber,
-              counterData.totalArNumber,
-              counterData.totalTestName
-            ]
-          }]
+        type: xColumn && filteredData.every(row => isNaN(row[xColumn])) ? 'category' : 'linear', // Adjust type based on data
+        min: 0 // Ensure the x-axis starts from 0
+      },
+      y: {
+        title: {
+          display: true,
+          text: yColumn
         },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: "Monthly Report"
-            }
-          }
-        }
-      });
+        min: 0 // Ensure the y-axis starts from 0
+      }
     }
-  }, [counterData]);
- 
- 
- 
- 
+  };
+
+  const barChartOptions = (titleText, xText, yText) => ({
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: titleText
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: xText
+        },
+        min: 0 // Ensure the x-axis starts from 0
+      },
+      y: {
+        title: {
+          display: true,
+          text: yText
+        },
+        min: 0 // Ensure the y-axis starts from 0
+      }
+    }
+  });
+
+  const handleReset = () => {
+    setProject('All');
+    setSampleType('All');
+    setMethodSet('All');
+    setXColumn('');
+    setYColumn('');
+  };
+
   return (
-    <div style={{marginLeft:'14px'}}>
+    <div style={{ marginLeft: '14px' }}>
       <aside className="col-md-1 p_sideNav">
         <div className="main">
-        <div className="btn-group dropend">
+          <div className="btn-group dropend">
             <Link to={"/home/Column_Dashboard1"}>
               <button type="button">
                 <img src={dash} alt="Dashboard1" title="Dashboard1" />
@@ -200,106 +236,90 @@ console.log("counterData",counterData)
             </Link>
           </div><br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-                        <Link to={"/"}>
-                            <button type="button" title='Logout'>
-                                <img src={po} alt="Logout" />
-                            </button>
-                        </Link>
-                    </div>
+            <Link to={"/"}>
+              <button type="button">
+                <img src={po} alt="Logout" />
+              </button>
+            </Link>
+          </div>
         </div>
       </aside>
-      <section className="full_screen">
-        <div className="container-fluid">
-          <nav aria-label="breadcrumb">
-            <ol className="breadcrumb cooseText mb-2">
-              <li className="breadcrumb-item active" aria-current="page">Column Dashboard</li>
-            </ol>
-          </nav>
- 
-          <div className="row">
-            <div className="col-lg-12" >
-              <div className="card mt-3"  style={{ padding: "1.7rem", width: "99%", marginLeft: "5px" }}>
-                <div className="row">
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="fromDate" className="form-label"><b>From Date</b><span style={{ color: "red" }}>*</span></label>
-                      <input type="date" id="fromDate" className="form-control" aria-label="From Date" aria-describedby="basic-addon1" />
-                    </div>
-                  </div>
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="toDate" className="form-label"><b>To Date</b><span style={{ color: "red" }}>*</span></label>
-                      <input type="date" id="toDate" className="form-control" aria-label="To Date" aria-describedby="basic-addon1" />
-                    </div>
-                  </div>
-                  <div className="col-sm-3 ">
-                    <button className="btn btn-primary " style={{marginTop:'25px'}}>
-                      Search <i className="fa-solid fa-magnifying-glass"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
- 
-          <div className="row mt-3">
-            <div className="col-md-4">
-              <div className="card">
-                <canvas id="myChart" style={{ height: '400px' }}></canvas>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="card">
-                <canvas id="myChart2" style={{ height: '400px' }}></canvas>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="card">
-                <canvas id="myChart3" style={{ height: '400px' }}></canvas>
-              </div>
-            </div>
-            {/* <div className="col-md-3">
-              <div className="card">
-                <canvas id="myChart4" style={{ height: '400px' }}></canvas>
-              </div>
-            </div> */}
-          </div>
-        </div>
+
+      {/* Main Content */}
+      <section className="full_screen" style={{ marginLeft: "70px" }}>
+        <Container>
+          <h1>Column Utilization Dashboard</h1>
+          <Row>
+            <Col md={3}>
+              <h4>Filters</h4>
+              <Form.Group>
+                <Form.Label>Project</Form.Label>
+                <Select
+                  options={projectOptions.map(opt => ({ value: opt, label: opt }))}
+                  value={projectOptions.find(opt => opt.value === project) || ''}
+                  onChange={opt => setProject(opt.value)}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Sample Type</Form.Label>
+                <Select
+                  options={sampleTypeOptions.map(opt => ({ value: opt, label: opt }))}
+                  value={sampleTypeOptions.find(opt => opt.value === sampleType) || ''}
+                  onChange={opt => setSampleType(opt.value)}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Method Set</Form.Label>
+                <Select
+                  options={methodSetOptions.map(opt => ({ value: opt, label: opt }))}
+                  value={methodSetOptions.find(opt => opt.value === methodSet) || ''}
+                  onChange={opt => setMethodSet(opt.value)}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={9}>
+              <h4>Custom Plot</h4>
+              <Form.Group>
+                <Form.Label>Select X-axis</Form.Label>
+                <Select
+                  options={getColumnOptions()}
+                  value={getColumnOptions().find(opt => opt.value === xColumn) || ''}
+                  onChange={opt => setXColumn(opt.value)}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Select Y-axis</Form.Label>
+                <Select
+                  options={getColumnOptions()}
+                  value={getColumnOptions().find(opt => opt.value === yColumn) || ''}
+                  onChange={opt => setYColumn(opt.value)}
+                />
+              </Form.Group>
+              <br></br>
+              <Button variant="secondary" onClick={handleReset} style={{marginLeft:"750px",backgroundColor:"#463E96"}}>Reset</Button>
+              <br></br>
+              <br></br>
+
+
+              <h4>Injection Status</h4>
+              <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
+
+              <h4>Processing Status</h4>
+              <Bar data={getBarChartData('peakType')} options={barChartOptions('Processing Status', 'Status Type', 'Count')} />
+
+              <h4>Integration Status</h4>
+              <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
+
+              <h4>Sample Set</h4>
+              <Bar data={getBarChartData('sampleSetStartDate')} options={{ ...barChartOptions('Sample Set', 'Date', 'Count'), indexAxis: 'y' }} />
+
+              
+            </Col>
+          </Row>
+        </Container>
       </section>
- 
-      {/* Modals */}
-      <div className="modal fade logOutModal" id="logOutModal" tabIndex="-1">
-        <div className="modal-dialog modal-md modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-body">
-              <h3 className="pt-5">Are you sure want to Logout?</h3>
-              <div style={{ textAlign: 'center' }} className="py-4">
-                <button className="btn btn-outline-dark mx-2" data-bs-dismiss="modal">No</button>
-                <a href="../index.html" className="btn btn-primary mx-2">Yes</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
- 
-      <div className="modal fade" id="editServer" tabIndex="-1" aria-labelledby="editServerLabel" aria-hidden="true">
-        <div className="modal-dialog modal-md modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="editServerLabel">Profile</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div className="modal-body">
-              <div className="myProfile">
-                {/* Your Profile Content */}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
- 
-export default Column_Dashboard;
- 
+
+export default Column_Dashboard1;

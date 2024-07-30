@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Form } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import Select from 'react-select';
 import { Bar, Scatter } from 'react-chartjs-2';
 import dash from '../img/dashboard.png';
@@ -133,12 +133,14 @@ const Column_Dashboard1 = () => {
           text: xColumn
         },
         type: xColumn && filteredData.every(row => isNaN(row[xColumn])) ? 'category' : 'linear', // Adjust type based on data
+        min: 0 // Ensure the x-axis starts from 0
       },
       y: {
         title: {
           display: true,
           text: yColumn
-        }
+        },
+        min: 0 // Ensure the y-axis starts from 0
       }
     }
   };
@@ -160,16 +162,26 @@ const Column_Dashboard1 = () => {
         title: {
           display: true,
           text: xText
-        }
+        },
+        min: 0 // Ensure the x-axis starts from 0
       },
       y: {
         title: {
           display: true,
           text: yText
-        }
+        },
+        min: 0 // Ensure the y-axis starts from 0
       }
     }
   });
+
+  const handleReset = () => {
+    setProject('All');
+    setSampleType('All');
+    setMethodSet('All');
+    setXColumn('');
+    setYColumn('');
+  };
 
   return (
     <div style={{ marginLeft: '14px' }}>
@@ -225,7 +237,7 @@ const Column_Dashboard1 = () => {
           </div><br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
             <Link to={"/"}>
-              <button type="button" title='Logout'>
+              <button type="button">
                 <img src={po} alt="Logout" />
               </button>
             </Link>
@@ -242,44 +254,55 @@ const Column_Dashboard1 = () => {
               <h4>Filters</h4>
               <Form.Group>
                 <Form.Label>Project</Form.Label>
-                <Select options={projectOptions.map(opt => ({ value: opt, label: opt }))}
-                        onChange={opt => setProject(opt.value)} />
+                <Select
+                  options={projectOptions.map(opt => ({ value: opt, label: opt }))}
+                  value={projectOptions.find(opt => opt.value === project) || ''}
+                  onChange={opt => setProject(opt.value)}
+                />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Sample Type</Form.Label>
-                <Select options={sampleTypeOptions.map(opt => ({ value: opt, label: opt }))}
-                        onChange={opt => setSampleType(opt.value)} />
+                <Select
+                  options={sampleTypeOptions.map(opt => ({ value: opt, label: opt }))}
+                  value={sampleTypeOptions.find(opt => opt.value === sampleType) || ''}
+                  onChange={opt => setSampleType(opt.value)}
+                />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Method Set</Form.Label>
-                <Select options={methodSetOptions.map(opt => ({ value: opt, label: opt }))}
-                        onChange={opt => setMethodSet(opt.value)} />
+                <Select
+                  options={methodSetOptions.map(opt => ({ value: opt, label: opt }))}
+                  value={methodSetOptions.find(opt => opt.value === methodSet) || ''}
+                  onChange={opt => setMethodSet(opt.value)}
+                />
               </Form.Group>
             </Col>
             <Col md={9}>
               <h4>Custom Plot</h4>
               <Form.Group>
                 <Form.Label>Select X-axis</Form.Label>
-                <Select options={getColumnOptions()} onChange={opt => setXColumn(opt.value)} />
+                <Select
+                  options={getColumnOptions()}
+                  value={getColumnOptions().find(opt => opt.value === xColumn) || ''}
+                  onChange={opt => setXColumn(opt.value)}
+                />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Select Y-axis</Form.Label>
-                <Select options={getColumnOptions()} onChange={opt => setYColumn(opt.value)} />
+                <Select
+                  options={getColumnOptions()}
+                  value={getColumnOptions().find(opt => opt.value === yColumn) || ''}
+                  onChange={opt => setYColumn(opt.value)}
+                />
               </Form.Group>
+              <br></br>
+              <Button variant="secondary" onClick={handleReset} style={{marginLeft:"750px",backgroundColor:"#463E96"}}>Reset</Button>
+              <br></br>
+              <br></br>
+
               <Scatter data={getChartData(xColumn, yColumn)} options={scatterChartOptions} />
 
-              <h4>Injection Status</h4>
-              <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
-
-              <h4>Processing Status</h4>
-              <Bar data={getBarChartData('peakType')} options={barChartOptions('Processing Status', 'Status Type', 'Count')} />
-
-              <h4>Integration Status</h4>
-              <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
-
-              <h4>Sample Set</h4>
-              <Bar data={getBarChartData('sampleSetStartDate')} options={{ ...barChartOptions('Sample Set', 'Date', 'Count'), indexAxis: 'y' }} />
-
+              
               <h4>Data Preview</h4>
               <table className="table">
                 <thead>
