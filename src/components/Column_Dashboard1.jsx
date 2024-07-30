@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import Select from 'react-select';
-import { Bar, Scatter } from 'react-chartjs-2';
+import { Scatter } from 'react-chartjs-2';
 import dash from '../img/dashboard.png';
 import HplcLogList from '../img/hplc_loglist.png';
 import search from '../img/search.png';
@@ -16,27 +16,38 @@ const Column_Dashboard1 = () => {
   const [sampleTypeOptions, setSampleTypeOptions] = useState([]);
   const [methodSetOptions, setMethodSetOptions] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [project, setProject] = useState('All');
-  const [sampleType, setSampleType] = useState('All');
-  const [methodSet, setMethodSet] = useState('All');
-  const [xColumn, setXColumn] = useState('');
-  const [yColumn, setYColumn] = useState('');
+  const [project, setProject] = useState(null);
+  const [sampleType, setSampleType] = useState(null);
+  const [methodSet, setMethodSet] = useState(null);
+  const [xColumn, setXColumn] = useState(null);
+  const [yColumn, setYColumn] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch("http://localhost:58747/api/Peaks/GetPeaksDetails");
-        const data = await response.json();
-        console.log("Fetched data:", data);
+        const result = await response.json();
+        console.log("Fetched data:", result);
 
-        if (Array.isArray(data.item2)) {
-          setData(data.item2);
-          setProjectOptions(['All', ...new Set(data.item2.map(row => row['product_Name']))]);
-          setSampleTypeOptions(['All', ...new Set(data.item2.map(row => row['peakType']))]);
-          setMethodSetOptions(['All', ...new Set(data.item2.map(row => row['test_Name']))]);
-          setFilteredData(data.item2);
+        if (Array.isArray(result.item2)) {
+          const fetchedData = result.item2;
+          setData(fetchedData);
+          
+          // Generate options for select components
+          const projects = [...new Set(fetchedData.map(row => row['product_Name']))];
+          const sampleTypes = [...new Set(fetchedData.map(row => row['peakType']))];
+          const methodSets = [...new Set(fetchedData.map(row => row['test_Name']))];
+
+          console.log("Project options:", projects);
+          console.log("Sample Type options:", sampleTypes);
+          console.log("Method Set options:", methodSets);
+
+          setProjectOptions([{ value: 'All', label: 'All' }, ...projects.map(opt => ({ value: opt, label: opt }))]);
+          setSampleTypeOptions([{ value: 'All', label: 'All' }, ...sampleTypes.map(opt => ({ value: opt, label: opt }))]);
+          setMethodSetOptions([{ value: 'All', label: 'All' }, ...methodSets.map(opt => ({ value: opt, label: opt }))]);
+          setFilteredData(fetchedData);
         } else {
-          console.error("Fetched data does not contain the expected array:", data);
+          console.error("Fetched data does not contain the expected array:", result);
         }
       } catch (error) {
         console.error("Error fetching or processing data:", error);
@@ -49,9 +60,9 @@ const Column_Dashboard1 = () => {
   useEffect(() => {
     let filtered = data;
 
-    if (project !== 'All') filtered = filtered.filter(row => row['product_Name'] === project);
-    if (sampleType !== 'All') filtered = filtered.filter(row => row['peakType'] === sampleType);
-    if (methodSet !== 'All') filtered = filtered.filter(row => row['test_Name'] === methodSet);
+    if (project && project.value !== 'All') filtered = filtered.filter(row => row['product_Name'] === project.value);
+    if (sampleType && sampleType.value !== 'All') filtered = filtered.filter(row => row['peakType'] === sampleType.value);
+    if (methodSet && methodSet.value !== 'All') filtered = filtered.filter(row => row['test_Name'] === methodSet.value);
 
     setFilteredData(filtered);
   }, [project, sampleType, methodSet, data]);
@@ -85,21 +96,6 @@ const Column_Dashboard1 = () => {
     };
   };
 
-  const getBarChartData = (column) => {
-    const counts = filteredData.reduce((acc, row) => {
-      acc[row[column]] = (acc[row[column]] || 0) + 1;
-      return acc;
-    }, {});
-    return {
-      labels: Object.keys(counts),
-      datasets: [{
-        label: `${column} Status`,
-        data: Object.values(counts),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)'
-      }]
-    };
-  };
-
   const scatterChartOptions = {
     responsive: true,
     plugins: {
@@ -119,8 +115,8 @@ const Column_Dashboard1 = () => {
             const xValue = raw.x;
             const yValue = raw.y;
             return [
-              `${xColumn}: ${xValue}`,
-              `${yColumn}: ${yValue}`
+              `${xColumn ? xColumn.label : ''}: ${xValue}`,
+              `${yColumn ? yColumn.label : ''}: ${yValue}`
             ];
           }
         }
@@ -130,57 +126,27 @@ const Column_Dashboard1 = () => {
       x: {
         title: {
           display: true,
-          text: xColumn
+          text: xColumn ? xColumn.label : ''
         },
-        type: xColumn && filteredData.every(row => isNaN(row[xColumn])) ? 'category' : 'linear', // Adjust type based on data
-        min: 0 // Ensure the x-axis starts from 0
+        type: xColumn && filteredData.every(row => isNaN(row[xColumn.value])) ? 'category' : 'linear',
+        min: 0
       },
       y: {
         title: {
           display: true,
-          text: yColumn
+          text: yColumn ? yColumn.label : ''
         },
-        min: 0 // Ensure the y-axis starts from 0
+        min: 0
       }
     }
   };
 
-  const barChartOptions = (titleText, xText, yText) => ({
-    responsive: true,
-    plugins: {
-      legend: {
-        display: true,
-        position: 'top'
-      },
-      title: {
-        display: true,
-        text: titleText
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: xText
-        },
-        min: 0 // Ensure the x-axis starts from 0
-      },
-      y: {
-        title: {
-          display: true,
-          text: yText
-        },
-        min: 0 // Ensure the y-axis starts from 0
-      }
-    }
-  });
-
   const handleReset = () => {
-    setProject('All');
-    setSampleType('All');
-    setMethodSet('All');
-    setXColumn('');
-    setYColumn('');
+    setProject(null);
+    setSampleType(null);
+    setMethodSet(null);
+    setXColumn(null);
+    setYColumn(null);
   };
 
   return (
@@ -255,25 +221,25 @@ const Column_Dashboard1 = () => {
               <Form.Group>
                 <Form.Label>Project</Form.Label>
                 <Select
-                  options={projectOptions.map(opt => ({ value: opt, label: opt }))}
-                  value={projectOptions.find(opt => opt.value === project) || ''}
-                  onChange={opt => setProject(opt.value)}
+                  options={projectOptions}
+                  value={project}
+                  onChange={setProject}
                 />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Sample Type</Form.Label>
                 <Select
-                  options={sampleTypeOptions.map(opt => ({ value: opt, label: opt }))}
-                  value={sampleTypeOptions.find(opt => opt.value === sampleType) || ''}
-                  onChange={opt => setSampleType(opt.value)}
+                  options={sampleTypeOptions}
+                  value={sampleType}
+                  onChange={setSampleType}
                 />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Method Set</Form.Label>
                 <Select
-                  options={methodSetOptions.map(opt => ({ value: opt, label: opt }))}
-                  value={methodSetOptions.find(opt => opt.value === methodSet) || ''}
-                  onChange={opt => setMethodSet(opt.value)}
+                  options={methodSetOptions}
+                  value={methodSet}
+                  onChange={setMethodSet}
                 />
               </Form.Group>
             </Col>
@@ -283,43 +249,56 @@ const Column_Dashboard1 = () => {
                 <Form.Label>Select X-axis</Form.Label>
                 <Select
                   options={getColumnOptions()}
-                  value={getColumnOptions().find(opt => opt.value === xColumn) || ''}
-                  onChange={opt => setXColumn(opt.value)}
+                  value={xColumn}
+                  onChange={setXColumn}
                 />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Select Y-axis</Form.Label>
                 <Select
                   options={getColumnOptions()}
-                  value={getColumnOptions().find(opt => opt.value === yColumn) || ''}
-                  onChange={opt => setYColumn(opt.value)}
+                  value={yColumn}
+                  onChange={setYColumn}
                 />
               </Form.Group>
-              <br></br>
-              <Button variant="secondary" onClick={handleReset} style={{marginLeft:"750px",backgroundColor:"#463E96"}}>Reset</Button>
-              <br></br>
-              <br></br>
+              <br />
+              <Button variant="secondary" onClick={handleReset} style={{ marginLeft: "750px", backgroundColor: "#463E96" }}>Reset</Button>
+              <br />
+              <br />
+            
+          
 
-              <Scatter data={getChartData(xColumn, yColumn)} options={scatterChartOptions} />
-
-              
-              <h4>Data Preview</h4>
-              <table className="table">
-                <thead>
-                  <tr>
-                    {data.length && Object.keys(data[0]).map(col => <th key={col}>{col}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.slice(0, 5).map((row, idx) => (
-                    <tr key={idx}>
-                      {Object.values(row).map((val, i) => <td key={i}>{val}</td>)}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Col>
+          <Row>
+            
+              <div style={{ overflowX: 'auto' }}>
+                <Scatter data={getChartData(xColumn?.value, yColumn?.value)} options={scatterChartOptions} />
+              </div>
+            
           </Row>
+          </Col>
+          </Row>
+          <Row>
+            
+              <h4>Data Preview</h4>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table" style={{ width: '100%', minWidth: '600px' }}>
+                  <thead>
+                    <tr>
+                      {data.length && Object.keys(data[0]).map(col => <th key={col}>{col}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.slice(0, 5).map((row, idx) => (
+                      <tr key={idx}>
+                        {Object.values(row).map((val, i) => <td key={i}>{val}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            
+          </Row>
+          
         </Container>
       </section>
     </div>
