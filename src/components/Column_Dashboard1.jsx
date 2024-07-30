@@ -32,7 +32,7 @@ const Column_Dashboard1 = () => {
         if (Array.isArray(result.item2)) {
           const fetchedData = result.item2;
           setData(fetchedData);
-          
+
           // Generate options for select components
           const projects = [...new Set(fetchedData.map(row => row['product_Name']))];
           const sampleTypes = [...new Set(fetchedData.map(row => row['peakType']))];
@@ -72,8 +72,13 @@ const Column_Dashboard1 = () => {
   };
 
   const getChartData = (xCol, yCol) => {
+    if (!xCol || !yCol) return { datasets: [] };
+
     const xValues = filteredData.map(row => row[xCol]);
     const yValues = filteredData.map(row => row[yCol]);
+
+    console.log('xValues:', xValues);
+    console.log('yValues:', yValues);
 
     const groupedData = filteredData.reduce((acc, row, index) => {
       const instrument = row['instrument_No'];
@@ -84,6 +89,8 @@ const Column_Dashboard1 = () => {
       acc[instrument].y.push(yValues[index]);
       return acc;
     }, {});
+
+    console.log('Grouped Data:', groupedData);
 
     const datasets = Object.values(groupedData).map(group => ({
       label: group.label,
@@ -128,7 +135,7 @@ const Column_Dashboard1 = () => {
           display: true,
           text: xColumn ? xColumn.label : ''
         },
-        type: xColumn && filteredData.every(row => isNaN(row[xColumn.value])) ? 'category' : 'linear',
+        type: filteredData.every(row => isNaN(row[xColumn?.value])) ? 'category' : 'linear',
         min: 0
       },
       y: {
@@ -188,8 +195,8 @@ const Column_Dashboard1 = () => {
           <div className="btn-group dropend">
             <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
-                <img src={report} alt="Audit Trial" title="Audit Trial" />
-                <p>Audit Trial</p>
+                <img src={report} alt="Audit Trail" title="Audit Trail" />
+                <p>Audit Trail</p>
               </button>
             </Link>
           </div><br />
@@ -211,7 +218,6 @@ const Column_Dashboard1 = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
           <h1>Column Utilization Dashboard</h1>
@@ -242,11 +248,8 @@ const Column_Dashboard1 = () => {
                   onChange={setMethodSet}
                 />
               </Form.Group>
-            </Col>
-            <Col md={9}>
-              <h4>Custom Plot</h4>
               <Form.Group>
-                <Form.Label>Select X-axis</Form.Label>
+                <Form.Label>X Column</Form.Label>
                 <Select
                   options={getColumnOptions()}
                   value={xColumn}
@@ -254,51 +257,51 @@ const Column_Dashboard1 = () => {
                 />
               </Form.Group>
               <Form.Group>
-                <Form.Label>Select Y-axis</Form.Label>
+                <Form.Label>Y Column</Form.Label>
                 <Select
                   options={getColumnOptions()}
                   value={yColumn}
                   onChange={setYColumn}
                 />
               </Form.Group>
-              <br />
-              <Button variant="secondary" onClick={handleReset} style={{ marginLeft: "750px", backgroundColor: "#463E96" }}>Reset</Button>
-              <br />
-              <br />
-            
-          
-
-          <Row>
-            
-              <div style={{ overflowX: 'auto' }}>
-                <Scatter data={getChartData(xColumn?.value, yColumn?.value)} options={scatterChartOptions} />
-              </div>
-            
-          </Row>
-          </Col>
-          </Row>
-          <Row>
-            
-              <h4>Data Preview</h4>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table" style={{ width: '100%', minWidth: '600px' }}>
-                  <thead>
-                    <tr>
-                      {data.length && Object.keys(data[0]).map(col => <th key={col}>{col}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredData.slice(0, 5).map((row, idx) => (
-                      <tr key={idx}>
-                        {Object.values(row).map((val, i) => <td key={i}>{val}</td>)}
+              <br></br>
+              <Button
+                variant="secondary"
+                onClick={handleReset}
+                style={{ backgroundColor: "#463E96" }}
+              >
+                Reset
+              </Button>
+            </Col>
+            <Col md={9}>
+              <h4>Custom Plot</h4>
+              <Row>
+                <div style={{ overflowX: 'auto' }}>
+                  <Scatter data={getChartData(xColumn?.value, yColumn?.value)} options={scatterChartOptions} />
+                </div>
+              </Row>
+              </Col>
+              <Row>
+                <h4>Data Preview</h4>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="table" style={{ width: '100%', minWidth: '600px' }}>
+                    <thead>
+                      <tr>
+                        {data.length && Object.keys(data[0,5]).map(col => <th key={col}>{col}</th>)}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {filteredData.slice(0, 5).map((row, index) => (
+                        <tr key={index}>
+                          {Object.keys(row).map((col, idx) => <td key={idx}>{row[col]}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Row>
             
           </Row>
-          
         </Container>
       </section>
     </div>

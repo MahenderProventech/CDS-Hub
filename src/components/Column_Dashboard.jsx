@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import Select from 'react-select';
-import { Bar, Scatter } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import dash from '../img/dashboard.png';
 import HplcLogList from '../img/hplc_loglist.png';
 import search from '../img/search.png';
@@ -10,15 +10,15 @@ import usermanagement from '../img/usermanagement.png';
 import po from '../img/po.svg';
 import { Link } from 'react-router-dom';
 
-const Column_Dashboard1 = () => {
+const Column_Dashboard = () => {
   const [data, setData] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
   const [sampleTypeOptions, setSampleTypeOptions] = useState([]);
   const [methodSetOptions, setMethodSetOptions] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [project, setProject] = useState('All');
-  const [sampleType, setSampleType] = useState('All');
-  const [methodSet, setMethodSet] = useState('All');
+  const [project, setProject] = useState(null);
+  const [sampleType, setSampleType] = useState(null);
+  const [methodSet, setMethodSet] = useState(null);
   const [xColumn, setXColumn] = useState('');
   const [yColumn, setYColumn] = useState('');
 
@@ -31,9 +31,15 @@ const Column_Dashboard1 = () => {
 
         if (Array.isArray(data.item2)) {
           setData(data.item2);
-          setProjectOptions(['All', ...new Set(data.item2.map(row => row['product_Name']))]);
-          setSampleTypeOptions(['All', ...new Set(data.item2.map(row => row['peakType']))]);
-          setMethodSetOptions(['All', ...new Set(data.item2.map(row => row['test_Name']))]);
+
+          const uniqueProjectOptions = [...new Set(data.item2.map(row => row['product_Name']))];
+          const uniqueSampleTypeOptions = [...new Set(data.item2.map(row => row['peakType']))];
+          const uniqueMethodSetOptions = [...new Set(data.item2.map(row => row['test_Name']))];
+
+          setProjectOptions([{ value: 'All', label: 'All' }, ...uniqueProjectOptions.map(opt => ({ value: opt, label: opt }))]);
+          setSampleTypeOptions([{ value: 'All', label: 'All' }, ...uniqueSampleTypeOptions.map(opt => ({ value: opt, label: opt }))]);
+          setMethodSetOptions([{ value: 'All', label: 'All' }, ...uniqueMethodSetOptions.map(opt => ({ value: opt, label: opt }))]);
+
           setFilteredData(data.item2);
         } else {
           console.error("Fetched data does not contain the expected array:", data);
@@ -49,41 +55,12 @@ const Column_Dashboard1 = () => {
   useEffect(() => {
     let filtered = data;
 
-    if (project !== 'All') filtered = filtered.filter(row => row['product_Name'] === project);
-    if (sampleType !== 'All') filtered = filtered.filter(row => row['peakType'] === sampleType);
-    if (methodSet !== 'All') filtered = filtered.filter(row => row['test_Name'] === methodSet);
+    if (project && project.value !== 'All') filtered = filtered.filter(row => row['product_Name'] === project.value);
+    if (sampleType && sampleType.value !== 'All') filtered = filtered.filter(row => row['peakType'] === sampleType.value);
+    if (methodSet && methodSet.value !== 'All') filtered = filtered.filter(row => row['test_Name'] === methodSet.value);
 
     setFilteredData(filtered);
   }, [project, sampleType, methodSet, data]);
-
-  const getColumnOptions = () => {
-    return data.length ? Object.keys(data[0]).map(col => ({ value: col, label: col })) : [];
-  };
-
-  const getChartData = (xCol, yCol) => {
-    const xValues = filteredData.map(row => row[xCol]);
-    const yValues = filteredData.map(row => row[yCol]);
-
-    const groupedData = filteredData.reduce((acc, row, index) => {
-      const instrument = row['instrument_No'];
-      if (!acc[instrument]) {
-        acc[instrument] = { x: [], y: [], label: `Instrument ${instrument}`, color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)` };
-      }
-      acc[instrument].x.push(xValues[index]);
-      acc[instrument].y.push(yValues[index]);
-      return acc;
-    }, {});
-
-    const datasets = Object.values(groupedData).map(group => ({
-      label: group.label,
-      data: group.x.map((x, index) => ({ x, y: group.y[index], instrument: group.label })),
-      backgroundColor: group.color,
-    }));
-
-    return {
-      datasets
-    };
-  };
 
   const getBarChartData = (column) => {
     const counts = filteredData.reduce((acc, row) => {
@@ -98,51 +75,6 @@ const Column_Dashboard1 = () => {
         backgroundColor: 'rgba(75, 192, 192, 0.6)'
       }]
     };
-  };
-
-  const scatterChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: true,
-        position: 'top'
-      },
-      tooltip: {
-        callbacks: {
-          title: (tooltipItems) => {
-            const { dataset } = tooltipItems[0];
-            const instrument = dataset.data[tooltipItems[0].dataIndex].instrument;
-            return [`Instrument: ${instrument}`];
-          },
-          label: (tooltipItem) => {
-            const { raw } = tooltipItem;
-            const xValue = raw.x;
-            const yValue = raw.y;
-            return [
-              `${xColumn}: ${xValue}`,
-              `${yColumn}: ${yValue}`
-            ];
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: xColumn
-        },
-        type: xColumn && filteredData.every(row => isNaN(row[xColumn])) ? 'category' : 'linear', // Adjust type based on data
-        min: 0 // Ensure the x-axis starts from 0
-      },
-      y: {
-        title: {
-          display: true,
-          text: yColumn
-        },
-        min: 0 // Ensure the y-axis starts from 0
-      }
-    }
   };
 
   const barChartOptions = (titleText, xText, yText) => ({
@@ -176,9 +108,9 @@ const Column_Dashboard1 = () => {
   });
 
   const handleReset = () => {
-    setProject('All');
-    setSampleType('All');
-    setMethodSet('All');
+    setProject(null);
+    setSampleType(null);
+    setMethodSet(null);
     setXColumn('');
     setYColumn('');
   };
@@ -249,77 +181,57 @@ const Column_Dashboard1 = () => {
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
           <h1>Column Utilization Dashboard</h1>
-          <Row>
-            <Col md={3}>
-              <h4>Filters</h4>
+          <br></br>
+          <Col>
+            <Row md={3}>
               <Form.Group>
                 <Form.Label>Project</Form.Label>
                 <Select
-                  options={projectOptions.map(opt => ({ value: opt, label: opt }))}
-                  value={projectOptions.find(opt => opt.value === project) || ''}
-                  onChange={opt => setProject(opt.value)}
+                  options={projectOptions}
+                  value={project}
+                  onChange={setProject}
                 />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Sample Type</Form.Label>
                 <Select
-                  options={sampleTypeOptions.map(opt => ({ value: opt, label: opt }))}
-                  value={sampleTypeOptions.find(opt => opt.value === sampleType) || ''}
-                  onChange={opt => setSampleType(opt.value)}
+                  options={sampleTypeOptions}
+                  value={sampleType}
+                  onChange={setSampleType}
                 />
               </Form.Group>
               <Form.Group>
                 <Form.Label>Method Set</Form.Label>
                 <Select
-                  options={methodSetOptions.map(opt => ({ value: opt, label: opt }))}
-                  value={methodSetOptions.find(opt => opt.value === methodSet) || ''}
-                  onChange={opt => setMethodSet(opt.value)}
+                  options={methodSetOptions}
+                  value={methodSet}
+                  onChange={setMethodSet}
                 />
               </Form.Group>
-            </Col>
-            <Col md={9}>
-              <h4>Custom Plot</h4>
-              <Form.Group>
-                <Form.Label>Select X-axis</Form.Label>
-                <Select
-                  options={getColumnOptions()}
-                  value={getColumnOptions().find(opt => opt.value === xColumn) || ''}
-                  onChange={opt => setXColumn(opt.value)}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Select Y-axis</Form.Label>
-                <Select
-                  options={getColumnOptions()}
-                  value={getColumnOptions().find(opt => opt.value === yColumn) || ''}
-                  onChange={opt => setYColumn(opt.value)}
-                />
-              </Form.Group>
-              <br></br>
-              <Button variant="secondary" onClick={handleReset} style={{marginLeft:"750px",backgroundColor:"#463E96"}}>Reset</Button>
-              <br></br>
-              <br></br>
+            </Row>
 
+            <br></br>
+            <Button variant="secondary" onClick={handleReset} style={{marginLeft:"1000px",backgroundColor:"#463E96"}}>Reset</Button>
+            <br></br>
+            <br></br>
 
-              <h4>Injection Status</h4>
-              <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
+            <h4>Injection Status</h4>
+            <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
 
-              <h4>Processing Status</h4>
-              <Bar data={getBarChartData('peakType')} options={barChartOptions('Processing Status', 'Status Type', 'Count')} />
+            <h4>Processing Status</h4>
+            <Bar data={getBarChartData('peakType')} options={barChartOptions('Processing Status', 'Status Type', 'Count')} />
 
-              <h4>Integration Status</h4>
-              <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
+            <h4>Integration Status</h4>
+            <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
 
-              <h4>Sample Set</h4>
-              <Bar data={getBarChartData('sampleSetStartDate')} options={{ ...barChartOptions('Sample Set', 'Date', 'Count'), indexAxis: 'y' }} />
+            <h4>Sample Set</h4>
+            <Bar data={getBarChartData('sampleSetStartDate')} options={{ ...barChartOptions('Sample Set', 'Count', 'Date'), indexAxis: 'y' }} />
 
-              
-            </Col>
-          </Row>
+          </Col>
         </Container>
       </section>
     </div>
   );
 };
 
-export default Column_Dashboard1;
+export default Column_Dashboard;
