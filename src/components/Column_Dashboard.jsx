@@ -19,8 +19,6 @@ const Column_Dashboard = () => {
   const [project, setProject] = useState(null);
   const [sampleType, setSampleType] = useState(null);
   const [methodSet, setMethodSet] = useState(null);
-  const [xColumn, setXColumn] = useState('');
-  const [yColumn, setYColumn] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,17 +60,27 @@ const Column_Dashboard = () => {
     setFilteredData(filtered);
   }, [project, sampleType, methodSet, data]);
 
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
   const getBarChartData = (column) => {
     const counts = filteredData.reduce((acc, row) => {
       acc[row[column]] = (acc[row[column]] || 0) + 1;
       return acc;
     }, {});
+    const colors = Object.keys(counts).map(() => getRandomColor());
     return {
       labels: Object.keys(counts),
       datasets: [{
         label: `${column} Status`,
         data: Object.values(counts),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)'
+        backgroundColor: colors
       }]
     };
   };
@@ -111,8 +119,6 @@ const Column_Dashboard = () => {
     setProject(null);
     setSampleType(null);
     setMethodSet(null);
-    setXColumn('');
-    setYColumn('');
   };
 
   return (
@@ -181,7 +187,7 @@ const Column_Dashboard = () => {
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
           <h1>Column Utilization Dashboard</h1>
-          <br></br>
+          <br />
           <Col>
             <Row md={3}>
               <Form.Group>
@@ -210,10 +216,10 @@ const Column_Dashboard = () => {
               </Form.Group>
             </Row>
 
-            <br></br>
+            <br />
             <Button variant="secondary" onClick={handleReset} style={{marginLeft:"1000px",backgroundColor:"#463E96"}}>Reset</Button>
-            <br></br>
-            <br></br>
+            <br />
+            <br />
 
             <h4>Injection Status</h4>
             <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
