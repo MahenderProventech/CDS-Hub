@@ -372,10 +372,9 @@ const Column_Dashboard1 = () => {
           <h2>Column Utilization Dashboard</h2>
           <br></br>
           <Row>
-            <h5>Filters</h5>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>Project</Form.Label>
+                <Form.Label><b>Project</b></Form.Label>
                 <Select
                   options={projectOptions}
                   value={project}
@@ -385,7 +384,7 @@ const Column_Dashboard1 = () => {
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>Sample Type</Form.Label>
+                <Form.Label><b>Sample Type</b></Form.Label>
                 <Select
                   options={sampleTypeOptions}
                   value={sampleType}
@@ -395,7 +394,7 @@ const Column_Dashboard1 = () => {
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>Method Set</Form.Label>
+                <Form.Label><b>Method Set</b></Form.Label>
                 <Select
                   options={methodSetOptions}
                   value={methodSet}
@@ -405,7 +404,7 @@ const Column_Dashboard1 = () => {
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>X Column</Form.Label>
+                <Form.Label><b>X Column</b></Form.Label>
                 <Select
                   options={getColumnOptions()}
                   value={xColumn}
@@ -416,7 +415,7 @@ const Column_Dashboard1 = () => {
             <br></br>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>Y Column</Form.Label>
+                <Form.Label><b>Y Column</b></Form.Label>
                 <Select
                   options={getColumnOptions()}
                   value={yColumn}

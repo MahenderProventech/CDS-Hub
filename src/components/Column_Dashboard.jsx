@@ -207,7 +207,7 @@ const Column_Dashboard = () => {
           <Col>
             <Row md={3}>
               <Form.Group>
-                <Form.Label>Project</Form.Label>
+                <Form.Label><b>Project</b></Form.Label>
                 <Select
                   options={projectOptions}
                   value={project}
@@ -215,7 +215,7 @@ const Column_Dashboard = () => {
                 />
               </Form.Group>
               <Form.Group>
-                <Form.Label>Sample Type</Form.Label>
+                <Form.Label><b>Sample Type</b></Form.Label>
                 <Select
                   options={sampleTypeOptions}
                   value={sampleType}
@@ -223,7 +223,7 @@ const Column_Dashboard = () => {
                 />
               </Form.Group>
               <Form.Group>
-                <Form.Label>Method Set</Form.Label>
+                <Form.Label><b>Method Set</b></Form.Label>
                 <Select
                   options={methodSetOptions}
                   value={methodSet}
