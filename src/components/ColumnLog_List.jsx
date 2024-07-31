@@ -6,6 +6,8 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link } from 'react-router-dom';
 import './print.css';
+import "./Column_Dashboard.css";
+
 
 const ColumnLog_List = () => {
   const [peaksData, setPeaksData] = useState([]);
@@ -18,6 +20,8 @@ const ColumnLog_List = () => {
   const [batchNumbers, setBatchNumbers] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,6 +47,9 @@ const ColumnLog_List = () => {
         }
       } catch (error) {
         console.error("Error fetching or processing data:", error);
+      }
+      finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     };
 
@@ -275,6 +282,15 @@ const ColumnLog_List = () => {
 
   return (
     <div>
+      {loading && (
+        <div className="page-loader">
+          <div className="loading-dots">
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+          </div>
+        </div>
+      )}
       <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">

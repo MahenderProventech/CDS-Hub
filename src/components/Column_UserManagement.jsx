@@ -18,6 +18,7 @@ import Select from 'react-select';
   import http from './Http';
   import * as Appconstant from '../services/AppConstantService';
   import MultiSelectComponent from './core/MultiSelectComponent';
+  import "./Column_Dashboard.css";
 
 
 const Column_UserManagement = () => {
@@ -42,6 +43,8 @@ const Column_UserManagement = () => {
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10; // Number of items to show per page
+    const [loading, setLoading] = useState(true);
+
   
     // Handle pagination change
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -67,6 +70,9 @@ const Column_UserManagement = () => {
         setGetRolesResponse(getRolesResponse.data.item2);
       } catch (error) {
         console.error("Error fetching dropdown data:", error);
+      }
+      finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     }
     // Fetch all users from API
@@ -286,6 +292,15 @@ const Column_UserManagement = () => {
   
   return (
     <div>
+      {loading && (
+        <div className="page-loader">
+          <div className="loading-dots">
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+          </div>
+        </div>
+      )}
          <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">

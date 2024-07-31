@@ -1,20 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Form, Button } from 'react-bootstrap';
-import Select from 'react-select';
-import { Scatter } from 'react-chartjs-2';
-import dash from '../img/dashboard.png';
-import HplcLogList from '../img/hplc_loglist.png';
-import search from '../img/search.png';
-import report from '../img/report.png';
-import usermanagement from '../img/usermanagement.png';
-import po from '../img/po.svg';
-import { Link } from 'react-router-dom';
-import './Column_Dashboard.css';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, Tooltip, Legend } from 'chart.js';
-
+import React, { useEffect, useState } from "react";
+import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import Select from "react-select";
+import { Scatter } from "react-chartjs-2";
+import dash from "../img/dashboard.png";
+import HplcLogList from "../img/hplc_loglist.png";
+import search from "../img/search.png";
+import report from "../img/report.png";
+import usermanagement from "../img/usermanagement.png";
+import po from "../img/po.svg";
+import { Link } from "react-router-dom";
+import "./Column_Dashboard.css";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Tooltip, Legend);
-
 
 const Column_Dashboard1 = () => {
   const [data, setData] = useState([]);
@@ -34,7 +39,9 @@ const Column_Dashboard1 = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:58747/api/Peaks/GetPeaksDetails");
+        const response = await fetch(
+          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+        );
         const result = await response.json();
         console.log("Fetched data:", result);
 
@@ -43,20 +50,38 @@ const Column_Dashboard1 = () => {
           setData(fetchedData);
 
           // Generate options for select components
-          const projects = [...new Set(fetchedData.map(row => row['product_Name']))];
-          const sampleTypes = [...new Set(fetchedData.map(row => row['peakType']))];
-          const methodSets = [...new Set(fetchedData.map(row => row['test_Name']))];
+          const projects = [
+            ...new Set(fetchedData.map((row) => row["product_Name"])),
+          ];
+          const sampleTypes = [
+            ...new Set(fetchedData.map((row) => row["peakType"])),
+          ];
+          const methodSets = [
+            ...new Set(fetchedData.map((row) => row["test_Name"])),
+          ];
 
           console.log("Project options:", projects);
           console.log("Sample Type options:", sampleTypes);
           console.log("Method Set options:", methodSets);
 
-          setProjectOptions([{ value: 'All', label: 'All' }, ...projects.map(opt => ({ value: opt, label: opt }))]);
-          setSampleTypeOptions([{ value: 'All', label: 'All' }, ...sampleTypes.map(opt => ({ value: opt, label: opt }))]);
-          setMethodSetOptions([{ value: 'All', label: 'All' }, ...methodSets.map(opt => ({ value: opt, label: opt }))]);
+          setProjectOptions([
+            { value: "All", label: "All" },
+            ...projects.map((opt) => ({ value: opt, label: opt })),
+          ]);
+          setSampleTypeOptions([
+            { value: "All", label: "All" },
+            ...sampleTypes.map((opt) => ({ value: opt, label: opt })),
+          ]);
+          setMethodSetOptions([
+            { value: "All", label: "All" },
+            ...methodSets.map((opt) => ({ value: opt, label: opt })),
+          ]);
           setFilteredData(fetchedData);
         } else {
-          console.error("Fetched data does not contain the expected array:", result);
+          console.error(
+            "Fetched data does not contain the expected array:",
+            result
+          );
         }
       } catch (error) {
         console.error("Error fetching or processing data:", error);
@@ -71,15 +96,22 @@ const Column_Dashboard1 = () => {
   useEffect(() => {
     let filtered = data;
 
-    if (project && project.value !== 'All') filtered = filtered.filter(row => row['product_Name'] === project.value);
-    if (sampleType && sampleType.value !== 'All') filtered = filtered.filter(row => row['peakType'] === sampleType.value);
-    if (methodSet && methodSet.value !== 'All') filtered = filtered.filter(row => row['test_Name'] === methodSet.value);
+    if (project && project.value !== "All")
+      filtered = filtered.filter(
+        (row) => row["product_Name"] === project.value
+      );
+    if (sampleType && sampleType.value !== "All")
+      filtered = filtered.filter((row) => row["peakType"] === sampleType.value);
+    if (methodSet && methodSet.value !== "All")
+      filtered = filtered.filter((row) => row["test_Name"] === methodSet.value);
 
     setFilteredData(filtered);
   }, [project, sampleType, methodSet, data]);
 
   const getColumnOptions = () => {
-    return data.length ? Object.keys(data[0]).map(col => ({ value: col, label: col })) : [];
+    return data.length
+      ? Object.keys(data[0]).map((col) => ({ value: col, label: col }))
+      : [];
   };
 
   const getChartData = (xCol, yCol) => {
@@ -87,20 +119,31 @@ const Column_Dashboard1 = () => {
 
     // Prepare data for the scatter plot
     const groupedData = filteredData.reduce((acc, row) => {
-      const instrument = row['instrument_No'];
+      const instrument = row["instrument_No"];
       if (!acc[instrument]) {
-        acc[instrument] = { x: [], y: [], label: `${instrument}`, color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)` };
+        acc[instrument] = {
+          x: [],
+          y: [],
+          label: `${instrument}`,
+          color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(
+            Math.random() * 255
+          )}, ${Math.floor(Math.random() * 255)}, 0.6)`,
+        };
       }
       acc[instrument].x.push(row[xCol]);
       acc[instrument].y.push(row[yCol]);
       return acc;
     }, {});
 
-    console.log('Grouped Data:', groupedData);
+    console.log("Grouped Data:", groupedData);
 
-    const datasets = Object.values(groupedData).map(group => ({
+    const datasets = Object.values(groupedData).map((group) => ({
       label: group.label,
-      data: group.x.map((x, index) => ({ x, y: group.y[index], instrument: group.label })),
+      data: group.x.map((x, index) => ({
+        x,
+        y: group.y[index],
+        instrument: group.label,
+      })),
       backgroundColor: group.color,
     }));
 
@@ -109,23 +152,24 @@ const Column_Dashboard1 = () => {
   const handleFirstPage = () => {
     setCurrentPage(1);
   };
-  
+
   const handleLastPage = () => {
     setCurrentPage(totalPages);
   };
-  
+
   const scatterChartOptions = {
     responsive: true,
     plugins: {
       legend: {
         display: true,
-        position: 'top',
+        position: "top",
       },
       tooltip: {
         callbacks: {
           title: (tooltipItems) => {
             const { dataset } = tooltipItems[0];
-            const instrument = dataset.data[tooltipItems[0].dataIndex].instrument;
+            const instrument =
+              dataset.data[tooltipItems[0].dataIndex].instrument;
             return [`Instrument: ${instrument}`];
           },
           label: (tooltipItem) => {
@@ -133,8 +177,8 @@ const Column_Dashboard1 = () => {
             const xValue = raw.x;
             const yValue = raw.y;
             return [
-              `${xColumn ? xColumn.label : ''}: ${xValue}`,
-              `${yColumn ? yColumn.label : ''}: ${yValue}`,
+              `${xColumn ? xColumn.label : ""}: ${xValue}`,
+              `${yColumn ? yColumn.label : ""}: ${yValue}`,
             ];
           },
         },
@@ -144,61 +188,72 @@ const Column_Dashboard1 = () => {
       x: {
         title: {
           display: true,
-          text: xColumn ? xColumn.label : '',
+          text: xColumn ? xColumn.label : "",
         },
-        type: isNaN(filteredData[0]?.[xColumn?.value]) ? 'category' : 'linear',
-        position: 'bottom',
+        type: isNaN(filteredData[0]?.[xColumn?.value]) ? "category" : "linear",
+        position: "bottom",
         grid: {
           display: false,
         },
         ticks: {
           callback: (value) => {
-            if (typeof value === 'number') {
+            if (typeof value === "number") {
               return value.toLocaleString();
             }
             return value;
           },
         },
-        ...(isNaN(filteredData[0]?.[xColumn?.value]) ? {
-          // Handle categorical data
-          ticks: {
-            autoSkip: false,
-            maxRotation: 45,
-            minRotation: 0,
-          },
-          labels: xColumn ? Array.from(new Set(filteredData.map(row => row[xColumn.value]))) : [],
-        } : {}),
+        ...(isNaN(filteredData[0]?.[xColumn?.value])
+          ? {
+              // Handle categorical data
+              ticks: {
+                autoSkip: false,
+                maxRotation: 45,
+                minRotation: 0,
+              },
+              labels: xColumn
+                ? Array.from(
+                    new Set(filteredData.map((row) => row[xColumn.value]))
+                  )
+                : [],
+            }
+          : {}),
       },
       y: {
         title: {
           display: true,
-          text: yColumn ? yColumn.label : '',
+          text: yColumn ? yColumn.label : "",
         },
-        type: isNaN(filteredData[0]?.[yColumn?.value]) ? 'category' : 'linear',
+        type: isNaN(filteredData[0]?.[yColumn?.value]) ? "category" : "linear",
         grid: {
           display: false,
         },
         ticks: {
           callback: (value) => {
-            if (typeof value === 'number') {
+            if (typeof value === "number") {
               return value.toLocaleString();
             }
             return value;
           },
         },
-        ...(isNaN(filteredData[0]?.[yColumn?.value]) ? {
-          // Handle categorical data
-          ticks: {
-            autoSkip: false,
-            maxRotation: 45,
-            minRotation: 0,
-          },
-          labels: yColumn ? Array.from(new Set(filteredData.map(row => row[yColumn.value]))) : [],
-        } : {}),
+        ...(isNaN(filteredData[0]?.[yColumn?.value])
+          ? {
+              // Handle categorical data
+              ticks: {
+                autoSkip: false,
+                maxRotation: 45,
+                minRotation: 0,
+              },
+              labels: yColumn
+                ? Array.from(
+                    new Set(filteredData.map((row) => row[yColumn.value]))
+                  )
+                : [],
+            }
+          : {}),
       },
     },
   };
- 
 
   const handleReset = () => {
     setProject(null);
@@ -228,7 +283,7 @@ const Column_Dashboard1 = () => {
   const isLastPage = currentPage === totalPages;
 
   return (
-    <div style={{ marginLeft: '14px' }}>
+    <div style={{ marginLeft: "14px" }}>
       {loading && (
         <div className="page-loader">
           <div className="loading-dots">
@@ -247,7 +302,8 @@ const Column_Dashboard1 = () => {
                 <p>Dashboard 1</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_Dashboard"}>
               <button type="button">
@@ -255,15 +311,21 @@ const Column_Dashboard1 = () => {
                 <p>Dashboard</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/ColumnLog_List"}>
               <button type="button">
-                <img src={HplcLogList} alt="Column Log List" title="Column Log List" />
+                <img
+                  src={HplcLogList}
+                  alt="Column Log List"
+                  title="Column Log List"
+                />
                 <p>Column Log List</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_Search"}>
               <button type="button">
@@ -271,7 +333,8 @@ const Column_Dashboard1 = () => {
                 <p>Search</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
@@ -279,15 +342,21 @@ const Column_Dashboard1 = () => {
                 <p>Audit Trail</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_UserManagement"}>
               <button type="button">
-                <img src={usermanagement} alt="User Management" title="User Management" />
+                <img
+                  src={usermanagement}
+                  alt="User Management"
+                  title="User Management"
+                />
                 <p>User Management</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
             <Link to={"/"}>
               <button type="button">
@@ -303,9 +372,8 @@ const Column_Dashboard1 = () => {
           <h2>Column Utilization Dashboard</h2>
           <br></br>
           <Row>
-            
-              <h5>Filters</h5>
-              <Col md={4}>
+            <h5>Filters</h5>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>Project</Form.Label>
                 <Select
@@ -314,8 +382,8 @@ const Column_Dashboard1 = () => {
                   onChange={setProject}
                 />
               </Form.Group>
-              </Col>
-              <Col md={4}>
+            </Col>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>Sample Type</Form.Label>
                 <Select
@@ -324,8 +392,8 @@ const Column_Dashboard1 = () => {
                   onChange={setSampleType}
                 />
               </Form.Group>
-              </Col>
-              <Col md={4}>
+            </Col>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>Method Set</Form.Label>
                 <Select
@@ -334,8 +402,8 @@ const Column_Dashboard1 = () => {
                   onChange={setMethodSet}
                 />
               </Form.Group>
-              </Col>
-              <Col md={4}>
+            </Col>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>X Column</Form.Label>
                 <Select
@@ -344,9 +412,9 @@ const Column_Dashboard1 = () => {
                   onChange={setXColumn}
                 />
               </Form.Group>
-              </Col>
-              <br></br>
-              <Col md={4}>
+            </Col>
+            <br></br>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>Y Column</Form.Label>
                 <Select
@@ -355,33 +423,34 @@ const Column_Dashboard1 = () => {
                   onChange={setYColumn}
                 />
               </Form.Group>
-              </Col>
-              <Col md={4}>
-
+            </Col>
+            <Col md={4}>
               <Button
                 variant="secondary"
                 onClick={handleReset}
-                style={{ backgroundColor: "#463E96", marginTop:"25px" }}
+                style={{ backgroundColor: "#463E96", marginTop: "25px" }}
               >
                 Reset
               </Button>
-              </Col>
-            
-            </Row>
-<br></br>
-<br></br>
-            <Col md={12}>
-              <h5>Custom Plot</h5>
-              <Row>
-                <div style={{ overflowX: 'auto' }}>
-                  <Scatter data={getChartData(xColumn?.value, yColumn?.value)} options={scatterChartOptions} />
-                </div>
-              </Row>
             </Col>
+          </Row>
+          <br></br>
+          <br></br>
+          <Col md={12}>
+            <h5>Custom Plot</h5>
+            <Row>
+              <div style={{ overflowX: "auto" }}>
+                <Scatter
+                  data={getChartData(xColumn?.value, yColumn?.value)}
+                  options={scatterChartOptions}
+                />
+              </div>
+            </Row>
+          </Col>
           <Row>
             <h4>Data Preview</h4>
-            <div style={{ overflowX: 'auto' }}>
-              <div style={{width:'100px'}}>
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ width: "100px" }}>
                 <Form.Group>
                   <Form.Label>Rows per Page</Form.Label>
                   <Form.Control
@@ -397,71 +466,70 @@ const Column_Dashboard1 = () => {
                 </Form.Group>
                 <br></br>
               </div>
-              <table className="table" style={{ width: '100%', minWidth: '600px' }}>
+              <table
+                className="table"
+                style={{ width: "100%", minWidth: "600px" }}
+              >
                 <thead>
                   <tr>
-                    {data.length && Object.keys(data[0]).map(col => <th key={col}>{col}</th>)}
+                    {data.length &&
+                      Object.keys(data[0]).map((col) => (
+                        <th key={col}>{col}</th>
+                      ))}
                   </tr>
                 </thead>
                 <tbody>
                   {getPaginatedData().map((row, index) => (
                     <tr key={index}>
-                      {Object.keys(row).map((col, idx) => <td key={idx}>{row[col]}</td>)}
+                      {Object.keys(row).map((col, idx) => (
+                        <td key={idx}>{row[col]}</td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
               <div className="pagination">
-      <Button
-        onClick={handleFirstPage}
-        disabled={isFirstPage}
-      >
-        First
-      </Button>
-      
-      <Button
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={isFirstPage}
-      >
-        Previous
-      </Button>
+                <Button onClick={handleFirstPage} disabled={isFirstPage}>
+                  First
+                </Button>
 
-      {/* Display the previous page if it's not the first page */}
-      {!isFirstPage && (
-        <Button onClick={() => handlePageChange(currentPage - 1)}>
-          {currentPage - 1}
-        </Button>
-      )}
+                <Button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={isFirstPage}
+                >
+                  Previous
+                </Button>
 
-      {/* Display the current page */}
-      <Button
-        onClick={() => handlePageChange(currentPage)}
-        active
-      >
-        {currentPage}
-      </Button>
+                {/* Display the previous page if it's not the first page */}
+                {!isFirstPage && (
+                  <Button onClick={() => handlePageChange(currentPage - 1)}>
+                    {currentPage - 1}
+                  </Button>
+                )}
 
-      {/* Display the next page if it's not the last page */}
-      {!isLastPage && (
-        <Button onClick={() => handlePageChange(currentPage + 1)}>
-          {currentPage + 1}
-        </Button>
-      )}
+                {/* Display the current page */}
+                <Button onClick={() => handlePageChange(currentPage)} active>
+                  {currentPage}
+                </Button>
 
-      <Button
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={isLastPage}
-      >
-        Next
-      </Button>
+                {/* Display the next page if it's not the last page */}
+                {!isLastPage && (
+                  <Button onClick={() => handlePageChange(currentPage + 1)}>
+                    {currentPage + 1}
+                  </Button>
+                )}
 
-      <Button
-        onClick={handleLastPage}
-        disabled={isLastPage}
-      >
-        Last
-      </Button>
-    </div>
+                <Button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={isLastPage}
+                >
+                  Next
+                </Button>
+
+                <Button onClick={handleLastPage} disabled={isLastPage}>
+                  Last
+                </Button>
+              </div>
             </div>
           </Row>
         </Container>
