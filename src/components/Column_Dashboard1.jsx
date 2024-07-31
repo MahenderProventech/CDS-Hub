@@ -74,19 +74,14 @@ const Column_Dashboard1 = () => {
   const getChartData = (xCol, yCol) => {
     if (!xCol || !yCol) return { datasets: [] };
 
-    const xValues = filteredData.map(row => row[xCol]);
-    const yValues = filteredData.map(row => row[yCol]);
-
-    console.log('xValues:', xValues);
-    console.log('yValues:', yValues);
-
-    const groupedData = filteredData.reduce((acc, row, index) => {
+    // Prepare data for the scatter plot
+    const groupedData = filteredData.reduce((acc, row) => {
       const instrument = row['instrument_No'];
       if (!acc[instrument]) {
-        acc[instrument] = { x: [], y: [], label: `Instrument ${instrument}`, color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)` };
+        acc[instrument] = { x: [], y: [], label: `${instrument}`, color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)` };
       }
-      acc[instrument].x.push(xValues[index]);
-      acc[instrument].y.push(yValues[index]);
+      acc[instrument].x.push(row[xCol]);
+      acc[instrument].y.push(row[yCol]);
       return acc;
     }, {});
 
@@ -98,9 +93,7 @@ const Column_Dashboard1 = () => {
       backgroundColor: group.color,
     }));
 
-    return {
-      datasets
-    };
+    return { datasets };
   };
 
   const scatterChartOptions = {
@@ -108,7 +101,7 @@ const Column_Dashboard1 = () => {
     plugins: {
       legend: {
         display: true,
-        position: 'top'
+        position: 'top',
       },
       tooltip: {
         callbacks: {
@@ -123,29 +116,30 @@ const Column_Dashboard1 = () => {
             const yValue = raw.y;
             return [
               `${xColumn ? xColumn.label : ''}: ${xValue}`,
-              `${yColumn ? yColumn.label : ''}: ${yValue}`
+              `${yColumn ? yColumn.label : ''}: ${yValue}`,
             ];
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       x: {
         title: {
           display: true,
-          text: xColumn ? xColumn.label : ''
+          text: xColumn ? xColumn.label : '',
         },
-        type: filteredData.every(row => isNaN(row[xColumn?.value])) ? 'category' : 'linear',
-        min: 0
+        type: xColumn ? 'category' : undefined,
+        labels: xColumn ? Array.from(new Set(filteredData.map(row => row[xColumn.value]))) : [],
       },
       y: {
         title: {
           display: true,
-          text: yColumn ? yColumn.label : ''
+          text: yColumn ? yColumn.label : '',
         },
-        min: 0
-      }
-    }
+        type: yColumn ? 'category' : undefined,
+        labels: yColumn ? Array.from(new Set(filteredData.map(row => row[yColumn.value]))) : [],
+      },
+    },
   };
 
   const handleReset = () => {
@@ -220,10 +214,10 @@ const Column_Dashboard1 = () => {
 
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
-          <h1>Column Utilization Dashboard</h1>
+          <h3>Column Utilization Dashboard</h3>
           <Row>
             <Col md={3}>
-              <h4>Filters</h4>
+              <h5>Filters</h5>
               <Form.Group>
                 <Form.Label>Project</Form.Label>
                 <Select
@@ -264,7 +258,7 @@ const Column_Dashboard1 = () => {
                   onChange={setYColumn}
                 />
               </Form.Group>
-              <br></br>
+              <br />
               <Button
                 variant="secondary"
                 onClick={handleReset}
@@ -274,33 +268,32 @@ const Column_Dashboard1 = () => {
               </Button>
             </Col>
             <Col md={9}>
-              <h4>Custom Plot</h4>
+              <h5>Custom Plot</h5>
               <Row>
                 <div style={{ overflowX: 'auto' }}>
                   <Scatter data={getChartData(xColumn?.value, yColumn?.value)} options={scatterChartOptions} />
                 </div>
               </Row>
-              </Col>
-              <Row>
-                <h4>Data Preview</h4>
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="table" style={{ width: '100%', minWidth: '600px' }}>
-                    <thead>
-                      <tr>
-                        {data.length && Object.keys(data[0,5]).map(col => <th key={col}>{col}</th>)}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData.slice(0, 5).map((row, index) => (
-                        <tr key={index}>
-                          {Object.keys(row).map((col, idx) => <td key={idx}>{row[col]}</td>)}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Row>
-            
+            </Col>
+          </Row>
+          <Row>
+            <h4>Data Preview</h4>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ width: '100%', minWidth: '600px' }}>
+                <thead>
+                  <tr>
+                    {data.length && Object.keys(data[0]).map(col => <th key={col}>{col}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.slice(0, 5).map((row, index) => (
+                    <tr key={index}>
+                      {Object.keys(row).map((col, idx) => <td key={idx}>{row[col]}</td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Row>
         </Container>
       </section>
