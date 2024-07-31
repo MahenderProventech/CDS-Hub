@@ -238,8 +238,8 @@ const Column_Dashboard = () => {
             <br />
             <Row>
             <Col md={6}>
-            <h4>Injection Status</h4>
-            <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
+            <h4>Integration Status</h4>
+            <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
             </Col>
             <Col md={6}>
             <h4>Processing Status</h4>
@@ -251,11 +251,8 @@ const Column_Dashboard = () => {
 <br></br>
 
             <Row>
-            <Col md={6}>
-            <h4>Integration Status</h4>
-            <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
-            </Col>
-            <Col md={6}>
+            
+            <Col md={12}>
             <h4>Sample Set</h4>
             <Bar data={getBarChartData('sampleSetStartDate')} options={{ ...barChartOptions('Sample Set', 'Count', 'Date'), indexAxis: 'y' }} />
             </Col>
