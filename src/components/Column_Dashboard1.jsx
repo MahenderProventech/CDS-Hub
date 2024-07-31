@@ -9,6 +9,7 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import po from '../img/po.svg';
 import { Link } from 'react-router-dom';
+import './Column_Dashboard.css';
 
 const Column_Dashboard1 = () => {
   const [data, setData] = useState([]);
@@ -21,6 +22,9 @@ const Column_Dashboard1 = () => {
   const [methodSet, setMethodSet] = useState(null);
   const [xColumn, setXColumn] = useState(null);
   const [yColumn, setYColumn] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +55,8 @@ const Column_Dashboard1 = () => {
         }
       } catch (error) {
         console.error("Error fetching or processing data:", error);
+      } finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     };
 
@@ -95,7 +101,14 @@ const Column_Dashboard1 = () => {
 
     return { datasets };
   };
-
+  const handleFirstPage = () => {
+    setCurrentPage(1);
+  };
+  
+  const handleLastPage = () => {
+    setCurrentPage(totalPages);
+  };
+  
   const scatterChartOptions = {
     responsive: true,
     plugins: {
@@ -150,8 +163,36 @@ const Column_Dashboard1 = () => {
     setYColumn(null);
   };
 
+  const handleRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(1); // Reset to first page when rows per page changes
+  };
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    return filteredData.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
+
   return (
     <div style={{ marginLeft: '14px' }}>
+      {loading && (
+        <div className="page-loader">
+          <div className="loading-dots">
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+          </div>
+        </div>
+      )}
       <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">
@@ -214,7 +255,7 @@ const Column_Dashboard1 = () => {
 
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
-          <h3>Column Utilization Dashboard</h3>
+          <h2>Column Utilization Dashboard</h2>
           <Row>
             <Col md={3}>
               <h5>Filters</h5>
@@ -279,6 +320,22 @@ const Column_Dashboard1 = () => {
           <Row>
             <h4>Data Preview</h4>
             <div style={{ overflowX: 'auto' }}>
+              <div style={{width:'100px'}}>
+                <Form.Group>
+                  <Form.Label>Rows per Page</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={rowsPerPage}
+                    onChange={handleRowsPerPageChange}
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </Form.Control>
+                </Form.Group>
+                <br></br>
+              </div>
               <table className="table" style={{ width: '100%', minWidth: '600px' }}>
                 <thead>
                   <tr>
@@ -286,13 +343,64 @@ const Column_Dashboard1 = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.slice(0, 5).map((row, index) => (
+                  {getPaginatedData().map((row, index) => (
                     <tr key={index}>
                       {Object.keys(row).map((col, idx) => <td key={idx}>{row[col]}</td>)}
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <div className="pagination">
+      <Button
+        onClick={handleFirstPage}
+        disabled={isFirstPage}
+      >
+        First
+      </Button>
+      
+      <Button
+        onClick={() => handlePageChange(currentPage - 1)}
+        disabled={isFirstPage}
+      >
+        Previous
+      </Button>
+
+      {/* Display the previous page if it's not the first page */}
+      {!isFirstPage && (
+        <Button onClick={() => handlePageChange(currentPage - 1)}>
+          {currentPage - 1}
+        </Button>
+      )}
+
+      {/* Display the current page */}
+      <Button
+        onClick={() => handlePageChange(currentPage)}
+        active
+      >
+        {currentPage}
+      </Button>
+
+      {/* Display the next page if it's not the last page */}
+      {!isLastPage && (
+        <Button onClick={() => handlePageChange(currentPage + 1)}>
+          {currentPage + 1}
+        </Button>
+      )}
+
+      <Button
+        onClick={() => handlePageChange(currentPage + 1)}
+        disabled={isLastPage}
+      >
+        Next
+      </Button>
+
+      <Button
+        onClick={handleLastPage}
+        disabled={isLastPage}
+      >
+        Last
+      </Button>
+    </div>
             </div>
           </Row>
         </Container>

@@ -1,0 +1,75 @@
+/* Adjusted CSS */
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: calc(100% - 70px); /* Adjust based on sidebar width */
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999; /* Ensure it's on top of the main content */
+    pointer-events: none; /* Allows interaction with elements underneath */
+    margin-left: 110px; /* Adjust to match the sidebar width */
+  }
+  
+  .loading-dots {
+    display: flex;
+  }
+  
+  .loading-dots--dot {
+    width: 12px;
+    height: 12px;
+    background-color: #2a2a2c;
+    border-radius: 50%;
+    margin: 0 5px;
+    animation: loading-dots 1.5s infinite;
+  }
+  
+  @keyframes loading-dots {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.5);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+
+  .pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #ffffff; /* White background */
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for better visibility */
+}
+
+.pagination button {
+  background-color: #ffffff; /* White background for buttons */
+  color: #007bff; /* Blue text color */
+  border: 1px solid #007bff; /* Blue border for buttons */
+  margin: 0 5px;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.pagination button.active {
+  background-color: #007bff; /* Blue background for the active page */
+  color: #ffffff; /* White text color for the active page */
+}
+
+.pagination button:disabled {
+  background-color: #e9ecef; /* Light grey background for disabled buttons */
+  color: #6c757d; /* Grey text color for disabled buttons */
+  border: 1px solid #e9ecef; /* Light grey border for disabled buttons */
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #007bff; /* Light grey background on hover */
+}

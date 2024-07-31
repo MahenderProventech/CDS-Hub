@@ -9,6 +9,8 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import po from '../img/po.svg';
 import { Link } from 'react-router-dom';
+import './Column_Dashboard.css';
+
 
 const Column_Dashboard = () => {
   const [data, setData] = useState([]);
@@ -19,6 +21,8 @@ const Column_Dashboard = () => {
   const [project, setProject] = useState(null);
   const [sampleType, setSampleType] = useState(null);
   const [methodSet, setMethodSet] = useState(null);
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,29 +30,32 @@ const Column_Dashboard = () => {
         const response = await fetch("http://localhost:58747/api/Peaks/GetPeaksDetails");
         const data = await response.json();
         console.log("Fetched data:", data);
-
+  
         if (Array.isArray(data.item2)) {
           setData(data.item2);
-
+  
           const uniqueProjectOptions = [...new Set(data.item2.map(row => row['product_Name']))];
           const uniqueSampleTypeOptions = [...new Set(data.item2.map(row => row['peakType']))];
           const uniqueMethodSetOptions = [...new Set(data.item2.map(row => row['test_Name']))];
-
+  
           setProjectOptions([{ value: 'All', label: 'All' }, ...uniqueProjectOptions.map(opt => ({ value: opt, label: opt }))]);
           setSampleTypeOptions([{ value: 'All', label: 'All' }, ...uniqueSampleTypeOptions.map(opt => ({ value: opt, label: opt }))]);
           setMethodSetOptions([{ value: 'All', label: 'All' }, ...uniqueMethodSetOptions.map(opt => ({ value: opt, label: opt }))]);
-
+  
           setFilteredData(data.item2);
         } else {
           console.error("Fetched data does not contain the expected array:", data);
         }
       } catch (error) {
         console.error("Error fetching or processing data:", error);
+      } finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     };
-
+  
     fetchData();
   }, []);
+  
 
   useEffect(() => {
     let filtered = data;
@@ -123,6 +130,15 @@ const Column_Dashboard = () => {
 
   return (
     <div style={{ marginLeft: '14px' }}>
+      {loading && (
+      <div className="page-loader">
+        <div className="loading-dots">
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+        </div>
+      </div>
+    )}
       <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">
@@ -186,7 +202,7 @@ const Column_Dashboard = () => {
       {/* Main Content */}
       <section className="full_screen" style={{ marginLeft: "70px" }}>
         <Container>
-          <h1>Column Utilization Dashboard</h1>
+          <h2>Column Dashboard</h2>
           <br />
           <Col>
             <Row md={3}>
@@ -220,19 +236,30 @@ const Column_Dashboard = () => {
             <Button variant="secondary" onClick={handleReset} style={{marginLeft:"1000px",backgroundColor:"#463E96"}}>Reset</Button>
             <br />
             <br />
-
+            <Row>
+            <Col md={6}>
             <h4>Injection Status</h4>
             <Bar data={getBarChartData('intType')} options={barChartOptions('Injection Status', 'Status Type', 'Count')} />
-
+            </Col>
+            <Col md={6}>
             <h4>Processing Status</h4>
             <Bar data={getBarChartData('peakType')} options={barChartOptions('Processing Status', 'Status Type', 'Count')} />
+            </Col>
+            </Row>
 
+<br></br>
+<br></br>
+
+            <Row>
+            <Col md={6}>
             <h4>Integration Status</h4>
             <Bar data={getBarChartData('intType')} options={barChartOptions('Integration Status', 'Status Type', 'Count')} />
-
+            </Col>
+            <Col md={6}>
             <h4>Sample Set</h4>
             <Bar data={getBarChartData('sampleSetStartDate')} options={{ ...barChartOptions('Sample Set', 'Count', 'Date'), indexAxis: 'y' }} />
-
+            </Col>
+            </Row>
           </Col>
         </Container>
       </section>
