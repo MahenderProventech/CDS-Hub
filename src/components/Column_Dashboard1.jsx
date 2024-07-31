@@ -302,8 +302,9 @@ const Column_Dashboard1 = () => {
         <Container>
           <h2>Column Utilization Dashboard</h2>
           <Row>
-            <Col md={3}>
+            
               <h5>Filters</h5>
+              <Col md={4}>
               <Form.Group>
                 <Form.Label>Project</Form.Label>
                 <Select
@@ -312,6 +313,8 @@ const Column_Dashboard1 = () => {
                   onChange={setProject}
                 />
               </Form.Group>
+              </Col>
+              <Col md={4}>
               <Form.Group>
                 <Form.Label>Sample Type</Form.Label>
                 <Select
@@ -320,6 +323,8 @@ const Column_Dashboard1 = () => {
                   onChange={setSampleType}
                 />
               </Form.Group>
+              </Col>
+              <Col md={4}>
               <Form.Group>
                 <Form.Label>Method Set</Form.Label>
                 <Select
@@ -328,6 +333,8 @@ const Column_Dashboard1 = () => {
                   onChange={setMethodSet}
                 />
               </Form.Group>
+              </Col>
+              <Col md={4}>
               <Form.Group>
                 <Form.Label>X Column</Form.Label>
                 <Select
@@ -336,6 +343,9 @@ const Column_Dashboard1 = () => {
                   onChange={setXColumn}
                 />
               </Form.Group>
+              </Col>
+              <br></br>
+              <Col md={4}>
               <Form.Group>
                 <Form.Label>Y Column</Form.Label>
                 <Select
@@ -344,16 +354,22 @@ const Column_Dashboard1 = () => {
                   onChange={setYColumn}
                 />
               </Form.Group>
-              <br />
+              </Col>
+              <Col md={4}>
+
               <Button
                 variant="secondary"
                 onClick={handleReset}
-                style={{ backgroundColor: "#463E96" }}
+                style={{ backgroundColor: "#463E96", marginTop:"25px" }}
               >
                 Reset
               </Button>
-            </Col>
-            <Col md={9}>
+              </Col>
+            
+            </Row>
+<br></br>
+<br></br>
+            <Col md={12}>
               <h5>Custom Plot</h5>
               <Row>
                 <div style={{ overflowX: 'auto' }}>
@@ -361,7 +377,6 @@ const Column_Dashboard1 = () => {
                 </div>
               </Row>
             </Col>
-          </Row>
           <Row>
             <h4>Data Preview</h4>
             <div style={{ overflowX: 'auto' }}>
