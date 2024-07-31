@@ -562,39 +562,56 @@ const HPLC_Search = () => {
               <div>
                 <br></br>
                 <div className="row">
-                  <div className="col-sm-12">
-                    <nav aria-label="Page navigation">
-                      <ul className="pagination justify-content-center">
-                        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
-                          <button
-                            className="page-link"
-                            onClick={() => !isFirstPage && handlePageChange(currentPage - 1)}
-                          >
-                            Previous
-                          </button>
-                        </li>
-                        {pagesToShow.map(pageNumber => (
-                          <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
-                            <button
-                              className="page-link"
-                              onClick={() => handlePageChange(pageNumber)}
-                            >
-                              {pageNumber}
-                            </button>
-                          </li>
-                        ))}
-                        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
-                          <button
-                            className="page-link"
-                            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
-                          >
-                            Next
-                          </button>
-                        </li>
-                      </ul>
-                    </nav>
-                  </div>
-                </div>
+  <div className="col-sm-12">
+    <nav aria-label="Page navigation">
+      <ul className="pagination justify-content-center">
+        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
+          <button
+            className="page-link"
+            onClick={() => !isFirstPage && handlePageChange(1)}
+          >
+            First
+          </button>
+        </li>
+        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
+          <button
+            className="page-link"
+            onClick={() => !isFirstPage && handlePageChange(currentPage - 1)}
+          >
+            Previous
+          </button>
+        </li>
+        {pagesToShow.map(pageNumber => (
+          <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
+            <button
+              className="page-link"
+              onClick={() => handlePageChange(pageNumber)}
+            >
+              {pageNumber}
+            </button>
+          </li>
+        ))}
+        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
+          <button
+            className="page-link"
+            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
+          >
+            Next
+          </button>
+        </li>
+        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
+          <button
+            className="page-link"
+            onClick={() => !isLastPage && handlePageChange(totalPages)}
+          >
+            Last
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
                   </div>
                 </div>
             <div
