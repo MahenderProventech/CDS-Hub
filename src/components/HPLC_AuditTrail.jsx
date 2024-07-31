@@ -12,6 +12,8 @@ import Swal from 'sweetalert2';
 import http from './Http';
 import CustomPagination from './core/CustomPagination';
 import po from '../img/po.svg';
+import './Column_Dashboard.css';
+
 
  
 const HPLC_AuditTrail = () => {
@@ -24,6 +26,8 @@ const HPLC_AuditTrail = () => {
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items to show per page
+  const [loading, setLoading] = useState(true);
+
 
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -47,6 +51,9 @@ const HPLC_AuditTrail = () => {
 
     } catch (error) {
       console.error('Error fetching role assignments:', error.response ? error.response.data : error.message);
+    }
+    finally {
+      setLoading(false); // Hide loader after data is fetched
     }
   };
   useEffect(() => {
@@ -163,6 +170,15 @@ const HPLC_AuditTrail = () => {
  
   return (
     <div>
+       {loading && (
+      <div className="page-loader">
+        <div className="loading-dots">
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+        </div>
+      </div>
+    )}
         <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">

@@ -5,6 +5,7 @@ import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link, useNavigate } from 'react-router-dom';
 import po from '../img/po.svg';
+import './Column_Dashboard.css';
 
  
 // Define any necessary functions or state here
@@ -40,6 +41,8 @@ import Select from 'react-select';
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10; // Number of items to show per page
+    const [loading, setLoading] = useState(true);
+
   
     // Handle pagination change
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -65,6 +68,9 @@ import Select from 'react-select';
         setGetRolesResponse(getRolesResponse.data.item2);
       } catch (error) {
         console.error("Error fetching dropdown data:", error);
+      }
+      finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     }
     // Fetch all users from API
@@ -284,6 +290,15 @@ import Select from 'react-select';
   
   return (
     <div>
+      {loading && (
+      <div className="page-loader">
+        <div className="loading-dots">
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+        </div>
+      </div>
+    )}
         <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">

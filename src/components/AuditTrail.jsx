@@ -6,6 +6,8 @@ import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import http from './Http';
 import CustomPagination from './core/CustomPagination';
+import './Column_Dashboard.css';
+
  
 const AuditTrail = () => {
   const [roleAssignments, setRoleAssignments] = useState([]);
@@ -17,6 +19,8 @@ const AuditTrail = () => {
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items to show per page
+  const [loading, setLoading] = useState(true);
+
  
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -40,6 +44,9 @@ const AuditTrail = () => {
  
     } catch (error) {
       console.error('Error fetching role assignments:', error.response ? error.response.data : error.message);
+    }
+    finally {
+      setLoading(false); // Hide loader after data is fetched
     }
   };
   useEffect(() => {
@@ -157,6 +164,15 @@ const AuditTrail = () => {
  
   return (
     <section className="full_screen">
+      {loading && (
+      <div className="page-loader">
+        <div className="loading-dots">
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+        </div>
+      </div>
+    )}
       <div className="container-fluid" style={{ padding: "30px" }}>
         <Row>
           <h6>Audit Trail Search</h6>

@@ -10,6 +10,9 @@ import CustomPagination from './core/CustomPagination';
 import http from './Http';
 import * as Appconstant from '../services/AppConstantService';
 import MultiSelectComponent from './core/MultiSelectComponent';
+import './Column_Dashboard.css';
+
+
 const UserList = () => {
   const [show, setShow] = useState(false);
   const [deptResponse, setDeptResponse] = useState([]);
@@ -31,6 +34,8 @@ const UserList = () => {
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items to show per page
+  const [loading, setLoading] = useState(true);
+
 
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -56,6 +61,9 @@ const UserList = () => {
       setGetRolesResponse(getRolesResponse.data.item2);
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
+    }
+    finally {
+      setLoading(false); // Hide loader after data is fetched
     }
   }
   // Fetch all users from API
@@ -275,6 +283,15 @@ const UserList = () => {
 
   return (
     <section className="full_screen">
+      {loading && (
+      <div className="page-loader">
+        <div className="loading-dots">
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+          <div className="loading-dots--dot"></div>
+        </div>
+      </div>
+    )}
       <div style={{ padding: "30px" }}>
         {/* <Row>
           <h6>Users:</h6>
