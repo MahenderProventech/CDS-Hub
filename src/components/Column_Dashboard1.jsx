@@ -10,6 +10,11 @@ import usermanagement from '../img/usermanagement.png';
 import po from '../img/po.svg';
 import { Link } from 'react-router-dom';
 import './Column_Dashboard.css';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, Tooltip, Legend } from 'chart.js';
+
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, Tooltip, Legend);
+
 
 const Column_Dashboard1 = () => {
   const [data, setData] = useState([]);
@@ -141,19 +146,59 @@ const Column_Dashboard1 = () => {
           display: true,
           text: xColumn ? xColumn.label : '',
         },
-        type: xColumn ? 'category' : undefined,
-        labels: xColumn ? Array.from(new Set(filteredData.map(row => row[xColumn.value]))) : [],
+        type: isNaN(filteredData[0]?.[xColumn?.value]) ? 'category' : 'linear',
+        position: 'bottom',
+        grid: {
+          display: false,
+        },
+        ticks: {
+          callback: (value) => {
+            if (typeof value === 'number') {
+              return value.toLocaleString();
+            }
+            return value;
+          },
+        },
+        ...(isNaN(filteredData[0]?.[xColumn?.value]) ? {
+          // Handle categorical data
+          ticks: {
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 0,
+          },
+          labels: xColumn ? Array.from(new Set(filteredData.map(row => row[xColumn.value]))) : [],
+        } : {}),
       },
       y: {
         title: {
           display: true,
           text: yColumn ? yColumn.label : '',
         },
-        type: yColumn ? 'category' : undefined,
-        labels: yColumn ? Array.from(new Set(filteredData.map(row => row[yColumn.value]))) : [],
+        type: isNaN(filteredData[0]?.[yColumn?.value]) ? 'category' : 'linear',
+        grid: {
+          display: false,
+        },
+        ticks: {
+          callback: (value) => {
+            if (typeof value === 'number') {
+              return value.toLocaleString();
+            }
+            return value;
+          },
+        },
+        ...(isNaN(filteredData[0]?.[yColumn?.value]) ? {
+          // Handle categorical data
+          ticks: {
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 0,
+          },
+          labels: yColumn ? Array.from(new Set(filteredData.map(row => row[yColumn.value]))) : [],
+        } : {}),
       },
     },
   };
+ 
 
   const handleReset = () => {
     setProject(null);
