@@ -12,6 +12,7 @@
     z-index: 999; /* Ensure it's on top of the main content */
     pointer-events: none; /* Allows interaction with elements underneath */
     margin-left: 110px; /* Adjust to match the sidebar width */
+    margin-top: 60px;
   }
   
   .loading-dots {

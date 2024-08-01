@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Modal, Button } from 'react-bootstrap';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Modal } from 'react-bootstrap';
 import ProcalImg from '../img/PROCDSHUB1.svg';
 import dailyreview from '../img/dailyreview.png';
 import search from '../img/search.png';
@@ -11,7 +11,7 @@ import admin from '../img/admin.png';
 import home from '../img/home.png';
 import dash from '../img/dashboard.png';
 import po from '../img/po.svg';
-import bprofile from '../img/BlackProfile.jpg';  
+import bprofile from '../img/BlackProfile.jpg';
 import http from './Http';
 import UserContext from './UserContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -19,7 +19,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const NavbarComponent = () => {
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
+  const location = useLocation(); // Get the current path
   const [showModal, setShowModal] = useState(false);
+  const [hover, setHover] = useState(null);
 
   useEffect(() => {
     if (!userData || !userData.employeeId) {
@@ -29,13 +31,40 @@ const NavbarComponent = () => {
 
   const handleLogout = () => {
     sessionStorage.clear();
-    console.log("hiiiiiiiiiiiiiiii")
     http.get(`Login/Logout?employeeId=${userData.employeeId}`);
     navigate('/');
   };
 
   const handleShow = () => setShowModal(true);
   const handleClose = () => setShowModal(false);
+
+  const handleMouseEnter = (buttonId) => setHover(buttonId);
+  const handleMouseLeave = () => setHover(null);
+
+  const buttonStyle = {
+    backgroundColor: '#463E96',
+    color: 'white',
+    border: 'none',
+    padding: '5px 10px',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '50px',
+  };
+
+  const imgStyle = {
+    width: '20px',
+    height: '25px',
+  };
+
+  const pStyle = {
+    margin: '0',
+    fontSize: '12px',
+  };
+
+  const isActive = (path) => location.pathname === path; // Check if the current path matches the given path
 
   return (
     <>
@@ -83,55 +112,86 @@ const NavbarComponent = () => {
         <div className="main">
           <div className="btn-group dropend">
             <Link to={"/home/Select"}>
-              <button type="button">
-                <img src={dash} alt="Dashboard" title="Dashboard" />
-                <p>Dashboard</p>
+              <button
+                type="button"
+                onMouseEnter={() => handleMouseEnter('dashboard')}
+                onMouseLeave={handleMouseLeave}
+                style={{ ...buttonStyle, backgroundColor: isActive('/home/Select') || hover === 'dashboard' ? '#3b347d' : '#463E96' }}
+              >
+                <img src={dash} alt="Dashboard" title="Dashboard" style={imgStyle} />
+                <p style={pStyle}>Dashboard</p>
               </button>
             </Link>
           </div>
 
-          {(userData?.screenLists.includes('configuration')) &&
+          {userData?.screenLists.includes('configuration') &&
             <div className="btn-group dropend">
               <Link to={"/home/configuration"}>
-                <button type="button">
-                  <img src={setting} alt="Configuration" title='Configuration' />
-                  <p>Configuration</p>
+                <button
+                  type="button"
+                  onMouseEnter={() => handleMouseEnter('configuration')}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ ...buttonStyle, backgroundColor: isActive('/home/configuration') || hover === 'configuration' ? '#3b347d' : '#463E96' }}
+                >
+                  <img src={setting} alt="Configuration" title='Configuration' style={imgStyle} />
+                  <p style={pStyle}>Configuration</p>
                 </button>
               </Link>
             </div>
           }
 
-          {(userData?.screenLists.includes('auditTrail')) &&
+          {userData?.screenLists.includes('auditTrail') &&
             <div className="btn-group dropend">
               <Link to={"/home/auditTrail"}>
-                <button type="button">
-                  <img src={audit} alt="Audit Trail" title='Audit Trail' />
-                  <p>Audit Trail</p>
+                <button
+                  type="button"
+                  onMouseEnter={() => handleMouseEnter('auditTrail')}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ ...buttonStyle, backgroundColor: isActive('/home/auditTrail') || hover === 'auditTrail' ? '#3b347d' : '#463E96' }}
+                >
+                  <img src={audit} alt="Audit Trail" title='Audit Trail' style={imgStyle} />
+                  <p style={pStyle}>Audit Trail</p>
                 </button>
               </Link>
             </div>
           }
-          {(userData?.screenLists.includes('UserManagement')) &&
+          {userData?.screenLists.includes('UserManagement') &&
             <div className="btn-group dropend">
               <Link to={"/home/userList"}>
-                <button type="button">
-                  <img src={admin} alt="User Management" title='User Management' />
-                  <p>User Management</p>
+                <button
+                  type="button"
+                  onMouseEnter={() => handleMouseEnter('userManagement')}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ ...buttonStyle, backgroundColor: isActive('/home/userList') || hover === 'userManagement' ? '#3b347d' : '#463E96' }}
+                >
+                  <img src={admin} alt="User Management" title='User Management' style={imgStyle} />
+                  <p style={pStyle}>User Management</p>
                 </button>
               </Link>
             </div>
           }
 
-          <div className="btn-group dropend" style={{ marginTop: "70px" }}>
-            <button type="button">
-              <p>Version 1.0</p>
+          <div className="btn-group dropend" style={{ marginTop: "50px" }}>
+            <button
+              type="button"
+              onMouseEnter={() => handleMouseEnter('version')}
+              onMouseLeave={handleMouseLeave}
+              style={{ ...buttonStyle, backgroundColor: hover === 'version' ? '#3b347d' : '#463E96' }}
+            >
+              <p style={pStyle}>Version 1.0</p>
             </button>
           </div>
 
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+          <div className="btn-group dropend" style={{ marginTop: "5px" }}>
             <Link to={"/"}>
-              <button type="button" title='Logout'>
-                <img src={po} alt="Logout" />
+              <button
+                type="button"
+                title='Logout'
+                onMouseEnter={() => handleMouseEnter('logout')}
+                onMouseLeave={handleMouseLeave}
+                style={{ ...buttonStyle, backgroundColor: hover === 'logout' ? '#3b347d' : '#463E96' }}
+              >
+                <img src={po} alt="Logout" style={imgStyle} />
               </button>
             </Link>
           </div>
@@ -146,11 +206,8 @@ const NavbarComponent = () => {
         <Modal.Body>
           <div className="text-center">
             <img src={bprofile} alt="Profile" style={{ width: "100px", height: "100px", display: "block", borderRadius: "50%", margin: "0 auto 20px" }} />
-            <h5>{userData?.employeeId}</h5>
+            <h5>{userData?.employeeName}</h5>
             <p>{userData?.userRole}</p>
-          </div>
-          <div className="myProfile">
-            
           </div>
         </Modal.Body>
       </Modal>
