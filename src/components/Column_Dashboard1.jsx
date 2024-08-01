@@ -405,6 +405,7 @@ const Column_Dashboard1 = () => {
             <Col md={4}>
               <Form.Group>
                 <Form.Label><b>X Column</b></Form.Label>
+                <span style={{ color: "red" }}>*</span>
                 <Select
                   options={getColumnOptions()}
                   value={xColumn}
@@ -416,6 +417,7 @@ const Column_Dashboard1 = () => {
             <Col md={4}>
               <Form.Group>
                 <Form.Label><b>Y Column</b></Form.Label>
+                <span style={{ color: "red" }}>*</span>
                 <Select
                   options={getColumnOptions()}
                   value={yColumn}
