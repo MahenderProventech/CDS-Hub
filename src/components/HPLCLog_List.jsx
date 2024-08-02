@@ -506,19 +506,19 @@ const HPLCLog_List = () => {
                         <th width="" className="text-center">
                           S.No
                         </th>
-                        <th className="text-center">Date Acquired</th>
-                        <th className="text-center">Acquired By</th>
+                        <th className="text-center">Date Acquired</th>                 
                         <th className="text-center">Instrument Number</th>
                         <th className="text-center">Product Name</th>
-                        <th className="text-center">Test Name</th>
+                        <th className="text-center">Sample Set ID</th>
                         <th className="text-center">AR Number</th>
-                        <th className="text-center">Column Number</th>
                         <th className="text-center">Batch no.</th>
+                        <th className="text-center">Test Name</th>
                         <th className="text-center">Injection Id</th>
                         <th className="text-center">Sample Set Start Date</th>
                         <th className="text-center">Sample Set Finish Date</th>
                         <th className="text-center">No.of Injections</th>
                         <th className="text-center">Runtime</th>
+                        <th className="text-center">Acquired By</th>
 
                       </tr>
                     </thead>
@@ -529,13 +529,12 @@ const HPLCLog_List = () => {
                           <td className="text-center">
                             {peak.dateAcquired}
                           </td>
-                          <td className="text-center">{peak.sampleSetAcquiredBy}</td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
-                          <td className="text-center">{peak.test_Name}</td>
+                          <td className="text-center">{peak.sampleSetId}</td>
                           <td className="text-center">{peak.a_R_No}</td>
-                          <td className="text-center">{peak.column_No}</td>
                           <td className="text-center">{peak.batch_No}</td>
+                          <td className="text-center">{peak.test_Name}</td>
                           <td className="text-center">{peak.injectionId}</td>
                           <td className="text-center">
                             {peak.sampleSetStartDate
@@ -553,6 +552,8 @@ const HPLCLog_List = () => {
                           </td>
                           <td className="text-center"></td>
                           <td className="text-center">10</td>
+                          <td className="text-center">{peak.sampleSetAcquiredBy}</td>
+
                         </tr>
                         ))}
                        </tbody>
