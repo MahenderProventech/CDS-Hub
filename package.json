@@ -25,6 +25,7 @@
     "react-scripts": "^5.0.1",
     "react-select": "^5.8.0",
     "react-to-print": "^2.15.1",
+    "resize-observer-polyfill": "^1.5.1",
     "sweetalert2": "^11.12.2",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"
