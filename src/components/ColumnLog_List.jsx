@@ -297,7 +297,7 @@ const ColumnLog_List = () => {
             <Link to={"/home/Column_Dashboard1"}>
               <button type="button">
                 <img src={dash} alt="Dashboard1" title="Dashboard1" />
-                <p>Dashboard 1</p>
+                <p>Analysis</p>
               </button>
             </Link>
           </div><br />

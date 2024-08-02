@@ -294,6 +294,14 @@ const HPLC_Search = () => {
     )}
      <aside className="col-md-1 p_sideNav">
         <div className="main">
+        <div className="btn-group dropend">
+            <Link to={"/home/HPLC_Dashboard1"}>
+              <button type="button">
+                <img src={dash} alt="HPLCDashboard1" title="HPLCDashboard1" />
+                <p>Analysis</p>
+              </button>
+            </Link>
+          </div><br />
           <div className="btn-group dropend">
             <Link to={"/home/HPLC_Dashboard"}>
               <button type="button">
