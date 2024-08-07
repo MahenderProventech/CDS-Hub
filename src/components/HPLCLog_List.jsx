@@ -234,17 +234,18 @@ const HPLCLog_List = () => {
           <tr>
             <th class="text-center">S.No</th>
             <th class="text-center">Date Acquired</th>
-            <th class="text-center">Acquired By</th>
             <th class="text-center">Instrument Number</th>
             <th class="text-center">Product Name</th>
-            <th class="text-center">Test Name</th>
+            <th class="text-center">Sample Set Id</th>
             <th class="text-center">AR Number</th>
-            <th class="text-center">Column Number</th>
             <th class="text-center">Batch no.</th>
+            <th class="text-center">Test Name</th>
             <th class="text-center">Sample Set Start Date</th>
             <th class="text-center">Sample Set Finish Date</th>
             <th class="text-center">No.of Injections</th>
             <th class="text-center">Runtime</th>
+            <th class="text-center">Acquired By</th>
+
           </tr>
         </thead>
         <tbody>
@@ -256,17 +257,17 @@ const HPLCLog_List = () => {
         <tr>
           <td class="text-center">${index + 1}</td>
           <td class="text-center">${peak.dateAcquired}</td>
-          <td class="text-center">${peak.sampleSetAcquiredBy}</td>
           <td class="text-center">${peak.instrument_No}</td>
           <td class="text-center">${peak.product_Name}</td>
+          <td class="text-center">${peak.sampleSetId}</td>
+          <td class="text-center">${peak.arNumbers}</td>
+          <td class="text-center">${peak.batchNumbers}</td>
           <td class="text-center">${peak.test_Name}</td>
-          <td class="text-center">${peak.a_R_No}</td>
-          <td class="text-center">${peak.column_No}</td>
-          <td class="text-center">${peak.batch_No}</td>
            <td>${new Date(peak.sampleSetStartDate).toLocaleString()}</td>
           <td>${new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
-          <td class="text-center"></td>
-          <td class="text-center">10</td>
+          <td class="text-center">${peak.no_Of_Injections}</td>
+          <td class="text-center">${peak.runtime}</td>
+          <td class="text-center">${peak.acquiredBy}</td>
         </tr>
       `);
     });
@@ -288,33 +289,40 @@ const HPLCLog_List = () => {
     const csvContent = [
       [
         "S.No",
-        "Date",
-        "AR Number",
+        "Date Acquired",
         "Instrument Number",
         "Product Name",
+        "Sample Set Id",
+        "AR Numbers",
+        "Batch Number",
         "Test Name",
-        "Column Number",
-        "Batch no.",
         "Sample Set Start Date",
         "Sample Set Finish Date",
+        "No Of Injections",
+        "Runtime",
+        "Acquired By",
       ],
       ...filteredData.map((peak, index) => [
         index + 1,
-        peak.sampleSetStartDate,
-        peak.a_R_No,
+        peak.dateAcquired,
         peak.instrument_No,
         peak.product_Name,
+        peak.sampleSetId,
+        peak.arNumbers,
+        peak.batchNumbers,
         peak.test_Name,
-        peak.column_No,
-        peak.batch_No,
         peak.sampleSetStartDate
           ? new Date(peak.sampleSetStartDate).toLocaleDateString()
           : "NULL",
         peak.sampleSetFinishDate
           ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
           : "NULL",
+          peak.no_Of_Injections,
+          peak.runtime,
+          peak.acquiredBy,
       ]),
     ]
+
       .map((e) => e.join(","))
       .join("\n");
  
