@@ -611,8 +611,11 @@ const HPLCLog_List = () => {
                           </td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
-                          <td className="text-center"><a href={'/home/HPLCLog_List/${peak.sampleSetId}'} className="link-primary">{peak.sampleSetId}</a></td>
-                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.arNumbers }}></td>
+                          <td className="text-center">
+              <Link to={`/home/HPLCLog_List/${peak.sampleSetId}`} className="link-primary">
+                {peak.sampleSetId}
+              </Link>
+            </td>                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.arNumbers }}></td>
                           <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.batchNumbers }}></td>
                           <td className="text-center">{peak.test_Name}</td>
                           <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
