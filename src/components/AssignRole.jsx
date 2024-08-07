@@ -158,7 +158,8 @@ const AssignRole = () => {
               id="submit-btn"
               className="btn btn-primary mt-4"
               onClick={submitRole}
-              disabled={isSubmitDisabled}>
+              disabled={isSubmitDisabled}
+              style={{ backgroundColor: '#463E96', borderColor: '#463E96' }}>
               Submit
             </button>
           </Col>

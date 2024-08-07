@@ -307,6 +307,8 @@ const HPLC_AuditTrail = () => {
               className="btn btn-primary mt-4"
               onClick={submitRole}
               disabled={!searchedData}
+              style={{ backgroundColor: '#463E96', borderColor: '#463E96' }}
+
             >
               Search
             </button>
@@ -315,6 +317,8 @@ const HPLC_AuditTrail = () => {
               className="btn btn-primary mt-4 ms-3"
               onClick={() => { setSearchData(null); }}
               disabled={!searchedData}
+              style={{ backgroundColor: '#463E96', borderColor: '#463E96' }}
+
             >
               Clear Search
             </button>

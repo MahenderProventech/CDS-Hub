@@ -39,6 +39,7 @@ import Column_UserManagement from './components/Column_UserManagement';
 import HPLC_Search from './components/HPLC_Search';
 import HPLC_AuditTrail from './components/HPLC_AuditTrail';
 import HPLC_UserManagement from './components/HPLC_UserManagement';
+import SampleSetDetails from './components/SampleSetDetails';
 
 import ExecutionList from './components/MastersList/ExecutionList';
 
@@ -80,6 +81,8 @@ function App() {
             <Route path='execApproveFormulaByID/:id' element={<ExecApproveFormulaByID />} />
             <Route path='generateResultsById/:id' element={<GenerateResultsById />} />
             <Route path='configurationEdit' element={<ConfigurationEdit />} />
+            <Route path='HPLCLog_List/:sampleSetId' element={<SampleSetDetails />} />
+
 
             <Route path='configurationEdit/:configId' element={<ConfigurationEdit />} />
             <Route path='reports/' element={<Reports />} />

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import Select from "react-select";
 import { Scatter } from "react-chartjs-2";
+import Modal from "react-modal";
+import Chart from "chart.js/auto"; // Updated import for Chart.js
+import zoomPlugin from "chartjs-plugin-zoom";
 import dash from "../img/dashboard.png";
 import HplcLogList from "../img/hplc_loglist.png";
 import search from "../img/search.png";
@@ -19,6 +22,7 @@ import {
   Legend,
 } from "chart.js";
 
+
 ChartJS.register(CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
 const Column_Dashboard1 = () => {
@@ -35,6 +39,8 @@ const Column_Dashboard1 = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -159,6 +165,7 @@ const Column_Dashboard1 = () => {
 
   const scatterChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: true,
@@ -181,6 +188,24 @@ const Column_Dashboard1 = () => {
               `${yColumn ? yColumn.label : ""}: ${yValue}`,
             ];
           },
+        },
+      },
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+          pinch: {
+            enabled: true,
+          },
+          drag: {
+            enabled: true,
+          },
+          mode: 'xy',
+        },
+        pan: {
+          enabled: true,
+          mode: 'xy',
         },
       },
     },
@@ -235,6 +260,8 @@ const Column_Dashboard1 = () => {
             }
             return value;
           },
+          maxTicksLimit: 10, // Adjust this value to control the number of ticks
+          padding: 10, // Increase padding to avoid overlap
         },
         ...(isNaN(filteredData[0]?.[yColumn?.value])
           ? {
@@ -253,7 +280,36 @@ const Column_Dashboard1 = () => {
           : {}),
       },
     },
+    plugins: {
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+          pinch: {
+            enabled: true,
+          },
+          drag: {
+            enabled: true,
+          },
+          mode: 'xy',
+        },
+        pan: {
+          enabled: true,
+          mode: 'xy',
+        },
+      },
+    },
   };
+
+  const openModal = () => {
+    setModalIsOpen(true);
+  };
+  
+  const closeModal = () => {
+    setModalIsOpen(false);
+  };
+  
 
   const handleReset = () => {
     setProject(null);
@@ -299,7 +355,7 @@ const Column_Dashboard1 = () => {
             <Link to={"/home/Column_Dashboard1"}>
               <button type="button">
                 <img src={dash} alt="Dashboard1" title="Dashboard1" />
-                <p>Dashboard 1</p>
+                <p>Analysis</p>
               </button>
             </Link>
           </div>
@@ -408,6 +464,7 @@ const Column_Dashboard1 = () => {
             <Col md={4}>
               <Form.Group>
                 <Form.Label><b>X Column</b></Form.Label>
+                <span style={{ color: "red" }}>*</span>
                 <Select
                   options={getColumnOptions()}
                   value={xColumn}
@@ -418,6 +475,7 @@ const Column_Dashboard1 = () => {
             <Col md={4}>
               <Form.Group>
                 <Form.Label><b>Y Column</b></Form.Label>
+                <span style={{ color: "red" }}>*</span>
                 <Select
                   options={getColumnOptions()}
                   value={yColumn}
@@ -439,8 +497,14 @@ const Column_Dashboard1 = () => {
           <br></br>
           <Col md={12}>
             <h5>Custom Plot</h5>
+            <Button
+              onClick={openModal}
+              style={{ backgroundColor: "#463E96", color: "white", marginLeft:"1000px" }}
+            >
+              Zoom
+            </Button>
             <Row>
-              <div style={{ overflowX: "auto" }}>
+              <div style={{ overflowX: "auto",height: "800px" }}>
                 <Scatter
                   data={getChartData(xColumn?.value, yColumn?.value)}
                   options={scatterChartOptions}
@@ -535,6 +599,33 @@ const Column_Dashboard1 = () => {
           </Row>
         </Container>
       </section>
+      <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={closeModal}
+      style={{
+        content: {
+          top: "10%",
+          left: "10%",
+          right: "2%",
+          bottom: "2%",
+          padding: "5px",
+        },
+      }}
+      ariaHideApp={false}
+    >
+      <Button onClick={closeModal} style={{ position: "absolute", top: "10px", right: "10px" }}>
+        Close
+      </Button>
+      <h2>Zoomed Plot</h2>
+      <div style={{ height: "100%", width: "100%", position: "relative" }}>
+        <Scatter
+          data={getChartData(xColumn?.value, yColumn?.value)}
+          options={scatterChartOptions}
+          style={{ height: "100%", width: "100%" }}
+        />
+      </div>
+    </Modal>
+  
     </div>
   );
 };

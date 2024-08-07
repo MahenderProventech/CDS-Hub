@@ -198,7 +198,7 @@ button#dropdown-basic-button{
   padding: 20px;
   border-bottom: 1px solid gray;
   font-size: 13px;
-  color: #0d6efd;
+  color: #463E96;
 }
 
 
@@ -328,7 +328,7 @@ input.form-control.descInput.textarea-no-outline{
   font-size: 1rem;
 }
 .carousel-indicators [data-bs-target]{
-  background: #352F6C;
+  background: #463E96;
   width: 20px;
   height: 0px;
   padding: 0px !important;
@@ -1416,6 +1416,6 @@ h2#swal2-title {
 .page-item.active .page-link {
   z-index: 0 !important;
   color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: #463E96;
+  border-color: #463E96;
 }

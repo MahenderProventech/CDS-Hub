@@ -53,15 +53,15 @@
 
 .pagination button {
   background-color: #ffffff; /* White background for buttons */
-  color: #007bff; /* Blue text color */
-  border: 1px solid #007bff; /* Blue border for buttons */
+  color: #463E96; /* Blue text color */
+  border: 1px solid #463E96; /* Blue border for buttons */
   margin: 0 5px;
   padding: 5px 10px;
   border-radius: 5px;
 }
 
 .pagination button.active {
-  background-color: #007bff; /* Blue background for the active page */
+  background-color: #463E96; /* Blue background for the active page */
   color: #ffffff; /* White text color for the active page */
 }
 
@@ -72,5 +72,6 @@
 }
 
 .pagination button:hover:not(:disabled) {
-  background-color: #007bff; /* Light grey background on hover */
+  background-color: #463E96; /* Light grey background on hover */
+  color: white;
 }

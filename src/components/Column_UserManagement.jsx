@@ -381,7 +381,8 @@ const Column_UserManagement = () => {
             />
           </Col>
           <Col sm={1}>
-            <button className='btn btn-primary' onClick={handleShowModal} style={{ marginRight: "15px" }}>
+            <button className='btn btn-primary' onClick={handleShowModal} style={{ marginRight: "15px" , backgroundColor: '#463E96', borderColor: '#463E96'}}  
+            >
               Create
             </button>
           </Col>

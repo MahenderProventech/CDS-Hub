@@ -89,6 +89,8 @@ const Reports = () => {
                             className="btn btn-primary mt-4"
                             onClick={submitData}
                             disabled={!productName && !batchNumber}
+                            style={{ backgroundColor: '#463E96', borderColor: '#463E96' }}
+
                         >
                             Search
                         </button>

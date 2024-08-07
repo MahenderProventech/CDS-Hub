@@ -8,9 +8,9 @@ import { Link } from "react-router-dom";
 import './print.css';
 import po from '../img/po.svg';
 import './Column_Dashboard.css';
-
-
-
+ 
+ 
+ 
 const HPLCLog_List = () => {
   const [peaksData, setPeaksData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -23,8 +23,8 @@ const HPLCLog_List = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-
-
+ 
+ 
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,12 +33,13 @@ const HPLCLog_List = () => {
         );
         const data = await response.json();
         console.log("Fetched data:", data);
-
+ 
         if (Array.isArray(data.item2)) {
-          setPeaksData(data.item2);
-          setFilteredData(data.item2);
+          const processedData = processPeaksData(data.item2);
+          setPeaksData(processedData);
+          setFilteredData(processedData);
           const uniqueInstruments = [
-            ...new Set(data.item2.map((item) => item.instrument_No)),
+            ...new Set(processedData.map((item) => item.instrument_No)),
           ];
           setInstruments(uniqueInstruments);
         } else {
@@ -54,16 +55,90 @@ const HPLCLog_List = () => {
         setLoading(false); // Hide loader after data is fetched
       }
     };
-
+ 
     fetchData();
   }, []);
-
+ 
+  const processPeaksData = (data) => {
+    const sortedData = data.sort((a, b) => new Date(a.dateAcquired) - new Date(b.dateAcquired));
+    const sampleSetMap = {};
+    const injectionCountMap = {};
+    const arNumberMap = {};
+    const batchNumberMap = {};
+    const acquiredByMap = {};
+  
+    sortedData.forEach(item => {
+      const sampleSetId = item.sampleSetId;
+  
+      if (!sampleSetMap[sampleSetId]) {
+        sampleSetMap[sampleSetId] = { sumDate: 0, count: 0 };
+        arNumberMap[sampleSetId] = [];
+        batchNumberMap[sampleSetId] = [];
+        acquiredByMap[sampleSetId] = [];
+      }
+  
+      const dateAcquired = new Date(item.dateAcquired).getTime();
+      sampleSetMap[sampleSetId].sumDate += dateAcquired;
+      sampleSetMap[sampleSetId].count += 1;
+  
+      if (!injectionCountMap[sampleSetId]) {
+        injectionCountMap[sampleSetId] = 0;
+      }
+      injectionCountMap[sampleSetId] += 1;
+  
+      if (item.a_R_No) {
+        if (!arNumberMap[sampleSetId].includes(item.a_R_No)) {
+          arNumberMap[sampleSetId].push(item.a_R_No);
+        }
+      }
+  
+      if (item.batch_No) {
+        if (!batchNumberMap[sampleSetId].includes(item.batch_No)) {
+          batchNumberMap[sampleSetId].push(item.batch_No);
+        }
+      }
+  
+      if (item.sampleSetAcquiredBy) {
+        if (!acquiredByMap[sampleSetId].includes(item.sampleSetAcquiredBy)) {
+          acquiredByMap[sampleSetId].push(item.sampleSetAcquiredBy);
+        }
+      }
+    });
+  
+    return sortedData.map(item => {
+      const sampleSetId = item.sampleSetId;
+      let runtime = "NULL";
+  
+      if (sampleSetMap[sampleSetId]) {
+        const meanDate = new Date(sampleSetMap[sampleSetId].sumDate / sampleSetMap[sampleSetId].count);
+        item.sampleSetFinishDate = meanDate.toISOString();
+        item.no_Of_Injections = injectionCountMap[sampleSetId];
+        item.arNumbers = arNumberMap[sampleSetId].map(ar => ar).join(',<br>');
+        item.batchNumbers = batchNumberMap[sampleSetId].map(batch => batch).join(',<br>');
+        item.acquiredBy = acquiredByMap[sampleSetId].map(acquired => acquired).join(',<br>');
+  
+        if (item.sampleSetStartDate && item.sampleSetFinishDate) {
+          const startDate = new Date(item.sampleSetStartDate);
+          const finishDate = new Date(item.sampleSetFinishDate);
+          const diffMs = finishDate - startDate;
+          const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          runtime = `${diffHrs}h ${diffMin}m`;
+        }
+      }
+  
+      return { ...item, runtime };
+    });
+  };
+  
+  
+ 
   const handleSearch = () => {
     const filtered = peaksData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
-
+  
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
@@ -72,11 +147,18 @@ const HPLCLog_List = () => {
         (!batchNumbers || peak.batch_No.includes(batchNumbers))
       );
     });
-
-    setFilteredData(filtered);
+  
+    // Ensure unique sampleSetId values and take the first occurrence (which is the earliest due to sorting)
+    const uniqueFilteredData = [...new Set(filtered.map(item => item.sampleSetId))].map(id =>
+      filtered.find(item => item.sampleSetId === id)
+    );
+  
+    setFilteredData(uniqueFilteredData);
     setCurrentPage(1); // Reset to first page on new search
   };
-
+  
+ 
+ 
   const handleReset = () => {
     setFromDate("");
     setToDate("");
@@ -94,10 +176,10 @@ const HPLCLog_List = () => {
     iframe.style.height = '0px';
     iframe.style.border = 'none';
     document.body.appendChild(iframe);
-  
+ 
     // Get iframe document
     const iframeDoc = iframe.contentWindow.document;
-  
+ 
     // Create CSS styles to be included in the iframe
     const printStyles = `
       <style>
@@ -137,14 +219,14 @@ const HPLCLog_List = () => {
         }
       </style>
     `;
-  
+ 
     // Write content to the iframe document
     iframeDoc.open();
     iframeDoc.write('<html><head><title>Print</title>');
     iframeDoc.write(printStyles); // Inject CSS styles
     iframeDoc.write('</head><body>');
     iframeDoc.write('<h1>HPLC Log List</h1>');
-  
+ 
     // Add table headers
     iframeDoc.write(`
       <table class="table table-bordered">
@@ -159,7 +241,6 @@ const HPLCLog_List = () => {
             <th class="text-center">AR Number</th>
             <th class="text-center">Column Number</th>
             <th class="text-center">Batch no.</th>
-            <th class="text-center">Injection Id</th>
             <th class="text-center">Sample Set Start Date</th>
             <th class="text-center">Sample Set Finish Date</th>
             <th class="text-center">No.of Injections</th>
@@ -168,7 +249,7 @@ const HPLCLog_List = () => {
         </thead>
         <tbody>
     `);
-  
+ 
     // Add table rows for all filtered data
     filteredData.forEach((peak, index) => {
       iframeDoc.write(`
@@ -182,7 +263,6 @@ const HPLCLog_List = () => {
           <td class="text-center">${peak.a_R_No}</td>
           <td class="text-center">${peak.column_No}</td>
           <td class="text-center">${peak.batch_No}</td>
-          <td class="text-center">${peak.injectionId}</td>
           <td class="text-center">
             ${peak.sampleSetStartDate
               ? new Date(peak.sampleSetStartDate).toLocaleDateString()
@@ -198,20 +278,20 @@ const HPLCLog_List = () => {
         </tr>
       `);
     });
-  
+ 
     iframeDoc.write('</tbody></table>');
     iframeDoc.write('</body></html>');
     iframeDoc.close();
-  
+ 
     // Print the iframe content
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
-  
+ 
     // Remove iframe after printing
-    document.body.removeChild(iframe);
+    iframe.remove();
   };
-  
-
+ 
+ 
   const handleExport = () => {
     const csvContent = [
       [
@@ -223,7 +303,6 @@ const HPLCLog_List = () => {
         "Test Name",
         "Column Number",
         "Batch no.",
-        "Injection Id",
         "Sample Set Start Date",
         "Sample Set Finish Date",
       ],
@@ -236,7 +315,6 @@ const HPLCLog_List = () => {
         peak.test_Name,
         peak.column_No,
         peak.batch_No,
-        peak.injectionId,
         peak.sampleSetStartDate
           ? new Date(peak.sampleSetStartDate).toLocaleDateString()
           : "NULL",
@@ -247,7 +325,7 @@ const HPLCLog_List = () => {
     ]
       .map((e) => e.join(","))
       .join("\n");
-
+ 
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -258,21 +336,25 @@ const HPLCLog_List = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  const totalRows = filteredData.length;
+ 
+  const uniqueFilteredData = [...new Set(filteredData.map(item => item.sampleSetId))].map(id =>
+    filteredData.find(item => item.sampleSetId === id)
+  );
+ 
+  const totalRows = uniqueFilteredData.length;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentData = filteredData.slice(startIndex, endIndex);
-
+  const currentData = uniqueFilteredData.slice(startIndex, endIndex);
+ 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-
+ 
   // Check if the current page is the first or the last page
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
-
+ 
   // Determine which pages to display
   const pagesToShow = [];
   if (totalPages > 1) {
@@ -280,7 +362,6 @@ const HPLCLog_List = () => {
     pagesToShow.push(currentPage);
     if (!isLastPage) pagesToShow.push(currentPage + 1);
   }
-
   return (
     <div>
       {loading && (
@@ -418,7 +499,7 @@ const HPLCLog_List = () => {
                       </select>
                     </div>
                   </div>
-
+ 
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="productName" className="form-label">
@@ -434,7 +515,7 @@ const HPLCLog_List = () => {
                       />
                     </div>
                   </div>
-
+ 
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="batchNumbers" className="form-label">
@@ -450,7 +531,7 @@ const HPLCLog_List = () => {
                       />
                     </div>
                   </div>
-
+ 
                   <div className="col-sm-3" style={{ marginTop: "28px" }}>
                     <button
                       className="btn btn-primary ms-3 MinW200 mt29"
@@ -458,7 +539,7 @@ const HPLCLog_List = () => {
                     >
                       Search <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
-
+ 
                     <button
                       type="button"
                       className="btn btn-secondary ms-2"
@@ -471,7 +552,7 @@ const HPLCLog_List = () => {
                 </div>
               </div>
               <div>
-
+ 
               <div
                 className="card mt-3"
                 style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
@@ -496,9 +577,9 @@ const HPLCLog_List = () => {
                     </div>
                   </div>
                 </div>
-
-
-              
+ 
+ 
+             
                 <div className="cus-Table table-responsive">
                   <table className="table table-bordered" id="example">
                     <thead>
@@ -506,36 +587,34 @@ const HPLCLog_List = () => {
                         <th width="" className="text-center">
                           S.No
                         </th>
-                        <th className="text-center">Date Acquired</th>                 
+                        <th className="text-center">Date Acquired</th>                
                         <th className="text-center">Instrument Number</th>
                         <th className="text-center">Product Name</th>
                         <th className="text-center">Sample Set ID</th>
                         <th className="text-center">AR Number</th>
                         <th className="text-center">Batch no.</th>
                         <th className="text-center">Test Name</th>
-                        <th className="text-center">Injection Id</th>
                         <th className="text-center">Sample Set Start Date</th>
                         <th className="text-center">Sample Set Finish Date</th>
                         <th className="text-center">No.of Injections</th>
                         <th className="text-center">Runtime</th>
                         <th className="text-center">Acquired By</th>
-
+ 
                       </tr>
                     </thead>
                     <tbody>
                     {currentData.map((peak, index) => (
                       <tr key={index}>
-                        <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>     
+                        <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
                           <td className="text-center">
                             {peak.dateAcquired}
                           </td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
-                          <td className="text-center">{peak.sampleSetId}</td>
-                          <td className="text-center">{peak.a_R_No}</td>
-                          <td className="text-center">{peak.batch_No}</td>
+                          <td className="text-center"><a href={'/home/HPLCLog_List/${peak.sampleSetId}'} className="link-primary">{peak.sampleSetId}</a></td>
+                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.arNumbers }}></td>
+                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.batchNumbers }}></td>
                           <td className="text-center">{peak.test_Name}</td>
-                          <td className="text-center">{peak.injectionId}</td>
                           <td className="text-center">
                             {peak.sampleSetStartDate
                               ? new Date(
@@ -550,10 +629,10 @@ const HPLCLog_List = () => {
                                 ).toLocaleDateString()
                               : "NULL"}
                           </td>
-                          <td className="text-center"></td>
-                          <td className="text-center">10</td>
-                          <td className="text-center">{peak.sampleSetAcquiredBy}</td>
-
+                          <td className="text-center">{peak.no_Of_Injections}</td>
+                          <td className="text-center">{peak.runtime}</td>
+                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.acquiredBy }}></td>
+ 
                         </tr>
                         ))}
                        </tbody>
@@ -614,7 +693,7 @@ const HPLCLog_List = () => {
     </nav>
   </div>
 </div>
-
+ 
                   </div>
                 </div>
             <div
@@ -632,8 +711,12 @@ const HPLCLog_List = () => {
           </div>
         </div>
       </section>
-    </div> 
+    </div>
      );
 };
-
+ 
 export default HPLCLog_List;
+ 
+ 
+ 
+ 

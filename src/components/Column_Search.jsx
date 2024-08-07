@@ -448,6 +448,8 @@ const Column_Search = () => {
                     <button
                       className="btn btn-primary ms-3 MinW200 mt29"
                       onClick={handleSearch}
+                      style={{ backgroundColor: '#463E96', borderColor: '#463E96' }}
+
                     >
                       Search <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
@@ -621,7 +623,7 @@ const Column_Search = () => {
                 <button className="btn btn-outline-dark me-2" onClick={handlePrint}>
                   Print
                 </button>
-                <button className="btn btn-primary" onClick={handleExport}>
+                <button className="btn btn-primary" onClick={handleExport}   style={{ backgroundColor: '#463E96', borderColor: '#463E96' }}      >
                   Export
                 </button>
               </div>
