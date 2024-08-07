@@ -263,16 +263,8 @@ const HPLCLog_List = () => {
           <td class="text-center">${peak.a_R_No}</td>
           <td class="text-center">${peak.column_No}</td>
           <td class="text-center">${peak.batch_No}</td>
-          <td class="text-center">
-            ${peak.sampleSetStartDate
-              ? new Date(peak.sampleSetStartDate).toLocaleDateString()
-              : "NULL"}
-          </td>
-          <td class="text-center">
-            ${peak.sampleSetFinishDate
-              ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
-              : "NULL"}
-          </td>
+           <td>${new Date(peak.sampleSetStartDate).toLocaleString()}</td>
+          <td>${new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
           <td class="text-center"></td>
           <td class="text-center">10</td>
         </tr>
@@ -615,20 +607,8 @@ const HPLCLog_List = () => {
                           <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.arNumbers }}></td>
                           <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.batchNumbers }}></td>
                           <td className="text-center">{peak.test_Name}</td>
-                          <td className="text-center">
-                            {peak.sampleSetStartDate
-                              ? new Date(
-                                  peak.sampleSetStartDate
-                                ).toLocaleDateString()
-                              : "NULL"}
-                          </td>
-                          <td className="text-center">
-                            {peak.sampleSetFinishDate
-                              ? new Date(
-                                  peak.sampleSetFinishDate
-                                ).toLocaleDateString()
-                              : "NULL"}
-                          </td>
+                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
+                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
                           <td className="text-center">{peak.no_Of_Injections}</td>
                           <td className="text-center">{peak.runtime}</td>
                           <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.acquiredBy }}></td>
