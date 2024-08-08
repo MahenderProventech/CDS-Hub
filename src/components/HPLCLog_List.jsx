@@ -612,10 +612,10 @@ const HPLCLog_List = () => {
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
                           <td className="text-center">
-              <Link to={`/home/HPLCLog_List/${peak.sampleSetId}`} className="link-primary">
-                {peak.sampleSetId}
-              </Link>
-            </td>                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.arNumbers }}></td>
+                            <Link to={`/home/HPLCLog_List/${peak.sampleSetId}`} className="link-primary">
+                              {peak.sampleSetId}
+                            </Link>
+                          </td>                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.arNumbers }}></td>
                           <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.batchNumbers }}></td>
                           <td className="text-center">{peak.test_Name}</td>
                           <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
