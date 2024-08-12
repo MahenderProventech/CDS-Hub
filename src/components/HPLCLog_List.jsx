@@ -12,7 +12,8 @@ import './Column_Dashboard.css';
  
  
 const HPLCLog_List = () => {
-  const [peaksData, setPeaksData] = useState([]);
+ 
+  const [processPeaksDataData, setProcessPeaksDataData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [instruments, setInstruments] = useState([]);
   const [fromDate, setFromDate] = useState("");
@@ -23,23 +24,24 @@ const HPLCLog_List = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  
  
  
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+          "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
         );
         const data = await response.json();
         console.log("Fetched data:", data);
- 
-        if (Array.isArray(data.item2)) {
-          const processedData = processPeaksData(data.item2);
-          setPeaksData(processedData);
-          setFilteredData(processedData);
+  
+        // Check if item2 exists and is an array
+        if (Array.isArray(data)) {
+          setProcessPeaksDataData(data);
+          setFilteredData(data);
           const uniqueInstruments = [
-            ...new Set(processedData.map((item) => item.instrument_No)),
+            ...new Set(data.map((item) => item.instrument_No)),
           ];
           setInstruments(uniqueInstruments);
         } else {
@@ -50,95 +52,21 @@ const HPLCLog_List = () => {
         }
       } catch (error) {
         console.error("Error fetching or processing data:", error);
-      }
-      finally {
+      } finally {
         setLoading(false); // Hide loader after data is fetched
       }
     };
- 
+  
     fetchData();
   }, []);
- 
-  const processPeaksData = (data) => {
-    const sortedData = data.sort((a, b) => new Date(a.dateAcquired) - new Date(b.dateAcquired));
-    const sampleSetMap = {};
-    const injectionCountMap = {};
-    const arNumberMap = {};
-    const batchNumberMap = {};
-    const acquiredByMap = {};
-  
-    sortedData.forEach(item => {
-      const sampleSetId = item.sampleSetId;
-  
-      if (!sampleSetMap[sampleSetId]) {
-        sampleSetMap[sampleSetId] = { sumDate: 0, count: 0 };
-        arNumberMap[sampleSetId] = [];
-        batchNumberMap[sampleSetId] = [];
-        acquiredByMap[sampleSetId] = [];
-      }
-  
-      const dateAcquired = new Date(item.dateAcquired).getTime();
-      sampleSetMap[sampleSetId].sumDate += dateAcquired;
-      sampleSetMap[sampleSetId].count += 1;
-  
-      if (!injectionCountMap[sampleSetId]) {
-        injectionCountMap[sampleSetId] = 0;
-      }
-      injectionCountMap[sampleSetId] += 1;
-  
-      if (item.a_R_No) {
-        if (!arNumberMap[sampleSetId].includes(item.a_R_No)) {
-          arNumberMap[sampleSetId].push(item.a_R_No);
-        }
-      }
-  
-      if (item.batch_No) {
-        if (!batchNumberMap[sampleSetId].includes(item.batch_No)) {
-          batchNumberMap[sampleSetId].push(item.batch_No);
-        }
-      }
-  
-      if (item.sampleSetAcquiredBy) {
-        if (!acquiredByMap[sampleSetId].includes(item.sampleSetAcquiredBy)) {
-          acquiredByMap[sampleSetId].push(item.sampleSetAcquiredBy);
-        }
-      }
-    });
-  
-    return sortedData.map(item => {
-      const sampleSetId = item.sampleSetId;
-      let runtime = "NULL";
-  
-      if (sampleSetMap[sampleSetId]) {
-        const meanDate = new Date(sampleSetMap[sampleSetId].sumDate / sampleSetMap[sampleSetId].count);
-        item.sampleSetFinishDate = meanDate.toISOString();
-        item.no_Of_Injections = injectionCountMap[sampleSetId];
-        item.arNumbers = arNumberMap[sampleSetId].map(ar => ar).join(',<br>');
-        item.batchNumbers = batchNumberMap[sampleSetId].map(batch => batch).join(',<br>');
-        item.acquiredBy = acquiredByMap[sampleSetId].map(acquired => acquired).join(',<br>');
-  
-        if (item.sampleSetStartDate && item.sampleSetFinishDate) {
-          const startDate = new Date(item.sampleSetStartDate);
-          const finishDate = new Date(item.sampleSetFinishDate);
-          const diffMs = finishDate - startDate;
-          const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-          const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-          runtime = `${diffHrs}h ${diffMin}m`;
-        }
-      }
-  
-      return { ...item, runtime };
-    });
-  };
-  
   
  
   const handleSearch = () => {
-    const filtered = peaksData.filter((peak) => {
+    const filtered = processPeaksDataData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
-  
+ 
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
@@ -147,17 +75,10 @@ const HPLCLog_List = () => {
         (!batchNumbers || peak.batch_No.includes(batchNumbers))
       );
     });
-  
-    // Ensure unique sampleSetId values and take the first occurrence (which is the earliest due to sorting)
-    const uniqueFilteredData = [...new Set(filtered.map(item => item.sampleSetId))].map(id =>
-      filtered.find(item => item.sampleSetId === id)
-    );
-  
-    setFilteredData(uniqueFilteredData);
+ 
+    setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page on new search
   };
-  
- 
  
   const handleReset = () => {
     setFromDate("");
@@ -165,7 +86,7 @@ const HPLCLog_List = () => {
     setInstrumentId("");
     setProductName("");
     setBatchNumbers("");
-    setFilteredData(peaksData);
+    setFilteredData(processPeaksDataData);
     setCurrentPage(1); // Reset to first page on reset
   };
   const handlePrint = () => {
@@ -234,18 +155,18 @@ const HPLCLog_List = () => {
           <tr>
             <th class="text-center">S.No</th>
             <th class="text-center">Date Acquired</th>
+            <th class="text-center">Acquired By</th>
             <th class="text-center">Instrument Number</th>
             <th class="text-center">Product Name</th>
-            <th class="text-center">Sample Set Id</th>
-            <th class="text-center">AR Number</th>
-            <th class="text-center">Batch no.</th>
             <th class="text-center">Test Name</th>
+            <th class="text-center">AR Number</th>
+            <th class="text-center">Column Number</th>
+            <th class="text-center">Batch no.</th>
+            <th class="text-center">Injection Id</th>
             <th class="text-center">Sample Set Start Date</th>
             <th class="text-center">Sample Set Finish Date</th>
             <th class="text-center">No.of Injections</th>
             <th class="text-center">Runtime</th>
-            <th class="text-center">Acquired By</th>
-
           </tr>
         </thead>
         <tbody>
@@ -257,17 +178,25 @@ const HPLCLog_List = () => {
         <tr>
           <td class="text-center">${index + 1}</td>
           <td class="text-center">${peak.dateAcquired}</td>
+          <td class="text-center">${peak.sampleSetAcquiredBy}</td>
           <td class="text-center">${peak.instrument_No}</td>
           <td class="text-center">${peak.product_Name}</td>
-          <td class="text-center">${peak.sampleSetId}</td>
-          <td class="text-center">${peak.arNumbers}</td>
-          <td class="text-center">${peak.batchNumbers}</td>
           <td class="text-center">${peak.test_Name}</td>
-           <td>${new Date(peak.sampleSetStartDate).toLocaleString()}</td>
-          <td>${new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
-          <td class="text-center">${peak.no_Of_Injections}</td>
-          <td class="text-center">${peak.runtime}</td>
-          <td class="text-center">${peak.acquiredBy}</td>
+          <td class="text-center">${peak.a_R_No}</td>
+          <td class="text-center">${peak.column_No}</td>
+          <td class="text-center">${peak.batch_No}</td>
+          <td class="text-center">
+            ${peak.sampleSetStartDate
+              ? new Date(peak.sampleSetStartDate).toLocaleDateString()
+              : "NULL"}
+          </td>
+          <td class="text-center">
+            ${peak.sampleSetFinishDate
+              ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
+              : "NULL"}
+          </td>
+          <td class="text-center"></td>
+          <td class="text-center">10</td>
         </tr>
       `);
     });
@@ -281,7 +210,7 @@ const HPLCLog_List = () => {
     iframe.contentWindow.print();
  
     // Remove iframe after printing
-    iframe.remove();
+    document.body.removeChild(iframe);
   };
  
  
@@ -289,40 +218,35 @@ const HPLCLog_List = () => {
     const csvContent = [
       [
         "S.No",
-        "Date Acquired",
+        "Date",
+        "AR Number",
         "Instrument Number",
         "Product Name",
-        "Sample Set Id",
-        "AR Numbers",
-        "Batch Number",
         "Test Name",
+        "Column Number",
+        "Batch no.",
+        
         "Sample Set Start Date",
         "Sample Set Finish Date",
-        "No Of Injections",
-        "Runtime",
-        "Acquired By",
       ],
       ...filteredData.map((peak, index) => [
         index + 1,
-        peak.dateAcquired,
+        peak.sampleSetStartDate,
+        peak.a_R_No,
         peak.instrument_No,
         peak.product_Name,
-        peak.sampleSetId,
-        peak.arNumbers,
-        peak.batchNumbers,
         peak.test_Name,
+        peak.column_No,
+        peak.batch_No,
+       
         peak.sampleSetStartDate
           ? new Date(peak.sampleSetStartDate).toLocaleDateString()
           : "NULL",
         peak.sampleSetFinishDate
           ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
           : "NULL",
-          peak.no_Of_Injections,
-          peak.runtime,
-          peak.acquiredBy,
       ]),
     ]
-
       .map((e) => e.join(","))
       .join("\n");
  
@@ -337,15 +261,11 @@ const HPLCLog_List = () => {
     URL.revokeObjectURL(url);
   };
  
-  const uniqueFilteredData = [...new Set(filteredData.map(item => item.sampleSetId))].map(id =>
-    filteredData.find(item => item.sampleSetId === id)
-  );
- 
-  const totalRows = uniqueFilteredData.length;
+  const totalRows = filteredData.length;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentData = uniqueFilteredData.slice(startIndex, endIndex);
+  const currentData = filteredData.slice(startIndex, endIndex);
  
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -362,6 +282,19 @@ const HPLCLog_List = () => {
     pagesToShow.push(currentPage);
     if (!isLastPage) pagesToShow.push(currentPage + 1);
   }
+ 
+  const handleValues = (values) => {
+    // Check if values is defined and is a string, otherwise return a placeholder
+    if (typeof values === 'string') {
+        return values.split(',').map((val, i) => (
+            <div key={i}>
+                {val}{i < values.split(',').length - 1 && ', '}
+            </div>
+        ));
+    }
+    return <div>No Data</div>;
+};
+
   return (
     <div>
       {loading && (
@@ -615,14 +548,16 @@ const HPLCLog_List = () => {
                             <Link to={`/home/HPLCLog_List/${peak.sampleSetId}`} className="link-primary">
                               {peak.sampleSetId}
                             </Link>
-                          </td>                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.arNumbers }}></td>
-                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.batchNumbers }}></td>
+                          </td>      
+ 
+                          <td className="text-center">{handleValues(peak.a_R_No) }</td>
+                          <td className="text-center">{handleValues(peak.batch_No) }</td>
                           <td className="text-center">{peak.test_Name}</td>
                           <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
                         <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
-                          <td className="text-center">{peak.no_Of_Injections}</td>
+                          <td className="text-center">{peak.noOfInjections}</td>
                           <td className="text-center">{peak.runtime}</td>
-                          <td className="text-center" dangerouslySetInnerHTML={{ __html: peak.acquiredBy }}></td>
+                          <td className="text-center">{peak.sampleSetAcquiredBy }</td>
  
                         </tr>
                         ))}
@@ -707,7 +642,5 @@ const HPLCLog_List = () => {
 };
  
 export default HPLCLog_List;
- 
- 
  
  
