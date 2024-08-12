@@ -171,7 +171,7 @@ const SampleSetDetails = () => {
                   <tr key={index}>
                     <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                     <td className="text-center">
-                      {peak.dateAcquired}
+                    {new Date(peak.dateAcquired).toLocaleString()}
                     </td>
                     <td className="text-center">{peak.instrument_No}</td>
                     <td className="text-center">{peak.product_Name}</td>
