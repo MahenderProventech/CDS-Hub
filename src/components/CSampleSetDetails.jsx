@@ -80,60 +80,67 @@ const SampleSetDetails = () => {
       <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">
-            <Link to={"/home/HPLC_Dashboard1"}>
+            <Link to={"/home/Column_Dashboard1"}>
               <button type="button">
-                <img src={dash} alt="HPLCDashboard1" title="HPLCDashboard1" />
+                <img src={dash} alt="Dashboard1" title="Dashboard1" />
                 <p>Analysis</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
-            <Link to={"/home/HPLC_Dashboard"}>
+            <Link to={"/home/Column_Dashboard"}>
               <button type="button">
-                <img src={dash} alt="HPLCDashboard" title="HPLCDashboard" />
+                <img src={dash} alt="Dashboard" title="Dashboard" />
                 <p>Dashboard</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
-            <Link to={"/home/HPLCLog_List"}>
+            <Link to={"/home/ColumnLog_List"}>
               <button type="button">
-                <img src={HplcLogList} alt="HPLC Log List" title="HPLC Log List" />
-                <p>HPLC Log List</p>
+                <img
+                  src={HplcLogList}
+                  alt="Column Log List"
+                  title="Column Log List"
+                />
+                <p>Column Log List</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
-            <Link to={"/home/HPLC_Search"}>
+            <Link to={"/home/Column_Search"}>
               <button type="button">
                 <img src={search} alt="Search" title="Search" />
                 <p>Search</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
-            <Link to={"/home/HPLC_AuditTrail"}>
+            <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
-                <img src={report} alt="Audit Trail" title="Audit Trail" />
-                <p>Audit Trail</p>
-              </button>
-            </Link>
-          </div><br />
-          <div className="btn-group dropend">
-            <Link to={"/home/HPLC_UserManagement"}>
-              <button type="button">
-                <img src={usermanagement} alt="User Management" title="User Management" />
-                <p>User Management</p>
-              </button>
-            </Link>
-          </div><br />
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-            <Link to={"/"}>
-              <button type="button" title='Logout'>
-                <img src={po} alt="Logout" />
+                <img src={report} alt="Audit Trial" title="Audit Trial" />
+                <p>Audit Trial</p>
               </button>
             </Link>
           </div>
+          <br />
+          <div className="btn-group dropend">
+            <Link to={"/home/Column_UserManagement"}>
+              <button type="button">
+                <img
+                  src={usermanagement}
+                  alt="User Management"
+                  title="User Management"
+                />
+                <p>User Management</p>
+              </button>
+            </Link>
+          </div>
+          <br />
         </div>
       </aside>
       <section className="full_screen" style={{ backgroundColor: "#e9ecef" }}>
@@ -146,49 +153,54 @@ const SampleSetDetails = () => {
             </ol>
           </nav>
           <div className="cus-Table table-responsive">
-            <table className="table table-bordered" id="example">
-              <thead>
-                <tr>
-                  <th width="" className="text-center">
-                    S.No
-                  </th>
-                  <th className="text-center">Date Acquired</th>
-                  <th className="text-center">Instrument Number</th>
-                  <th className="text-center">Product Name</th>
-                  <th className="text-center">Sample Set ID</th>
-                  <th className="text-center">AR Number</th>
-                  <th className="text-center">Batch no.</th>
-                  <th className="text-center">Test Name</th>
-                  <th className="text-center">Sample Set Start Date</th>
-                  <th className="text-center">Sample Set Finish Date</th>
-                  <th className="text-center">No.of Injections</th>
-                  <th className="text-center">Runtime</th>
-                  <th className="text-center">Acquired By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.map((peak, index) => (
-                  <tr key={index}>
-                    <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                    <td className="text-center">
-                      {peak.dateAcquired}
-                    </td>
-                    <td className="text-center">{peak.instrument_No}</td>
-                    <td className="text-center">{peak.product_Name}</td>
-                    <td className="text-center">{peak.sampleSetId}</td>
-                    <td className="text-center">{handleValues(peak.a_R_No)}</td>
-                    <td className="text-center">{handleValues(peak.batch_No)}</td>
-                    <td className="text-center">{peak.test_Name}</td>
-                    <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
-                    <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
-                    <td className="text-center">{peak.noOfInjections}</td>
-                    <td className="text-center">{peak.runtime}</td>
-                    <td className="text-center">{peak.sampleSetAcquiredBy}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  <table className="table table-bordered" id="example">
+                    <thead>
+                      <tr>
+                        <th width="" className="text-center">
+                          S.No
+                        </th>
+                        <th className="text-center">Date Acquired</th>                
+                        <th className="text-center">Instrument Number</th>
+                        <th className="text-center">Product Name</th>
+                        <th className="text-center">Sample Set ID</th>
+                        <th className="text-center">Column No.</th>
+                        <th className="text-center">AR Number</th>
+                        <th className="text-center">Batch no.</th>
+                        <th className="text-center">Test Name</th>
+                        <th className="text-center">Sample Set Start Date</th>
+                        <th className="text-center">Sample Set Finish Date</th>
+                        <th className="text-center">No.of Injections</th>
+                        <th className="text-center">Runtime</th>
+                        <th className="text-center">Acquired By</th>
+ 
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {currentData.map((peak, index) => (
+                      <tr key={index}>
+                        <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
+                          <td className="text-center">
+                            {peak.dateAcquired}
+                          </td>
+                          <td className="text-center">{peak.instrument_No}</td>
+                          <td className="text-center">{peak.product_Name}</td>
+                          <td className="text-center">{peak.sampleSetId}</td>      
+                          <td className="text-center">{peak.column_No}</td>
+
+                          <td className="text-center">{handleValues(peak.a_R_No) }</td>
+                          <td className="text-center">{handleValues(peak.batch_No) }</td>
+                          <td className="text-center">{peak.test_Name}</td>
+                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
+                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
+                          <td className="text-center">{peak.noOfInjections}</td>
+                          <td className="text-center">{peak.runtime}</td>
+                          <td className="text-center">{peak.sampleSetAcquiredBy }</td>
+ 
+                        </tr>
+                        ))}
+                       </tbody>
+                  </table>
+                </div>
 
           <div className="row">
   <div className="col-sm-12">

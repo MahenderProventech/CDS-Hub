@@ -556,7 +556,7 @@ const ColumnLog_List = () => {
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
                           <td className="text-center">
-                            <Link to={`/home/HPLCLog_List/${peak.sampleSetId}`} className="link-primary">
+                            <Link to={`/home/ColumnLog_List/${peak.sampleSetId}`} className="link-primary">
                               {peak.sampleSetId}
                             </Link>
                           </td>      
