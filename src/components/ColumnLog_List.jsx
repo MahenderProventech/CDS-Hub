@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import dash from '../img/dashboard.png';
-import HplcLogList from '../img/hplc_loglist.png';
-import search from '../img/search.png';
-import report from '../img/report.png';
-import usermanagement from '../img/usermanagement.png';
-import { Link } from 'react-router-dom';
-import './print.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import dash from "../img/dashboard.png";
+import HplcLogList from "../img/hplc_loglist.png";
+import search from "../img/search.png";
+import report from "../img/report.png";
+import usermanagement from "../img/usermanagement.png";
+import { Link } from "react-router-dom";
+import "./print.css";
 import "./Column_Dashboard.css";
 
-
 const ColumnLog_List = () => {
-  const [peaksData, setPeaksData] = useState([]);
+  const [processPeaksDataData, setProcessPeaksDataData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [instruments, setInstruments] = useState([]);
   const [fromDate, setFromDate] = useState("");
@@ -22,21 +22,21 @@ const ColumnLog_List = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
-
-  useEffect(() => {
+ useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+          "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
         );
         const data = await response.json();
         console.log("Fetched data:", data);
-
-        if (Array.isArray(data.item2)) {
-          setPeaksData(data.item2);
-          setFilteredData(data.item2);
+  
+        // Check if item2 exists and is an array
+        if (Array.isArray(data)) {
+          setProcessPeaksDataData(data);
+          setFilteredData(data);
           const uniqueInstruments = [
-            ...new Set(data.item2.map((item) => item.instrument_No)),
+            ...new Set(data.map((item) => item.instrument_No)),
           ];
           setInstruments(uniqueInstruments);
         } else {
@@ -47,21 +47,20 @@ const ColumnLog_List = () => {
         }
       } catch (error) {
         console.error("Error fetching or processing data:", error);
-      }
-      finally {
+      } finally {
         setLoading(false); // Hide loader after data is fetched
       }
     };
-
+  
     fetchData();
   }, []);
 
   const handleSearch = () => {
-    const filtered = peaksData.filter((peak) => {
+    const filtered = processPeaksDataData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
-
+ 
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
@@ -70,7 +69,7 @@ const ColumnLog_List = () => {
         (!batchNumbers || peak.batch_No.includes(batchNumbers))
       );
     });
-
+ 
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page on new search
   };
@@ -81,21 +80,22 @@ const ColumnLog_List = () => {
     setInstrumentId("");
     setProductName("");
     setBatchNumbers("");
-    setFilteredData(peaksData);
+    setFilteredData(processPeaksDataData);
     setCurrentPage(1); // Reset to first page on reset
   };
+ 
   const handlePrint = () => {
     // Create a hidden iframe for printing
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0px';
-    iframe.style.height = '0px';
-    iframe.style.border = 'none';
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.border = "none";
     document.body.appendChild(iframe);
-  
+
     // Get iframe document
     const iframeDoc = iframe.contentWindow.document;
-  
+
     // Create CSS styles to be included in the iframe
     const printStyles = `
       <style>
@@ -135,14 +135,14 @@ const ColumnLog_List = () => {
         }
       </style>
     `;
-  
+
     // Write content to the iframe document
     iframeDoc.open();
-    iframeDoc.write('<html><head><title>Print</title>');
+    iframeDoc.write("<html><head><title>Print</title>");
     iframeDoc.write(printStyles); // Inject CSS styles
-    iframeDoc.write('</head><body>');
-    iframeDoc.write('<h1>Column Log List</h1>');
-  
+    iframeDoc.write("</head><body>");
+    iframeDoc.write("<h1>Column Log List</h1>");
+
     // Add table headers
     iframeDoc.write(`
       <table class="table table-bordered">
@@ -166,7 +166,7 @@ const ColumnLog_List = () => {
         </thead>
         <tbody>
     `);
-  
+
     // Add table rows for all filtered data
     filteredData.forEach((peak, index) => {
       iframeDoc.write(`
@@ -182,33 +182,37 @@ const ColumnLog_List = () => {
           <td class="text-center">${peak.batch_No}</td>
           <td class="text-center">${peak.injectionId}</td>
           <td class="text-center">
-            ${peak.sampleSetStartDate
-              ? new Date(peak.sampleSetStartDate).toLocaleDateString()
-              : "NULL"}
+            ${
+              peak.sampleSetStartDate
+                ? new Date(peak.sampleSetStartDate).toLocaleDateString()
+                : "NULL"
+            }
           </td>
           <td class="text-center">
-            ${peak.sampleSetFinishDate
-              ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
-              : "NULL"}
+            ${
+              peak.sampleSetFinishDate
+                ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
+                : "NULL"
+            }
           </td>
           <td class="text-center"></td>
           <td class="text-center">10</td>
         </tr>
       `);
     });
-  
-    iframeDoc.write('</tbody></table>');
-    iframeDoc.write('</body></html>');
+
+    iframeDoc.write("</tbody></table>");
+    iframeDoc.write("</body></html>");
     iframeDoc.close();
-  
+
     // Print the iframe content
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
-  
+
     // Remove iframe after printing
     document.body.removeChild(iframe);
   };
-  
+
   const handleExport = () => {
     const csvContent = [
       [
@@ -263,22 +267,35 @@ const ColumnLog_List = () => {
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
-
+ 
+  // Handle pagination
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  // Check if the current page is the first or the last page
+  // Generate pages to show
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
-  // Determine which pages to display
   const pagesToShow = [];
   if (totalPages > 1) {
     if (!isFirstPage) pagesToShow.push(currentPage - 1);
     pagesToShow.push(currentPage);
     if (!isLastPage) pagesToShow.push(currentPage + 1);
   }
+
+  const handleValues = (values) => {
+    // Check if values is defined and is a string, otherwise return a placeholder
+    if (typeof values === "string") {
+      return values.split(",").map((val, i) => (
+        <div key={i}>
+          {val}
+          {i < values.split(",").length - 1 && ", "}
+        </div>
+      ));
+    }
+    return <div>No Data</div>;
+  };
 
   return (
     <div>
@@ -293,14 +310,15 @@ const ColumnLog_List = () => {
       )}
       <aside className="col-md-1 p_sideNav">
         <div className="main">
-      <div className="btn-group dropend">
+          <div className="btn-group dropend">
             <Link to={"/home/Column_Dashboard1"}>
               <button type="button">
                 <img src={dash} alt="Dashboard1" title="Dashboard1" />
                 <p>Analysis</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_Dashboard"}>
               <button type="button">
@@ -308,15 +326,21 @@ const ColumnLog_List = () => {
                 <p>Dashboard</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/ColumnLog_List"}>
               <button type="button">
-                <img src={HplcLogList} alt="Column Log List" title="Column Log List" />
+                <img
+                  src={HplcLogList}
+                  alt="Column Log List"
+                  title="Column Log List"
+                />
                 <p>Column Log List</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_Search"}>
               <button type="button">
@@ -324,7 +348,8 @@ const ColumnLog_List = () => {
                 <p>Search</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
@@ -332,23 +357,31 @@ const ColumnLog_List = () => {
                 <p>Audit Trial</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_UserManagement"}>
               <button type="button">
-                <img src={usermanagement} alt="User Management" title="User Management" />
+                <img
+                  src={usermanagement}
+                  alt="User Management"
+                  title="User Management"
+                />
                 <p>User Management</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
         </div>
       </aside>
 
-      <section className="full_screen" style={{ backgroundColor: '#e9ecef' }}>
+      <section className="full_screen" style={{ backgroundColor: "#e9ecef" }}>
         <div className="container-fluid">
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb cooseText mb-2">
-              <li className="breadcrumb-item active" aria-current="page">Column Log Table</li>
+              <li className="breadcrumb-item active" aria-current="page">
+                HPLC Log Table
+              </li>
             </ol>
           </nav>
           <div className="row">
@@ -409,7 +442,7 @@ const ColumnLog_List = () => {
                       </select>
                     </div>
                   </div>
-
+ 
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="productName" className="form-label">
@@ -425,7 +458,7 @@ const ColumnLog_List = () => {
                       />
                     </div>
                   </div>
-
+ 
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="batchNumbers" className="form-label">
@@ -441,7 +474,7 @@ const ColumnLog_List = () => {
                       />
                     </div>
                   </div>
-
+ 
                   <div className="col-sm-3" style={{ marginTop: "28px" }}>
                     <button
                       className="btn btn-primary ms-3 MinW200 mt29"
@@ -449,7 +482,7 @@ const ColumnLog_List = () => {
                     >
                       Search <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
-
+ 
                     <button
                       type="button"
                       className="btn btn-secondary ms-2"
@@ -462,8 +495,7 @@ const ColumnLog_List = () => {
                 </div>
               </div>
               <div>
-
-             
+ 
               <div
                 className="card mt-3"
                 style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
@@ -488,7 +520,9 @@ const ColumnLog_List = () => {
                     </div>
                   </div>
                 </div>
-                
+ 
+ 
+             
                 <div className="cus-Table table-responsive">
                   <table className="table table-bordered" id="example">
                     <thead>
@@ -496,56 +530,50 @@ const ColumnLog_List = () => {
                         <th width="" className="text-center">
                           S.No
                         </th>
-                        <th className="text-center">Date Acquired</th>
-                        <th className="text-center">Acquired By</th>
-                        <th className="text-center">Column Number</th>
+                        <th className="text-center">Date Acquired</th>                
                         <th className="text-center">Instrument Number</th>
                         <th className="text-center">Product Name</th>
-                        <th className="text-center">Test Name</th>
+                        <th className="text-center">Sample Set ID</th>
+                        <th className="text-center">Column No.</th>
                         <th className="text-center">AR Number</th>
                         <th className="text-center">Batch no.</th>
-                        <th className="text-center">Injection Id</th>
+                        <th className="text-center">Test Name</th>
                         <th className="text-center">Sample Set Start Date</th>
                         <th className="text-center">Sample Set Finish Date</th>
                         <th className="text-center">No.of Injections</th>
                         <th className="text-center">Runtime</th>
+                        <th className="text-center">Acquired By</th>
+ 
                       </tr>
                     </thead>
                     <tbody>
-                      
-                      {currentData.map((peak, index) => (
+                    {currentData.map((peak, index) => (
                       <tr key={index}>
-                        <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>                
-                                  <td className="text-center">
+                        <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
+                          <td className="text-center">
                             {peak.dateAcquired}
                           </td>
-                          <td className="text-center">{peak.sampleSetAcquiredBy}</td>
-                          <td className="text-center">{peak.column_No}</td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
+                          <td className="text-center">
+                            <Link to={`/home/HPLCLog_List/${peak.sampleSetId}`} className="link-primary">
+                              {peak.sampleSetId}
+                            </Link>
+                          </td>      
+                          <td className="text-center">{peak.column_No}</td>
+
+                          <td className="text-center">{handleValues(peak.a_R_No) }</td>
+                          <td className="text-center">{handleValues(peak.batch_No) }</td>
                           <td className="text-center">{peak.test_Name}</td>
-                          <td className="text-center">{peak.a_R_No}</td>
-                          <td className="text-center">{peak.batch_No}</td>
-                          <td className="text-center">{peak.injectionId}</td>
-                          <td className="text-center">
-                            {peak.sampleSetStartDate
-                              ? new Date(
-                                  peak.sampleSetStartDate
-                                ).toLocaleDateString()
-                              : "NULL"}
-                          </td>
-                          <td className="text-center">
-                            {peak.sampleSetFinishDate
-                              ? new Date(
-                                  peak.sampleSetFinishDate
-                                ).toLocaleDateString()
-                              : "NULL"}
-                          </td>
-                          <td className="text-center"></td>
-                          <td className="text-center">10</td>
+                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
+                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
+                          <td className="text-center">{peak.noOfInjections}</td>
+                          <td className="text-center">{peak.runtime}</td>
+                          <td className="text-center">{peak.sampleSetAcquiredBy }</td>
+ 
                         </tr>
-                      ))}
-                    </tbody>
+                        ))}
+                       </tbody>
                   </table>
                 </div>
               </div>
@@ -603,7 +631,7 @@ const ColumnLog_List = () => {
     </nav>
   </div>
 </div>
-
+ 
                   </div>
                 </div>
             <div
@@ -622,7 +650,7 @@ const ColumnLog_List = () => {
         </div>
       </section>
     </div>
-  );
+     );
 };
-
+ 
 export default ColumnLog_List;
