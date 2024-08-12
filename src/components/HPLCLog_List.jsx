@@ -162,11 +162,11 @@ const HPLCLog_List = () => {
             <th class="text-center">AR Number</th>
             <th class="text-center">Column Number</th>
             <th class="text-center">Batch no.</th>
-            <th class="text-center">Injection Id</th>
+          
             <th class="text-center">Sample Set Start Date</th>
             <th class="text-center">Sample Set Finish Date</th>
-            <th class="text-center">No.of Injections</th>
-            <th class="text-center">Runtime</th>
+            
+           
           </tr>
         </thead>
         <tbody>
@@ -195,8 +195,8 @@ const HPLCLog_List = () => {
               ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
               : "NULL"}
           </td>
-          <td class="text-center"></td>
-          <td class="text-center">10</td>
+          
+        
         </tr>
       `);
     });
@@ -529,8 +529,8 @@ const HPLCLog_List = () => {
                         <th className="text-center">Test Name</th>
                         <th className="text-center">Sample Set Start Date</th>
                         <th className="text-center">Sample Set Finish Date</th>
-                        <th className="text-center">No.of Injections</th>
-                        <th className="text-center">Runtime</th>
+                        
+                        
                         <th className="text-center">Acquired By</th>
  
                       </tr>
@@ -555,11 +555,10 @@ const HPLCLog_List = () => {
                           <td className="text-center">{peak.test_Name}</td>
                           <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
                         <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
-                          <td className="text-center">{peak.noOfInjections}</td>
-                          <td className="text-center">{peak.runtime}</td>
+                          
+                          
                           <td className="text-center">{peak.sampleSetAcquiredBy }</td>
- 
-                        </tr>
+                                                 </tr>
                         ))}
                        </tbody>
                   </table>

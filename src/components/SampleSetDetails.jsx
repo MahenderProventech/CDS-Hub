@@ -161,8 +161,7 @@ const SampleSetDetails = () => {
                   <th className="text-center">Test Name</th>
                   <th className="text-center">Sample Set Start Date</th>
                   <th className="text-center">Sample Set Finish Date</th>
-                  <th className="text-center">No.of Injections</th>
-                  <th className="text-center">Runtime</th>
+                  
                   <th className="text-center">Acquired By</th>
                 </tr>
               </thead>
@@ -181,9 +180,9 @@ const SampleSetDetails = () => {
                     <td className="text-center">{peak.test_Name}</td>
                     <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
                     <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
-                    <td className="text-center">{peak.noOfInjections}</td>
-                    <td className="text-center">{peak.runtime}</td>
-                    <td className="text-center">{peak.sampleSetAcquiredBy}</td>
+                  
+                    
+                  <td className="text-center">{peak.sampleSetAcquiredBy}</td>
                   </tr>
                 ))}
               </tbody>
