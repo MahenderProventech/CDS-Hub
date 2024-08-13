@@ -22,7 +22,7 @@ const ColumnLog_List = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
@@ -30,7 +30,7 @@ const ColumnLog_List = () => {
         );
         const data = await response.json();
         console.log("Fetched data:", data);
-  
+
         // Check if item2 exists and is an array
         if (Array.isArray(data)) {
           setProcessPeaksDataData(data);
@@ -51,7 +51,7 @@ const ColumnLog_List = () => {
         setLoading(false); // Hide loader after data is fetched
       }
     };
-  
+
     fetchData();
   }, []);
 
@@ -60,7 +60,7 @@ const ColumnLog_List = () => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
- 
+
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
@@ -69,7 +69,7 @@ const ColumnLog_List = () => {
         (!batchNumbers || peak.batch_No.includes(batchNumbers))
       );
     });
- 
+
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page on new search
   };
@@ -83,7 +83,7 @@ const ColumnLog_List = () => {
     setFilteredData(processPeaksDataData);
     setCurrentPage(1); // Reset to first page on reset
   };
- 
+
   const handlePrint = () => {
     // Create a hidden iframe for printing
     const iframe = document.createElement("iframe");
@@ -267,7 +267,7 @@ const ColumnLog_List = () => {
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
- 
+
   // Handle pagination
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -442,7 +442,7 @@ const ColumnLog_List = () => {
                       </select>
                     </div>
                   </div>
- 
+
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="productName" className="form-label">
@@ -458,7 +458,7 @@ const ColumnLog_List = () => {
                       />
                     </div>
                   </div>
- 
+
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="batchNumbers" className="form-label">
@@ -474,7 +474,7 @@ const ColumnLog_List = () => {
                       />
                     </div>
                   </div>
- 
+
                   <div className="col-sm-3" style={{ marginTop: "28px" }}>
                     <button
                       className="btn btn-primary ms-3 MinW200 mt29"
@@ -482,7 +482,7 @@ const ColumnLog_List = () => {
                     >
                       Search <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
- 
+
                     <button
                       type="button"
                       className="btn btn-secondary ms-2"
@@ -491,166 +491,244 @@ const ColumnLog_List = () => {
                       Reset
                     </button>
                   </div>
-                 
                 </div>
               </div>
               <div>
- 
-              <div
-                className="card mt-3"
-                style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
-              >
-                 <div className="row">
-                  <div className="col-sm-2">
-                    <div className="mb-2">
-                      <label htmlFor="rowsPerPage" className="form-label">
-                        <b>Rows Per Page</b>
-                      </label>
-                      <select
-                        className="form-select"
-                        id="rowsPerPage"
-                        value={rowsPerPage}
-                        onChange={(e) => setRowsPerPage(parseInt(e.target.value))}
-                      >
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
+                <div
+                  className="card mt-3"
+                  style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
+                >
+                  <div className="row">
+                    <div className="col-sm-2">
+                      <div className="mb-2">
+                        <label htmlFor="rowsPerPage" className="form-label">
+                          <b>Rows Per Page</b>
+                        </label>
+                        <select
+                          className="form-select"
+                          id="rowsPerPage"
+                          value={rowsPerPage}
+                          onChange={(e) =>
+                            setRowsPerPage(parseInt(e.target.value))
+                          }
+                        >
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="cus-Table table-responsive">
+                    <table className="table table-bordered" id="example">
+                      <thead>
+                        <tr>
+                          <th width="" className="text-center">
+                            S.No
+                          </th>
+                          <th className="text-center">Date Acquired</th>
+                          <th className="text-center">Instrument Number</th>
+                          <th className="text-center">Product Name</th>
+                          <th className="text-center">Sample Set ID</th>
+                          <th className="text-center">Column No.</th>
+                          <th className="text-center">AR Number</th>
+                          <th className="text-center">Batch no.</th>
+                          <th className="text-center">Test Name</th>
+                          <th className="text-center">Sample Set Start Date</th>
+                          <th className="text-center">
+                            Sample Set Finish Date
+                          </th>
+                          <th className="text-center">No.of Injections</th>
+
+                          <th className="text-center">Acquired By</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentData.map((peak, index) => (
+                          <tr key={index}>
+                            <td className="text-center">
+                              {(currentPage - 1) * rowsPerPage + index + 1}
+                            </td>
+                            <td className="text-center">
+                              {new Date(peak.dateAcquired).toLocaleString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: false,
+                                }
+                              )}
+                            </td>
+                            <td className="text-center">
+                              {peak.instrument_No}
+                            </td>
+                            <td className="text-center">{peak.product_Name}</td>
+                            <td className="text-center">
+                              <Link
+                                to={`/home/ColumnLog_List/${peak.sampleSetId}`}
+                                className="link-primary"
+                              >
+                                {peak.sampleSetId}
+                              </Link>
+                            </td>
+                            <td className="text-center">{peak.column_No}</td>
+
+                            <td className="text-center">
+                              {handleValues(peak.a_R_No)}
+                            </td>
+                            <td className="text-center">
+                              {handleValues(peak.batch_No)}
+                            </td>
+                            <td className="text-center">{peak.test_Name}</td>
+                            <td className="text-center">
+                              {new Date(peak.sampleSetStartDate).toLocaleString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: false,
+                                }
+                              )}
+                            </td>
+                            <td className="text-center">
+                              {new Date(
+                                peak.sampleSetFinishDate
+                              ).toLocaleString("en-GB", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              })}
+                            </td>
+                            <td className="text-center">
+                              {peak.noOfInjections}
+                            </td>
+
+                            <td className="text-center">
+                              {peak.sampleSetAcquiredBy}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div>
+                  <br></br>
+                  <div className="row">
+                    <div className="col-sm-12">
+                      <nav aria-label="Page navigation">
+                        <ul className="pagination justify-content-center">
+                          <li
+                            className={`page-item ${
+                              isFirstPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isFirstPage && handlePageChange(1)
+                              }
+                            >
+                              First
+                            </button>
+                          </li>
+                          <li
+                            className={`page-item ${
+                              isFirstPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isFirstPage &&
+                                handlePageChange(currentPage - 1)
+                              }
+                            >
+                              Previous
+                            </button>
+                          </li>
+                          {pagesToShow.map((pageNumber) => (
+                            <li
+                              key={pageNumber}
+                              className={`page-item ${
+                                currentPage === pageNumber ? "active" : ""
+                              }`}
+                            >
+                              <button
+                                className="page-link"
+                                onClick={() => handlePageChange(pageNumber)}
+                              >
+                                {pageNumber}
+                              </button>
+                            </li>
+                          ))}
+                          <li
+                            className={`page-item ${
+                              isLastPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isLastPage && handlePageChange(currentPage + 1)
+                              }
+                            >
+                              Next
+                            </button>
+                          </li>
+                          <li
+                            className={`page-item ${
+                              isLastPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isLastPage && handlePageChange(totalPages)
+                              }
+                            >
+                              Last
+                            </button>
+                          </li>
+                        </ul>
+                      </nav>
                     </div>
                   </div>
                 </div>
- 
- 
-             
-                <div className="cus-Table table-responsive">
-                  <table className="table table-bordered" id="example">
-                    <thead>
-                      <tr>
-                        <th width="" className="text-center">
-                          S.No
-                        </th>
-                        <th className="text-center">Date Acquired</th>                
-                        <th className="text-center">Instrument Number</th>
-                        <th className="text-center">Product Name</th>
-                        <th className="text-center">Sample Set ID</th>
-                        <th className="text-center">Column No.</th>
-                        <th className="text-center">AR Number</th>
-                        <th className="text-center">Batch no.</th>
-                        <th className="text-center">Test Name</th>
-                        <th className="text-center">Sample Set Start Date</th>
-                        <th className="text-center">Sample Set Finish Date</th>
-                        <th className="text-center">No.of Injections</th>
-                        
-                        <th className="text-center">Acquired By</th>
- 
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {currentData.map((peak, index) => (
-                      <tr key={index}>
-                        <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
-                          <td className="text-center">
-                          {new Date(peak.dateAcquired).toLocaleString()}
-                          </td>
-                          <td className="text-center">{peak.instrument_No}</td>
-                          <td className="text-center">{peak.product_Name}</td>
-                          <td className="text-center">
-                            <Link to={`/home/ColumnLog_List/${peak.sampleSetId}`} className="link-primary">
-                              {peak.sampleSetId}
-                            </Link>
-                          </td>      
-                          <td className="text-center">{peak.column_No}</td>
-
-                          <td className="text-center">{handleValues(peak.a_R_No) }</td>
-                          <td className="text-center">{handleValues(peak.batch_No) }</td>
-                          <td className="text-center">{peak.test_Name}</td>
-                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
-                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
-                          <td className="text-center">{peak.noOfInjections}</td>
-                         
-                          <td className="text-center">{peak.sampleSetAcquiredBy }</td>
- 
-                        </tr>
-                        ))}
-                       </tbody>
-                  </table>
-                </div>
               </div>
-            </div>
-            <div>
-              <div>
-                <br></br>
-                <div className="row">
-  <div className="col-sm-12">
-    <nav aria-label="Page navigation">
-      <ul className="pagination justify-content-center">
-        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isFirstPage && handlePageChange(1)}
-          >
-            First
-          </button>
-        </li>
-        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isFirstPage && handlePageChange(currentPage - 1)}
-          >
-            Previous
-          </button>
-        </li>
-        {pagesToShow.map(pageNumber => (
-          <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(pageNumber)}
-            >
-              {pageNumber}
-            </button>
-          </li>
-        ))}
-        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
-          >
-            Next
-          </button>
-        </li>
-        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isLastPage && handlePageChange(totalPages)}
-          >
-            Last
-          </button>
-        </li>
-      </ul>
-    </nav>
-  </div>
-</div>
- 
-                  </div>
-                </div>
-            <div
+              <div
                 className="d-flex justify-content-end align-items-center my-3"
                 style={{ marginRight: "20px" }}
               >
-                <button className="btn btn-outline-dark me-2" onClick={handlePrint}>
+                <button
+                  className="btn btn-outline-dark me-2"
+                  onClick={handlePrint}
+                >
                   Print
                 </button>
                 <button className="btn btn-primary" onClick={handleExport}>
                   Export
                 </button>
               </div>
-              </div>
+            </div>
           </div>
         </div>
       </section>
     </div>
-     );
+  );
 };
- 
+
 export default ColumnLog_List;

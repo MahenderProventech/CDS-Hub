@@ -8,6 +8,8 @@ import search from "../img/search.png";
 import report from "../img/report.png";
 import usermanagement from "../img/usermanagement.png";
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 const SampleSetDetails = () => {
   const { sampleSetId } = useParams();
@@ -147,6 +149,11 @@ const SampleSetDetails = () => {
         <div className="container-fluid">
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb cooseText mb-2">
+            <li className="breadcrumb-item">
+                <Link to={"/home/ColumnLog_List"}>
+                  <FontAwesomeIcon icon={faArrowLeft} /> Back
+                </Link>
+              </li>
               <li className="breadcrumb-item active" aria-current="page">
                 Details for Sample Set ID: {sampleSetId}
               </li>
@@ -180,7 +187,14 @@ const SampleSetDetails = () => {
                       <tr key={index}>
                         <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
                           <td className="text-center">
-                          {new Date(peak.dateAcquired).toLocaleString()}
+                          {new Date(peak.dateAcquired).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        })}
                           </td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
@@ -190,8 +204,22 @@ const SampleSetDetails = () => {
                           <td className="text-center">{handleValues(peak.a_R_No) }</td>
                           <td className="text-center">{handleValues(peak.batch_No) }</td>
                           <td className="text-center">{peak.test_Name}</td>
-                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
-                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
+                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        })}</td>
+                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        })}</td>
                           <td className="text-center">{peak.noOfInjections}</td>
                           
                           <td className="text-center">{peak.sampleSetAcquiredBy }</td>

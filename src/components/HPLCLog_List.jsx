@@ -540,7 +540,14 @@ const HPLCLog_List = () => {
                       <tr key={index}>
                         <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
                           <td className="text-center">
-                          {new Date(peak.dateAcquired).toLocaleString()}
+                          {new Date(peak.dateAcquired).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        })}
                           </td>
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
@@ -553,8 +560,22 @@ const HPLCLog_List = () => {
                           <td className="text-center">{handleValues(peak.a_R_No) }</td>
                           <td className="text-center">{handleValues(peak.batch_No) }</td>
                           <td className="text-center">{peak.test_Name}</td>
-                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString()}</td>
-                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString()}</td>
+                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        })}</td>
+                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        })}</td>
                           
                           
                           <td className="text-center">{peak.sampleSetAcquiredBy }</td>
