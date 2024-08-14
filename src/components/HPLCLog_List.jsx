@@ -370,7 +370,7 @@ const HPLCLog_List = () => {
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb cooseText mb-2">
               <li className="breadcrumb-item active" aria-current="page">
-                HPLC Log Table
+                HPLC Usage Log 
               </li>
             </ol>
           </nav>

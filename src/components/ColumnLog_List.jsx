@@ -380,7 +380,7 @@ const ColumnLog_List = () => {
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb cooseText mb-2">
               <li className="breadcrumb-item active" aria-current="page">
-                Column Log Table
+                Column Usage Log
               </li>
             </ol>
           </nav>
