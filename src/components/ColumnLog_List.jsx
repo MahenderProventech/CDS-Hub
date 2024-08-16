@@ -21,24 +21,45 @@ const ColumnLog_List = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [productNames, setProductNames] = useState([]);
+  const [columnNo, setColumnNo] = useState("");
+ const [columnNos, setColumnNos] = useState([]);
+  
+
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch the main data
         const response = await fetch(
           "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
         );
         const data = await response.json();
         console.log("Fetched data:", data);
-
-        // Check if item2 exists and is an array
+  
+        // Check if the fetched data is an array
         if (Array.isArray(data)) {
           setProcessPeaksDataData(data);
           setFilteredData(data);
+  
+          // Get unique product names and instruments
           const uniqueInstruments = [
             ...new Set(data.map((item) => item.instrument_No)),
           ];
           setInstruments(uniqueInstruments);
+  
+          const uniqueProductNames = [
+            ...new Set(data.map((item) => item.product_Name)),
+          ];
+          setProductNames(uniqueProductNames);
+
+          const uniqueColumnNos = [
+            ...new Set(data.map((item) => item.column_No)),
+          ];
+
+          setColumnNos(uniqueColumnNos);
+
         } else {
           console.error(
             "Fetched data does not contain the expected array:",
@@ -51,23 +72,25 @@ const ColumnLog_List = () => {
         setLoading(false); // Hide loader after data is fetched
       }
     };
-
+  
     fetchData();
   }, []);
-
+  
   const handleSearch = () => {
     const filtered = processPeaksDataData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
 
+
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
         (!instrumentId || peak.instrument_No === instrumentId) &&
         (!productName || peak.product_Name.includes(productName)) &&
-        (!batchNumbers || peak.batch_No.includes(batchNumbers))
-      );
+        (!batchNumbers || peak.batch_No.includes(batchNumbers)) &&
+        (!columnNo || peak.column_No.includes(columnNo))
+     );
     });
 
     setFilteredData(filtered);
@@ -80,6 +103,7 @@ const ColumnLog_List = () => {
     setInstrumentId("");
     setProductName("");
     setBatchNumbers("");
+    setColumnNo("");
     setFilteredData(processPeaksDataData);
     setCurrentPage(1); // Reset to first page on reset
   };
@@ -395,7 +419,7 @@ const ColumnLog_List = () => {
                     <div className="mb-3">
                       <label htmlFor="fromDate" className="form-label">
                         <b>From Date</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <input
                         type="date"
@@ -410,7 +434,7 @@ const ColumnLog_List = () => {
                     <div className="mb-3">
                       <label htmlFor="toDate" className="form-label">
                         <b>To Date</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <input
                         type="date"
@@ -425,7 +449,7 @@ const ColumnLog_List = () => {
                     <div className="mb-3">
                       <label htmlFor="instrumentId" className="form-label">
                         <b>Instrument ID</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <select
                         className="form-select"
@@ -444,26 +468,54 @@ const ColumnLog_List = () => {
                   </div>
 
                   <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="productName" className="form-label">
-                        <b>Product Name</b>
-                        <span style={{ color: "red" }}>*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
+                   <div className="mb-3">
+                   <label htmlFor="productName" className="form-label">
+                     <b>Product Name</b>
+                       </label>
+                       <select
+                         className="form-select"
                         id="productName"
                         value={productName}
                         onChange={(e) => setProductName(e.target.value)}
-                      />
-                    </div>
-                  </div>
+    >
+                            <option value="">--select--</option>
+                           {productNames.map((name, index) => (
+                              <option key={index} value={name}>
+                                    {name}
+                                  </option>
+                               ))}
+                           </select>
+                          </div>
+                        </div>
+                    
+                        <div className="col-sm-3">
+  <div className="mb-3">
+    <label htmlFor="columnNo" className="form-label">
+      <b>Column No</b>
+    </label>
+    <select
+      className="form-select"
+      id="columnNo"
+      value={columnNo}
+      onChange={(e) => setColumnNo(e.target.value)}
+    >
+      <option value="">--select--</option>
+      {columnNos.map((number, index) => (
+        <option key={index} value={number}>
+          {number}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
+
 
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="batchNumbers" className="form-label">
                         <b>Batch Numbers</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <input
                         type="text"
@@ -528,7 +580,7 @@ const ColumnLog_List = () => {
                           <th width="" className="text-center">
                             S.No
                           </th>
-                          <th className="text-center">Date Acquired</th>
+                          {/* <th className="text-center">Date Acquired</th> */}
                           <th className="text-center">Instrument Number</th>
                           <th className="text-center">Product Name</th>
                           <th className="text-center">Sample Set ID</th>
@@ -551,7 +603,7 @@ const ColumnLog_List = () => {
                             <td className="text-center">
                               {(currentPage - 1) * rowsPerPage + index + 1}
                             </td>
-                            <td className="text-center">
+                            {/* <td className="text-center">
                               {new Date(peak.dateAcquired).toLocaleString(
                                 "en-GB",
                                 {
@@ -563,7 +615,7 @@ const ColumnLog_List = () => {
                                   hour12: false,
                                 }
                               )}
-                            </td>
+                            </td> */}
                             <td className="text-center">
                               {peak.instrument_No}
                             </td>

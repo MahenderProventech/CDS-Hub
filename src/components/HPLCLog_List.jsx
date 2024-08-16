@@ -6,7 +6,7 @@ import report from "../img/report.png";
 import usermanagement from "../img/usermanagement.png";
 import { Link } from "react-router-dom";
 import './print.css';
-import po from '../img/po.svg';
+import po from '../img/po.svg'; 
 import './Column_Dashboard.css';
  
  
@@ -24,6 +24,7 @@ const HPLCLog_List = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [productNames, setProductNames] = useState([]);
   
  
  
@@ -44,6 +45,12 @@ const HPLCLog_List = () => {
             ...new Set(data.map((item) => item.instrument_No)),
           ];
           setInstruments(uniqueInstruments);
+
+          const uniqueProductNames = [
+            ...new Set(data.map((item) => item.product_Name)),
+          ];
+          setProductNames(uniqueProductNames);
+
         } else {
           console.error(
             "Fetched data does not contain the expected array:",
@@ -154,7 +161,7 @@ const HPLCLog_List = () => {
         <thead>
           <tr>
             <th class="text-center">S.No</th>
-            <th class="text-center">Date Acquired</th>
+            // <th class="text-center">Date Acquired</th>
             <th class="text-center">Acquired By</th>
             <th class="text-center">Instrument Number</th>
             <th class="text-center">Product Name</th>
@@ -177,7 +184,7 @@ const HPLCLog_List = () => {
       iframeDoc.write(`
         <tr>
           <td class="text-center">${index + 1}</td>
-          <td class="text-center">${peak.dateAcquired}</td>
+          //  <td class="text-center">${peak.dateAcquired}</td>
           <td class="text-center">${peak.sampleSetAcquiredBy}</td>
           <td class="text-center">${peak.instrument_No}</td>
           <td class="text-center">${peak.product_Name}</td>
@@ -385,7 +392,7 @@ const HPLCLog_List = () => {
                     <div className="mb-3">
                       <label htmlFor="fromDate" className="form-label">
                         <b>From Date</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <input
                         type="date"
@@ -400,7 +407,7 @@ const HPLCLog_List = () => {
                     <div className="mb-3">
                       <label htmlFor="toDate" className="form-label">
                         <b>To Date</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <input
                         type="date"
@@ -415,7 +422,7 @@ const HPLCLog_List = () => {
                     <div className="mb-3">
                       <label htmlFor="instrumentId" className="form-label">
                         <b>Instrument ID</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <select
                         className="form-select"
@@ -434,26 +441,31 @@ const HPLCLog_List = () => {
                   </div>
  
                   <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="productName" className="form-label">
-                        <b>Product Name</b>
-                        <span style={{ color: "red" }}>*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
+                   <div className="mb-3">
+                   <label htmlFor="productName" className="form-label">
+                     <b>Product Name</b>
+                       </label>
+                       <select
+                         className="form-select"
                         id="productName"
                         value={productName}
                         onChange={(e) => setProductName(e.target.value)}
-                      />
-                    </div>
-                  </div>
- 
+    >
+                            <option value="">--select--</option>
+                           {productNames.map((name, index) => (
+                              <option key={index} value={name}>
+                                    {name}
+                                  </option>
+                               ))}
+                           </select>
+                          </div>
+                        </div>
+
                   <div className="col-sm-3">
                     <div className="mb-3">
                       <label htmlFor="batchNumbers" className="form-label">
                         <b>Batch Numbers</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                       <input
                         type="text"
@@ -520,7 +532,7 @@ const HPLCLog_List = () => {
                         <th width="" className="text-center">
                           S.No
                         </th>
-                        <th className="text-center">Date Acquired</th>                
+                        {/* <th className="text-center">Date Acquired</th>                 */}
                         <th className="text-center">Instrument Number</th>
                         <th className="text-center">Product Name</th>
                         <th className="text-center">Sample Set ID</th>
@@ -539,7 +551,7 @@ const HPLCLog_List = () => {
                     {currentData.map((peak, index) => (
                       <tr key={index}>
                         <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
-                          <td className="text-center">
+                          {/* <td className="text-center">
                           {new Date(peak.dateAcquired).toLocaleString('en-GB', {
             day: '2-digit',
             month: '2-digit',
@@ -548,7 +560,7 @@ const HPLCLog_List = () => {
             minute: '2-digit',
             hour12: false
         })}
-                          </td>
+                          </td> */}
                           <td className="text-center">{peak.instrument_No}</td>
                           <td className="text-center">{peak.product_Name}</td>
                           <td className="text-center">
