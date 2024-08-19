@@ -41,6 +41,7 @@ import HPLC_AuditTrail from './components/HPLC_AuditTrail';
 import HPLC_UserManagement from './components/HPLC_UserManagement';
 import SampleSetDetails from './components/SampleSetDetails';
 import CSampleSetDetails from './components/CSampleSetDetails';
+import UsageLogSetting from './components/UsageLogSetting.jsx';
 
 import ExecutionList from './components/MastersList/ExecutionList';
 
@@ -84,6 +85,8 @@ function App() {
             <Route path='configurationEdit' element={<ConfigurationEdit />} />
             <Route path='HPLCLog_List/:sampleSetId' element={<SampleSetDetails />} />
             <Route path='ColumnLog_List/:sampleSetId' element={<CSampleSetDetails />} />
+            <Route path='UsageLogSetting' element={<UsageLogSetting />} />
+
 
 
             <Route path='configurationEdit/:configId' element={<ConfigurationEdit />} />

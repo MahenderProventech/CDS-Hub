@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import http from './Http';
 import check from '../img/check.png';
 
@@ -91,6 +91,20 @@ const Configuration = () => {
                             </div>
                         ))}
                        
+
+                       <div className="col-sm-3 mt-5">
+                            <Link to="/home/UsageLogSetting" style={{ textDecoration: 'none' }}>
+                                <div className="card card-client">
+                                    <div className="checkIcon">
+                                        <img src={check} alt="check" />
+                                    </div>
+                                    <div className="titles">
+                                        <h3 style={{ fontSize: "15px" }}>Usage Log Fields</h3>
+                                        <p>Usage Log Fields</p>
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
