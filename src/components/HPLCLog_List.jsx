@@ -26,6 +26,9 @@ const HPLCLog_List = () => {
   const [validColumns, setValidColumns] = useState([]);
   const [peaksData, setPeaksData] = useState([]);
   const [hasSampleSetId, setHasSampleSetId] = useState(false);
+  const [filters, setFilters] = useState([]); // To store dynamically fetched filter fields
+  const [selectedFilters, setSelectedFilters] = useState({});
+  
 
   useEffect(() => {
     setLoading(true);
@@ -84,6 +87,29 @@ const HPLCLog_List = () => {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    // Fetch filter details from the API
+    axios
+      .get('http://localhost:58747/api/PopulateHPLCUsage/GetFilterHplcDetails')
+      .then((response) => {
+        console.log('API Response:', response.data); // Debugging: Check the API response
+        setFilters(response.data); // Assuming the API response is an array of filter details
+      })
+      .catch((error) => {
+        console.error('Error fetching filter details:', error);
+      });
+  }, []);
+
+  const handleFilterChange = (filterName, value) => {
+    setSelectedFilters({
+      ...selectedFilters,
+      [filterName]: value,
+    });
+  };
+
+
+  
   const handleSearch = () => {
     const filtered = processPeaksDataData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
@@ -106,9 +132,8 @@ const HPLCLog_List = () => {
   const handleReset = () => {
     setFromDate("");
     setToDate("");
-    setInstrumentId("");
-    setProductName("");
-    setBatchNumbers("");
+    setSelectedFilters({});
+
     setFilteredData(processPeaksDataData);
     setCurrentPage(1); // Reset to first page on reset
   };
@@ -392,64 +417,40 @@ const HPLCLog_List = () => {
                       />
                     </div>
                   </div>
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="instrumentId" className="form-label">
-                        <b>Instrument ID</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <select
-                        className="form-select"
-                        id="instrumentId"
-                        value={instrumentId}
-                        onChange={(e) => setInstrumentId(e.target.value)}
-                      >
-                        <option value="">--Select--</option>
-                        {instruments.map((instrument) => (
-                          <option key={instrument} value={instrument}>
-                            {instrument}
+                  {filters.length > 0 ? (
+              filters.map((filter, index) => (
+                <div className="col-sm-3" key={index}>
+                  <div className="mb-3">
+                    <label htmlFor={filter.filterName} className="form-label">
+                      <b>{filter.filterName}</b>
+                    </label>
+                    <select
+                      className="form-select"
+                      id={filter.filterName}
+                      value={selectedFilters[filter.filterName] || ''}
+                      onChange={(e) => handleFilterChange(filter.filterName, e.target.value)}
+                    >
+                      <option value="">--Select--</option>
+                      {filter.options && filter.options.length > 0 ? (
+                        filter.options.map((option, idx) => (
+                          <option key={idx} value={option}>
+                            {option}
                           </option>
-                        ))}
-                      </select>
-                    </div>
+                        ))
+                      ) : (
+                        <option value="">No options available</option>
+                      )}
+                    </select>
                   </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-sm-12">
+                <p>No filters available.</p>
+              </div>
+            )}
 
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="productName" className="form-label">
-                        <b>Product Name</b>
-                      </label>
-                      <select
-                        className="form-select"
-                        id="productName"
-                        value={productName}
-                        onChange={(e) => setProductName(e.target.value)}
-                      >
-                        <option value="">--select--</option>
-                        {productNames.map((name, index) => (
-                          <option key={index} value={name}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
 
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="batchNumbers" className="form-label">
-                        <b>Batch Numbers</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="batchNumbers"
-                        value={batchNumbers}
-                        onChange={(e) => setBatchNumbers(e.target.value)}
-                      />
-                    </div>
-                  </div>
 
                   <div className="col-sm-3" style={{ marginTop: "28px" }}>
                     <button
