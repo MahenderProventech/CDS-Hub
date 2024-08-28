@@ -206,7 +206,7 @@ const NavbarComponent = () => {
         <Modal.Body>
           <div className="text-center">
             <img src={bprofile} alt="Profile" style={{ width: "100px", height: "100px", display: "block", borderRadius: "50%", margin: "0 auto 20px" }} />
-            <h5>{userData?.employeeName}</h5>
+            <h5>{userData?.employeeId}</h5>
             <p>{userData?.userRole}</p>
           </div>
         </Modal.Body>

@@ -5,14 +5,12 @@ import search from "../img/search.png";
 import report from "../img/report.png";
 import usermanagement from "../img/usermanagement.png";
 import { Link } from "react-router-dom";
-import './print.css';
-import po from '../img/po.svg'; 
-import './Column_Dashboard.css';
- 
- 
- 
+import "./print.css";
+import po from "../img/po.svg";
+import "./Column_Dashboard.css";
+import axios from "axios";
+
 const HPLCLog_List = () => {
- 
   const [processPeaksDataData, setProcessPeaksDataData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [instruments, setInstruments] = useState([]);
@@ -25,55 +23,73 @@ const HPLCLog_List = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [productNames, setProductNames] = useState([]);
-  
- 
- 
+  const [validColumns, setValidColumns] = useState([]);
+  const [peaksData, setPeaksData] = useState([]);
+  const [hasSampleSetId, setHasSampleSetId] = useState(false);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
-        );
-        const data = await response.json();
-        console.log("Fetched data:", data);
-  
-        // Check if item2 exists and is an array
-        if (Array.isArray(data)) {
-          setProcessPeaksDataData(data);
-          setFilteredData(data);
-          const uniqueInstruments = [
-            ...new Set(data.map((item) => item.instrument_No)),
-          ];
-          setInstruments(uniqueInstruments);
+    setLoading(true);
 
-          const uniqueProductNames = [
-            ...new Set(data.map((item) => item.product_Name)),
-          ];
-          setProductNames(uniqueProductNames);
+    // Fetch valid column headers
+    const fetchValidColumns = axios
+      .get("http://localhost:58747/api/PopulateHPLCUsage/GetSavedHplcDetails")
+      .then((response) => {
+        const columns = response.data.map((item) => item.nameOfTheColumn);
+        return columns;
+      })
+      .catch((error) => {
+        console.error("Error fetching valid columns:", error);
+        return [];
+      });
 
+    // Fetch actual data
+    const fetchData = axios
+      .get("http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails")
+      .then((response) => {
+        return response.data;
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        return [];
+      });
+
+    // Once both requests are completed, filter the data
+    Promise.all([fetchValidColumns, fetchData])
+      .then(([validColumns, data]) => {
+        if (validColumns.length && data.length) {
+          // Check if any data row contains sampleSetId
+          const hasSampleSetId = data.some(row => row.sampleSetId !== undefined);
+          setHasSampleSetId(hasSampleSetId);
+
+          // Filter the data to only include the valid columns
+          const filteredData = data.map((row) => {
+            let filteredRow = {};
+            validColumns.forEach((column) => {
+              if (column in row) {
+                filteredRow[column] = row[column];
+              }
+            });
+            return filteredRow;
+          });
+
+          // Set state
+          setValidColumns(validColumns);
+          setFilteredData(filteredData);
         } else {
-          console.error(
-            "Fetched data does not contain the expected array:",
-            data
-          );
+          console.warn("No valid columns or data found.");
         }
-      } catch (error) {
-        console.error("Error fetching or processing data:", error);
-      } finally {
-        setLoading(false); // Hide loader after data is fetched
-      }
-    };
-  
-    fetchData();
+      })
+      .catch((error) => {
+        console.error("Error processing data:", error);
+      })
+      .finally(() => setLoading(false));
   }, []);
-  
- 
   const handleSearch = () => {
     const filtered = processPeaksDataData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
- 
+
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
@@ -82,11 +98,11 @@ const HPLCLog_List = () => {
         (!batchNumbers || peak.batch_No.includes(batchNumbers))
       );
     });
- 
+
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page on new search
   };
- 
+
   const handleReset = () => {
     setFromDate("");
     setToDate("");
@@ -98,16 +114,16 @@ const HPLCLog_List = () => {
   };
   const handlePrint = () => {
     // Create a hidden iframe for printing
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0px';
-    iframe.style.height = '0px';
-    iframe.style.border = 'none';
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.border = "none";
     document.body.appendChild(iframe);
- 
+
     // Get iframe document
     const iframeDoc = iframe.contentWindow.document;
- 
+
     // Create CSS styles to be included in the iframe
     const printStyles = `
       <style>
@@ -147,116 +163,59 @@ const HPLCLog_List = () => {
         }
       </style>
     `;
- 
+
     // Write content to the iframe document
     iframeDoc.open();
-    iframeDoc.write('<html><head><title>Print</title>');
+    iframeDoc.write("<html><head><title>Print</title>");
     iframeDoc.write(printStyles); // Inject CSS styles
-    iframeDoc.write('</head><body>');
-    iframeDoc.write('<h1>HPLC Log List</h1>');
- 
+    iframeDoc.write("</head><body>");
+    iframeDoc.write("<h1>HPLC Log List</h1>");
+
     // Add table headers
     iframeDoc.write(`
       <table class="table table-bordered">
         <thead>
           <tr>
             <th class="text-center">S.No</th>
-            // <th class="text-center">Date Acquired</th>
-            <th class="text-center">Acquired By</th>
-            <th class="text-center">Instrument Number</th>
-            <th class="text-center">Product Name</th>
-            <th class="text-center">Test Name</th>
-            <th class="text-center">AR Number</th>
-            <th class="text-center">Column Number</th>
-            <th class="text-center">Batch no.</th>
-          
-            <th class="text-center">Sample Set Start Date</th>
-            <th class="text-center">Sample Set Finish Date</th>
-            
-           
+            ${validColumns.map(column => `<th class="text-center">${column}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
     `);
- 
-    // Add table rows for all filtered data
+    
     filteredData.forEach((peak, index) => {
-      iframeDoc.write(`
-        <tr>
-          <td class="text-center">${index + 1}</td>
-          //  <td class="text-center">${peak.dateAcquired}</td>
-          <td class="text-center">${peak.sampleSetAcquiredBy}</td>
-          <td class="text-center">${peak.instrument_No}</td>
-          <td class="text-center">${peak.product_Name}</td>
-          <td class="text-center">${peak.test_Name}</td>
-          <td class="text-center">${peak.a_R_No}</td>
-          <td class="text-center">${peak.column_No}</td>
-          <td class="text-center">${peak.batch_No}</td>
-          <td class="text-center">
-            ${peak.sampleSetStartDate
-              ? new Date(peak.sampleSetStartDate).toLocaleDateString()
-              : "NULL"}
-          </td>
-          <td class="text-center">
-            ${peak.sampleSetFinishDate
-              ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
-              : "NULL"}
-          </td>
-          
-        
-        </tr>
-      `);
+      iframeDoc.write('<tr>');
+      iframeDoc.write(`<td class="text-center">${index + 1}</td>`);
+      validColumns.forEach(column => {
+        iframeDoc.write(`<td class="text-center">${peak[column] || 'NULL'}</td>`);
+      });
+      iframeDoc.write('</tr>');
     });
- 
-    iframeDoc.write('</tbody></table>');
-    iframeDoc.write('</body></html>');
+    
+
+    iframeDoc.write("</tbody></table>");
+    iframeDoc.write("</body></html>");
     iframeDoc.close();
- 
+
     // Print the iframe content
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
- 
+
     // Remove iframe after printing
     document.body.removeChild(iframe);
   };
- 
- 
+
   const handleExport = () => {
     const csvContent = [
-      [
-        "S.No",
-        "Date",
-        "AR Number",
-        "Instrument Number",
-        "Product Name",
-        "Test Name",
-        "Column Number",
-        "Batch no.",
-        
-        "Sample Set Start Date",
-        "Sample Set Finish Date",
-      ],
+      ["S.No", ...validColumns],
       ...filteredData.map((peak, index) => [
         index + 1,
-        peak.sampleSetStartDate,
-        peak.a_R_No,
-        peak.instrument_No,
-        peak.product_Name,
-        peak.test_Name,
-        peak.column_No,
-        peak.batch_No,
-       
-        peak.sampleSetStartDate
-          ? new Date(peak.sampleSetStartDate).toLocaleDateString()
-          : "NULL",
-        peak.sampleSetFinishDate
-          ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
-          : "NULL",
+        ...validColumns.map(column => peak[column] || 'NULL')
       ]),
     ]
-      .map((e) => e.join(","))
-      .join("\n");
- 
+    .map(e => e.join(","))
+    .join("\n");
+    
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -267,21 +226,21 @@ const HPLCLog_List = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
- 
+
   const totalRows = filteredData.length;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
- 
+
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
- 
+
   // Check if the current page is the first or the last page
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
- 
+
   // Determine which pages to display
   const pagesToShow = [];
   if (totalPages > 1) {
@@ -289,40 +248,42 @@ const HPLCLog_List = () => {
     pagesToShow.push(currentPage);
     if (!isLastPage) pagesToShow.push(currentPage + 1);
   }
- 
+
   const handleValues = (values) => {
     // Check if values is defined and is a string, otherwise return a placeholder
-    if (typeof values === 'string') {
-        return values.split(',').map((val, i) => (
-            <div key={i}>
-                {val}{i < values.split(',').length - 1 && ', '}
-            </div>
-        ));
+    if (typeof values === "string") {
+      return values.split(",").map((val, i) => (
+        <div key={i}>
+          {val}
+          {i < values.split(",").length - 1 && ", "}
+        </div>
+      ));
     }
     return <div>No Data</div>;
-};
+  };
 
   return (
     <div>
       {loading && (
-      <div className="page-loader">
-        <div className="loading-dots">
-          <div className="loading-dots--dot"></div>
-          <div className="loading-dots--dot"></div>
-          <div className="loading-dots--dot"></div>
+        <div className="page-loader">
+          <div className="loading-dots">
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+            <div className="loading-dots--dot"></div>
+          </div>
         </div>
-      </div>
-    )}
-     <aside className="col-md-1 p_sideNav">
+      )}
+      <aside className="col-md-1 p_sideNav">
         <div className="main">
-        <div className="btn-group dropend">
+          <div className="btn-group dropend">
             <Link to={"/home/HPLC_Dashboard1"}>
               <button type="button">
                 <img src={dash} alt="HPLCDashboard1" title="HPLCDashboard1" />
                 <p>Analysis</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/HPLC_Dashboard"}>
               <button type="button">
@@ -330,15 +291,21 @@ const HPLCLog_List = () => {
                 <p>Dashboard</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/HPLCLog_List"}>
               <button type="button">
-                <img src={HplcLogList} alt="HPLC Log List" title="HPLC Log List" />
+                <img
+                  src={HplcLogList}
+                  alt="HPLC Log List"
+                  title="HPLC Log List"
+                />
                 <p>HPLC Log List</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/HPLC_Search"}>
               <button type="button">
@@ -346,7 +313,8 @@ const HPLCLog_List = () => {
                 <p>Search</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/HPLC_AuditTrail"}>
               <button type="button">
@@ -354,22 +322,28 @@ const HPLCLog_List = () => {
                 <p>Audit Trial</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend">
             <Link to={"/home/HPLC_UserManagement"}>
               <button type="button">
-                <img src={usermanagement} alt="User Management" title="User Management" />
+                <img
+                  src={usermanagement}
+                  alt="User Management"
+                  title="User Management"
+                />
                 <p>User Management</p>
               </button>
             </Link>
-          </div><br />
+          </div>
+          <br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-                        <Link to={"/"}>
-                            <button type="button" title='Logout'>
-                                <img src={po} alt="Logout" />
-                            </button>
-                        </Link>
-                    </div>
+            <Link to={"/"}>
+              <button type="button" title="Logout">
+                <img src={po} alt="Logout" />
+              </button>
+            </Link>
+          </div>
         </div>
       </aside>
       <section className="full_screen" style={{ backgroundColor: "#e9ecef" }}>
@@ -377,7 +351,7 @@ const HPLCLog_List = () => {
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb cooseText mb-2">
               <li className="breadcrumb-item active" aria-current="page">
-                HPLC Usage Log 
+                HPLC Usage Log
               </li>
             </ol>
           </nav>
@@ -439,27 +413,27 @@ const HPLCLog_List = () => {
                       </select>
                     </div>
                   </div>
- 
+
                   <div className="col-sm-3">
-                   <div className="mb-3">
-                   <label htmlFor="productName" className="form-label">
-                     <b>Product Name</b>
-                       </label>
-                       <select
-                         className="form-select"
+                    <div className="mb-3">
+                      <label htmlFor="productName" className="form-label">
+                        <b>Product Name</b>
+                      </label>
+                      <select
+                        className="form-select"
                         id="productName"
                         value={productName}
                         onChange={(e) => setProductName(e.target.value)}
-    >
-                            <option value="">--select--</option>
-                           {productNames.map((name, index) => (
-                              <option key={index} value={name}>
-                                    {name}
-                                  </option>
-                               ))}
-                           </select>
-                          </div>
-                        </div>
+                      >
+                        <option value="">--select--</option>
+                        {productNames.map((name, index) => (
+                          <option key={index} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
                   <div className="col-sm-3">
                     <div className="mb-3">
@@ -476,7 +450,7 @@ const HPLCLog_List = () => {
                       />
                     </div>
                   </div>
- 
+
                   <div className="col-sm-3" style={{ marginTop: "28px" }}>
                     <button
                       className="btn btn-primary ms-3 MinW200 mt29"
@@ -484,7 +458,7 @@ const HPLCLog_List = () => {
                     >
                       Search <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
- 
+
                     <button
                       type="button"
                       className="btn btn-secondary ms-2"
@@ -493,186 +467,172 @@ const HPLCLog_List = () => {
                       Reset
                     </button>
                   </div>
-                 
                 </div>
               </div>
               <div>
- 
-              <div
-                className="card mt-3"
-                style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
-              >
-                 <div className="row">
-                  <div className="col-sm-2">
-                    <div className="mb-2">
-                      <label htmlFor="rowsPerPage" className="form-label">
-                        <b>Rows Per Page</b>
-                      </label>
-                      <select
-                        className="form-select"
-                        id="rowsPerPage"
-                        value={rowsPerPage}
-                        onChange={(e) => setRowsPerPage(parseInt(e.target.value))}
-                      >
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
+                <div
+                  className="card mt-3"
+                  style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
+                >
+                  <div className="row">
+                    <div className="col-sm-2">
+                      <div className="mb-2">
+                        <label htmlFor="rowsPerPage" className="form-label">
+                          <b>Rows Per Page</b>
+                        </label>
+                        <select
+                          className="form-select"
+                          id="rowsPerPage"
+                          value={rowsPerPage}
+                          onChange={(e) =>
+                            setRowsPerPage(parseInt(e.target.value))
+                          }
+                        >
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="cus-Table table-responsive">
+                  <table>
+  <thead>
+    <tr>
+      {validColumns.map((column) => (
+        <th key={column}>{column}</th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {filteredData.map((row, index) => (
+      <tr key={index}>
+        {validColumns.map((column) => (
+          <td key={column}>
+            {column === 'sampleSetId' && row[column] ? (
+              <Link to={`/home/HPLCLog_List/${row[column]}`} className="link-primary">
+                {row[column]}
+              </Link>
+            ) : (
+              row[column]
+            )}
+          </td>
+        ))}
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div>
+                  <br></br>
+                  <div className="row">
+                    <div className="col-sm-12">
+                      <nav aria-label="Page navigation">
+                        <ul className="pagination justify-content-center">
+                          <li
+                            className={`page-item ${
+                              isFirstPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isFirstPage && handlePageChange(1)
+                              }
+                            >
+                              First
+                            </button>
+                          </li>
+                          <li
+                            className={`page-item ${
+                              isFirstPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isFirstPage &&
+                                handlePageChange(currentPage - 1)
+                              }
+                            >
+                              Previous
+                            </button>
+                          </li>
+                          {pagesToShow.map((pageNumber) => (
+                            <li
+                              key={pageNumber}
+                              className={`page-item ${
+                                currentPage === pageNumber ? "active" : ""
+                              }`}
+                            >
+                              <button
+                                className="page-link"
+                                onClick={() => handlePageChange(pageNumber)}
+                              >
+                                {pageNumber}
+                              </button>
+                            </li>
+                          ))}
+                          <li
+                            className={`page-item ${
+                              isLastPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isLastPage && handlePageChange(currentPage + 1)
+                              }
+                            >
+                              Next
+                            </button>
+                          </li>
+                          <li
+                            className={`page-item ${
+                              isLastPage ? "disabled" : ""
+                            }`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() =>
+                                !isLastPage && handlePageChange(totalPages)
+                              }
+                            >
+                              Last
+                            </button>
+                          </li>
+                        </ul>
+                      </nav>
                     </div>
                   </div>
                 </div>
- 
- 
-             
-                <div className="cus-Table table-responsive">
-                  <table className="table table-bordered" id="example">
-                    <thead>
-                      <tr>
-                        <th width="" className="text-center">
-                          S.No
-                        </th>
-                        {/* <th className="text-center">Date Acquired</th>                 */}
-                        <th className="text-center">Instrument Number</th>
-                        <th className="text-center">Product Name</th>
-                        <th className="text-center">Sample Set ID</th>
-                        <th className="text-center">AR Number</th>
-                        <th className="text-center">Batch no.</th>
-                        <th className="text-center">Test Name</th>
-                        <th className="text-center">Sample Set Start Date</th>
-                        <th className="text-center">Sample Set Finish Date</th>
-                        
-                        
-                        <th className="text-center">Acquired By</th>
- 
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {currentData.map((peak, index) => (
-                      <tr key={index}>
-                        <td className="text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>  
-                          {/* <td className="text-center">
-                          {new Date(peak.dateAcquired).toLocaleString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        })}
-                          </td> */}
-                          <td className="text-center">{peak.instrument_No}</td>
-                          <td className="text-center">{peak.product_Name}</td>
-                          <td className="text-center">
-                            <Link to={`/home/HPLCLog_List/${peak.sampleSetId}`} className="link-primary">
-                              {peak.sampleSetId}
-                            </Link>
-                          </td>      
- 
-                          <td className="text-center">{handleValues(peak.a_R_No) }</td>
-                          <td className="text-center">{handleValues(peak.batch_No) }</td>
-                          <td className="text-center">{peak.test_Name}</td>
-                          <td className="text-center">{new Date(peak.sampleSetStartDate).toLocaleString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        })}</td>
-                        <td className="text-center">{new Date(peak.sampleSetFinishDate).toLocaleString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        })}</td>
-                          
-                          
-                          <td className="text-center">{peak.sampleSetAcquiredBy }</td>
-                                                 </tr>
-                        ))}
-                       </tbody>
-                  </table>
-                </div>
               </div>
-            </div>
-            <div>
-              <div>
-                <br></br>
-                <div className="row">
-  <div className="col-sm-12">
-    <nav aria-label="Page navigation">
-      <ul className="pagination justify-content-center">
-        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isFirstPage && handlePageChange(1)}
-          >
-            First
-          </button>
-        </li>
-        <li className={`page-item ${isFirstPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isFirstPage && handlePageChange(currentPage - 1)}
-          >
-            Previous
-          </button>
-        </li>
-        {pagesToShow.map(pageNumber => (
-          <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(pageNumber)}
-            >
-              {pageNumber}
-            </button>
-          </li>
-        ))}
-        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
-          >
-            Next
-          </button>
-        </li>
-        <li className={`page-item ${isLastPage ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => !isLastPage && handlePageChange(totalPages)}
-          >
-            Last
-          </button>
-        </li>
-      </ul>
-    </nav>
-  </div>
-</div>
- 
-                  </div>
-                </div>
-            <div
+              <div
                 className="d-flex justify-content-end align-items-center my-3"
                 style={{ marginRight: "20px" }}
               >
-                <button className="btn btn-outline-dark me-2" onClick={handlePrint}>
+                <button
+                  className="btn btn-outline-dark me-2"
+                  onClick={handlePrint}
+                >
                   Print
                 </button>
                 <button className="btn btn-primary" onClick={handleExport}>
                   Export
                 </button>
               </div>
-              </div>
+            </div>
           </div>
         </div>
       </section>
     </div>
-     );
+  );
 };
- 
+
 export default HPLCLog_List;
- 
- 
