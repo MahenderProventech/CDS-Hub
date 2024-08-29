@@ -188,7 +188,7 @@ const UsageLogSetting = () => {
 const saveFilters = async () => {
     const endpoint = selectedData === 'hplc'
       ? 'http://localhost:58747/api/PopulateHPLCUsage/SelectfilterschangeshplcDetails'
-      : 'http://localhost:58747/api/PopulateColumnUsage/SelectfilterschangesColumnDetails';
+      : 'http://localhost:58747/api/PopulateColumnUsage/SelectfilterschangescolumnDetails';
   
     // Prepare filters to save
     const filtersToSave = currentFilters.map(filter => ({

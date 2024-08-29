@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import dash from "../img/dashboard.png";
 import HplcLogList from "../img/hplc_loglist.png";
 import search from "../img/search.png";
@@ -7,9 +6,11 @@ import report from "../img/report.png";
 import usermanagement from "../img/usermanagement.png";
 import { Link } from "react-router-dom";
 import "./print.css";
+import po from "../img/po.svg";
 import "./Column_Dashboard.css";
+import axios from "axios";
 
-const ColumnLog_List = () => {
+const ColumnLog_List= () => {
   const [processPeaksDataData, setProcessPeaksDataData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [instruments, setInstruments] = useState([]);
@@ -22,92 +23,125 @@ const ColumnLog_List = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [productNames, setProductNames] = useState([]);
-  const [columnNo, setColumnNo] = useState("");
- const [columnNos, setColumnNos] = useState([]);
-  
-
-
+  const [validColumns, setValidColumns] = useState([]);
+  const [peaksData, setPeaksData] = useState([]);
+  const [hasSampleSetId, setHasSampleSetId] = useState(false);
+  const [filters, setFilters] = useState([]); // To store dynamically fetched filter fields
+  const [selectedFilters, setSelectedFilters] = useState({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch the main data
-        const response = await fetch(
-          "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
-        );
-        const data = await response.json();
-        console.log("Fetched data:", data);
-  
-        // Check if the fetched data is an array
-        if (Array.isArray(data)) {
-          setProcessPeaksDataData(data);
-          setFilteredData(data);
-  
-          // Get unique product names and instruments
-          const uniqueInstruments = [
-            ...new Set(data.map((item) => item.instrument_No)),
-          ];
-          setInstruments(uniqueInstruments);
-  
-          const uniqueProductNames = [
-            ...new Set(data.map((item) => item.product_Name)),
-          ];
-          setProductNames(uniqueProductNames);
+    setLoading(true);
 
-          const uniqueColumnNos = [
-            ...new Set(data.map((item) => item.column_No)),
-          ];
+    // Fetch valid column headers
+    const fetchValidColumns = axios
+      .get("http://localhost:58747/api/PopulateColumnUsage/GetSavedColumnDetails")
+      .then((response) => {
+        const columns = response.data.map((item) => item.nameOfTheColumn);
+        return columns;
+      })
+      .catch((error) => {
+        console.error("Error fetching valid columns:", error);
+        return [];
+      });
 
-          setColumnNos(uniqueColumnNos);
+    // Fetch actual data
+    const fetchData = axios
+      .get(
+        "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
+      )
+      .then((response) => {
+        return response.data;
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        return [];
+      });
 
-        } else {
-          console.error(
-            "Fetched data does not contain the expected array:",
-            data
+    // Once both requests are completed, filter the data
+    Promise.all([fetchValidColumns, fetchData])
+      .then(([validColumns, data]) => {
+        if (validColumns.length && data.length) {
+          // Check if any data row contains sampleSetId
+          const hasSampleSetId = data.some(
+            (row) => row.sampleSetId !== undefined
           );
+          setHasSampleSetId(hasSampleSetId);
+
+          // Filter the data to only include the valid columns
+          const filteredData = data.map((row) => {
+            let filteredRow = {};
+            validColumns.forEach((column) => {
+              if (column in row) {
+                filteredRow[column] = row[column];
+              }
+            });
+            return filteredRow;
+          });
+
+          // Set state
+          setProcessPeaksDataData(data);
+          setValidColumns(validColumns);
+          setFilteredData(filteredData);
+        } else {
+          console.warn("No valid columns or data found.");
         }
-      } catch (error) {
-        console.error("Error fetching or processing data:", error);
-      } finally {
-        setLoading(false); // Hide loader after data is fetched
-      }
-    };
-  
-    fetchData();
+      })
+      .catch((error) => {
+        console.error("Error processing data:", error);
+      })
+      .finally(() => setLoading(false));
   }, []);
-  
+
+  useEffect(() => {
+    // Fetch filter details from the API
+    axios
+      .get("http://localhost:58747/api/PopulateColumnUsage/GetFilterColumnDetails")
+      .then((response) => {
+        console.log("API Response:", response.data); // Debugging: Check the API response
+        setFilters(response.data); // Assuming the API response is an array of filter details
+      })
+      .catch((error) => {
+        console.error("Error fetching filter details:", error);
+      });
+  }, []);
+
+  const handleFilterChange = (filterName, value) => {
+    setSelectedFilters({
+      ...selectedFilters,
+      [filterName]: value,
+    });
+  };
+  const [data, setData] = useState([]);
+
   const handleSearch = () => {
     const filtered = processPeaksDataData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
-
-
+ 
+      // Check for filters matching
+      const filterMatch = Object.keys(selectedFilters).every((filterName) => {
+        const filterValue = selectedFilters[filterName];
+        return !filterValue || peak[filterName]?.toString() === filterValue;
+      });
+ 
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
-        (!instrumentId || peak.instrument_No === instrumentId) &&
-        (!productName || peak.product_Name.includes(productName)) &&
-        (!batchNumbers || peak.batch_No.includes(batchNumbers)) &&
-        (!columnNo || peak.column_No.includes(columnNo))
-     );
+        filterMatch
+      );
     });
-
+ 
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page on new search
   };
-
+ 
   const handleReset = () => {
     setFromDate("");
     setToDate("");
-    setInstrumentId("");
-    setProductName("");
-    setBatchNumbers("");
-    setColumnNo("");
-    setFilteredData(processPeaksDataData);
-    setCurrentPage(1); // Reset to first page on reset
+    setSelectedFilters({});
+    setFilteredData(processPeaksDataData); // Reset filtered data
   };
-
+ 
   const handlePrint = () => {
     // Create a hidden iframe for printing
     const iframe = document.createElement("iframe");
@@ -173,56 +207,23 @@ const ColumnLog_List = () => {
         <thead>
           <tr>
             <th class="text-center">S.No</th>
-            <th class="text-center">Date Acquired</th>
-            <th class="text-center">Acquired By</th>
-            <th className="text-center">Column Number</th>
-            <th className="text-center">Instrument Number</th>
-            <th className="text-center">Product Name</th>
-            <th className="text-center">Test Name</th>
-            <th className="text-center">AR Number</th>
-            <th className="text-center">Batch no.</th>
-            <th className="text-center">Injection Id</th>
-            <th className="text-center">Sample Set Start Date</th>
-            <th className="text-center">Sample Set Finish Date</th>
-            <th className="text-center">No.of Injections</th>
-            
+            ${validColumns
+              .map((column) => `<th class="text-center">${column}</th>`)
+              .join("")}
           </tr>
         </thead>
         <tbody>
     `);
 
-    // Add table rows for all filtered data
     filteredData.forEach((peak, index) => {
-      iframeDoc.write(`
-        <tr>
-          <td class="text-center">${index + 1}</td>
-          <td class="text-center">${peak.dateAcquired}</td>
-          <td class="text-center">${peak.sampleSetAcquiredBy}</td>
-          <td class="text-center">${peak.instrument_No}</td>
-          <td class="text-center">${peak.column_No}</td>
-          <td class="text-center">${peak.product_Name}</td>
-          <td class="text-center">${peak.test_Name}</td>
-          <td class="text-center">${peak.a_R_No}</td>
-          <td class="text-center">${peak.batch_No}</td>
-          <td class="text-center">${peak.injectionId}</td>
-          <td class="text-center">
-            ${
-              peak.sampleSetStartDate
-                ? new Date(peak.sampleSetStartDate).toLocaleDateString()
-                : "NULL"
-            }
-          </td>
-          <td class="text-center">
-            ${
-              peak.sampleSetFinishDate
-                ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
-                : "NULL"
-            }
-          </td>
-          <td class="text-center"></td>
-         
-        </tr>
-      `);
+      iframeDoc.write("<tr>");
+      iframeDoc.write(`<td class="text-center">${index + 1}</td>`);
+      validColumns.forEach((column) => {
+        iframeDoc.write(
+          `<td class="text-center">${peak[column] || "NULL"}</td>`
+        );
+      });
+      iframeDoc.write("</tr>");
     });
 
     iframeDoc.write("</tbody></table>");
@@ -239,37 +240,10 @@ const ColumnLog_List = () => {
 
   const handleExport = () => {
     const csvContent = [
-      [
-        "S.No",
-        "Date Acquired",
-        "Acquired By",
-        "Column Number",
-        "Instrument Number",
-        "Product Name",
-        "Test Name",
-        "AR Number",
-        "Batch no.",
-        "Injection Id",
-        "Sample Set Start Date",
-        "Sample Set Finish Date",
-      ],
+      ["S.No", ...validColumns],
       ...filteredData.map((peak, index) => [
         index + 1,
-        peak.dateAcquired,
-        peak.sampleSetAcquiredBy,
-        peak.column_No,
-        peak.instrument_No,
-        peak.product_Name,
-        peak.test_Name,
-        peak.a_R_No,
-        peak.batch_No,
-        peak.injectionId,
-        peak.sampleSetStartDate
-          ? new Date(peak.sampleSetStartDate).toLocaleDateString()
-          : "NULL",
-        peak.sampleSetFinishDate
-          ? new Date(peak.sampleSetFinishDate).toLocaleDateString()
-          : "NULL",
+        ...validColumns.map((column) => peak[column] || "NULL"),
       ]),
     ]
       .map((e) => e.join(","))
@@ -292,15 +266,15 @@ const ColumnLog_List = () => {
   const endIndex = startIndex + rowsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  // Handle pagination
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  // Generate pages to show
+  // Check if the current page is the first or the last page
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
+  // Determine which pages to display
   const pagesToShow = [];
   if (totalPages > 1) {
     if (!isFirstPage) pagesToShow.push(currentPage - 1);
@@ -308,6 +282,45 @@ const ColumnLog_List = () => {
     if (!isLastPage) pagesToShow.push(currentPage + 1);
   }
 
+  const getUniqueFilterOptions = (filterName) => {
+    const uniqueValues = new Set();
+    processPeaksDataData.forEach((item) => {
+      if (item[filterName]) {
+        uniqueValues.add(item[filterName]);
+      }
+    });
+    return Array.from(uniqueValues);
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    const date = new Date(dateTimeString);
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return dateTimeString; // Return as-is if it's not a valid date
+    }
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const isDateTimeString = (value) => {
+    // Ensure the value is a string
+    if (typeof value !== 'string') {
+      return false;
+    }
+    
+    // Check if the value contains a 'T' and is a valid date
+    const date = new Date(value);
+    return !isNaN(date.getTime()) && value.includes('T');
+  };
+  
   const handleValues = (values) => {
     // Check if values is defined and is a string, otherwise return a placeholder
     if (typeof values === "string") {
@@ -337,16 +350,16 @@ const ColumnLog_List = () => {
           <div className="btn-group dropend">
             <Link to={"/home/Column_Dashboard1"}>
               <button type="button">
-                <img src={dash} alt="Dashboard1" title="Dashboard1" />
+                <img src={dash} alt="ColumnDashboard1" title="ColumnDashboard1" />
                 <p>Analysis</p>
               </button>
             </Link>
           </div>
           <br />
           <div className="btn-group dropend">
-            <Link to={"/home/Column_Dashboard"}>
+            <Link to={"/home/_ColumnDashboard"}>
               <button type="button">
-                <img src={dash} alt="Dashboard" title="Dashboard" />
+                <img src={dash} alt="ColumnDashboard" title="ColumnDashboard" />
                 <p>Dashboard</p>
               </button>
             </Link>
@@ -360,7 +373,7 @@ const ColumnLog_List = () => {
                   alt="Column Log List"
                   title="Column Log List"
                 />
-                <p>Column Log List</p>
+                <p> Column Log List</p>
               </button>
             </Link>
           </div>
@@ -396,9 +409,15 @@ const ColumnLog_List = () => {
             </Link>
           </div>
           <br />
+          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+            <Link to={"/"}>
+              <button type="button" title="Logout">
+                <img src={po} alt="Logout" />
+              </button>
+            </Link>
+          </div>
         </div>
       </aside>
-
       <section className="full_screen" style={{ backgroundColor: "#e9ecef" }}>
         <div className="container-fluid">
           <nav aria-label="breadcrumb">
@@ -410,141 +429,83 @@ const ColumnLog_List = () => {
           </nav>
           <div className="row">
             <div className="col-lg-12">
-              <div
-                className="card mt-3"
-                style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
-              >
-                <div className="row">
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="fromDate" className="form-label">
-                        <b>From Date</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        id="fromDate"
-                        value={fromDate}
-                        onChange={(e) => setFromDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="toDate" className="form-label">
-                        <b>To Date</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        id="toDate"
-                        value={toDate}
-                        onChange={(e) => setToDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="instrumentId" className="form-label">
-                        <b>Instrument ID</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <select
-                        className="form-select"
-                        id="instrumentId"
-                        value={instrumentId}
-                        onChange={(e) => setInstrumentId(e.target.value)}
-                      >
-                        <option value="">--Select--</option>
-                        {instruments.map((instrument) => (
-                          <option key={instrument} value={instrument}>
-                            {instrument}
+            <div
+          className="card mt-3"
+          style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
+        >
+          <div className="row">
+            <div className="col-sm-3">
+              <div className="mb-3">
+                <label htmlFor="fromDate" className="form-label">
+                  <b>From Date</b>
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  id="fromDate"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-sm-3">
+              <div className="mb-3">
+                <label htmlFor="toDate" className="form-label">
+                  <b>To Date</b>
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  id="toDate"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </div>
+            </div>
+            {filters.length > 0 ? (
+              filters.map((filter, index) => (
+                <div className="col-sm-3" key={index}>
+                  <div className="mb-3">
+                    <label htmlFor={filter.filterName} className="form-label">
+                      <b>{filter.filterName}</b>
+                    </label>
+                    <select
+                      className="form-select"
+                      id={filter.filterName}
+                      value={selectedFilters[filter.filterName] || ""}
+                      onChange={(e) =>
+                        handleFilterChange(filter.filterName, e.target.value)
+                      }
+                    >
+                      <option value="">--Select--</option>
+                      {getUniqueFilterOptions(filter.filterName).map(
+                        (option, idx) => (
+                          <option key={idx} value={option}>
+                            {option}
                           </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="col-sm-3">
-                   <div className="mb-3">
-                   <label htmlFor="productName" className="form-label">
-                     <b>Product Name</b>
-                       </label>
-                       <select
-                         className="form-select"
-                        id="productName"
-                        value={productName}
-                        onChange={(e) => setProductName(e.target.value)}
-    >
-                            <option value="">--select--</option>
-                           {productNames.map((name, index) => (
-                              <option key={index} value={name}>
-                                    {name}
-                                  </option>
-                               ))}
-                           </select>
-                          </div>
-                        </div>
-                    
-                        <div className="col-sm-3">
-  <div className="mb-3">
-    <label htmlFor="columnNo" className="form-label">
-      <b>Column No</b>
-    </label>
-    <select
-      className="form-select"
-      id="columnNo"
-      value={columnNo}
-      onChange={(e) => setColumnNo(e.target.value)}
-    >
-      <option value="">--select--</option>
-      {columnNos.map((number, index) => (
-        <option key={index} value={number}>
-          {number}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
-
-
-
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="batchNumbers" className="form-label">
-                        <b>Batch Numbers</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="batchNumbers"
-                        value={batchNumbers}
-                        onChange={(e) => setBatchNumbers(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-sm-3" style={{ marginTop: "28px" }}>
-                    <button
-                      className="btn btn-primary ms-3 MinW200 mt29"
-                      onClick={handleSearch}
-                    >
-                      Search <i className="fa-solid fa-magnifying-glass"></i>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn btn-secondary ms-2"
-                      onClick={handleReset}
-                    >
-                      Reset
-                    </button>
+                        )
+                      )}
+                    </select>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="col-sm-12">
+                <p>No filters available.</p>
               </div>
+            )}
+            <div className="col-sm-12">
+              <button className="btn btn-primary" onClick={handleSearch}>
+                Search
+              </button>
+              <button className="btn btn-secondary ml-2" onClick={handleReset}>
+                Reset
+              </button>
+            </div>
+          </div>
+          
+        </div>
+ 
               <div>
                 <div
                   className="card mt-3"
@@ -574,106 +535,37 @@ const ColumnLog_List = () => {
                   </div>
 
                   <div className="cus-Table table-responsive">
-                    <table className="table table-bordered" id="example">
-                      <thead>
-                        <tr>
-                          <th width="" className="text-center">
-                            S.No
-                          </th>
-                          {/* <th className="text-center">Date Acquired</th> */}
-                          <th className="text-center">Instrument Number</th>
-                          <th className="text-center">Product Name</th>
-                          <th className="text-center">Sample Set ID</th>
-                          <th className="text-center">Column No.</th>
-                          <th className="text-center">AR Number</th>
-                          <th className="text-center">Batch no.</th>
-                          <th className="text-center">Test Name</th>
-                          <th className="text-center">Sample Set Start Date</th>
-                          <th className="text-center">
-                            Sample Set Finish Date
-                          </th>
-                          <th className="text-center">No.of Injections</th>
-
-                          <th className="text-center">Acquired By</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentData.map((peak, index) => (
-                          <tr key={index}>
-                            <td className="text-center">
-                              {(currentPage - 1) * rowsPerPage + index + 1}
-                            </td>
-                            {/* <td className="text-center">
-                              {new Date(peak.dateAcquired).toLocaleString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: false,
-                                }
-                              )}
-                            </td> */}
-                            <td className="text-center">
-                              {peak.instrument_No}
-                            </td>
-                            <td className="text-center">{peak.product_Name}</td>
-                            <td className="text-center">
-                              <Link
-                                to={`/home/ColumnLog_List/${peak.sampleSetId}`}
-                                className="link-primary"
-                              >
-                                {peak.sampleSetId}
-                              </Link>
-                            </td>
-                            <td className="text-center">{peak.column_No}</td>
-
-                            <td className="text-center">
-                              {handleValues(peak.a_R_No)}
-                            </td>
-                            <td className="text-center">
-                              {handleValues(peak.batch_No)}
-                            </td>
-                            <td className="text-center">{peak.test_Name}</td>
-                            <td className="text-center">
-                              {new Date(peak.sampleSetStartDate).toLocaleString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: false,
-                                }
-                              )}
-                            </td>
-                            <td className="text-center">
-                              {new Date(
-                                peak.sampleSetFinishDate
-                              ).toLocaleString("en-GB", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              })}
-                            </td>
-                            <td className="text-center">
-                              {peak.noOfInjections}
-                            </td>
-
-                            <td className="text-center">
-                              {peak.sampleSetAcquiredBy}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                    
+                  <table>
+        <thead>
+          <tr>
+            {validColumns.map((column) => (
+              <th key={column}>{column}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filteredData
+            .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+            .map((row, index) => (
+              <tr key={index}>
+                {validColumns.map((column) => (
+                  <td key={column}>
+                    {column === 'sampleSetId' && row[column] ? (
+                      <Link to={`/home/ColumnLog_List/${row[column]}`} className="link-primary">
+                        {row[column]}
+                      </Link>
+                    ) : (
+                      isDateTimeString(row[column]) ? formatDateTime(row[column]) : row[column]
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+        </tbody>
+      </table>
+ 
+              </div>
                 </div>
               </div>
               <div>
