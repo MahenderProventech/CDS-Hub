@@ -26,6 +26,10 @@ const Configuration = () => {
 // document.addEventListener('keypress',handleUserActivity);
 
 // clearTimeout(idleTimeout);
+
+
+
+
    
         const fetchFormulaGroups = async () => {
             try {
@@ -44,10 +48,20 @@ const Configuration = () => {
     },[]);
    //  }, [idleTimeout.timeout,onIdle]);
 
-    const handleCardClick = (configureValue) => {
-        console.log("configureValue:",configureValue)
-       // alert(configureValue)
-        navigate(`/home/configurationEdit/${configureValue}`);
+    // const handleCardClick = (configureValue) => {
+    //     console.log("configureValue:",configureValue)
+    //    // alert(configureValue)
+    //     navigate(`/home/configurationEdit/${configureValue}`);
+    // };
+
+    const handleCardClick = (masterName) => {
+        console.log("masterName:", masterName);
+    
+        if (masterName === 'Usage Log Fields') {
+            navigate('/home/UsageLogSetting');
+        } else {
+            navigate(`/home/configurationEdit/${masterName}`);
+        }
     };
     const handleNewClick = () => {
        // console.log("configureValue:",configureValue)
@@ -92,7 +106,7 @@ const Configuration = () => {
                         ))}
                        
 
-                       <div className="col-sm-3 mt-5">
+                       {/* <div className="col-sm-3 mt-5">
                             <Link to="/home/UsageLogSetting" style={{ textDecoration: 'none' }}>
                                 <div className="card card-client">
                                     <div className="checkIcon">
@@ -104,7 +118,7 @@ const Configuration = () => {
                                     </div>
                                 </div>
                             </Link>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
