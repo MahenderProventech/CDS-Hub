@@ -28,7 +28,6 @@ const HPLCLog_List = () => {
   const [hasSampleSetId, setHasSampleSetId] = useState(false);
   const [filters, setFilters] = useState([]); // To store dynamically fetched filter fields
   const [selectedFilters, setSelectedFilters] = useState({});
-  
 
   useEffect(() => {
     setLoading(true);
@@ -47,7 +46,9 @@ const HPLCLog_List = () => {
 
     // Fetch actual data
     const fetchData = axios
-      .get("http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails")
+      .get(
+        "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
+      )
       .then((response) => {
         return response.data;
       })
@@ -61,7 +62,9 @@ const HPLCLog_List = () => {
       .then(([validColumns, data]) => {
         if (validColumns.length && data.length) {
           // Check if any data row contains sampleSetId
-          const hasSampleSetId = data.some(row => row.sampleSetId !== undefined);
+          const hasSampleSetId = data.some(
+            (row) => row.sampleSetId !== undefined
+          );
           setHasSampleSetId(hasSampleSetId);
 
           // Filter the data to only include the valid columns
@@ -76,6 +79,7 @@ const HPLCLog_List = () => {
           });
 
           // Set state
+          setProcessPeaksDataData(data);
           setValidColumns(validColumns);
           setFilteredData(filteredData);
         } else {
@@ -91,13 +95,13 @@ const HPLCLog_List = () => {
   useEffect(() => {
     // Fetch filter details from the API
     axios
-      .get('http://localhost:58747/api/PopulateHPLCUsage/GetFilterHplcDetails')
+      .get("http://localhost:58747/api/PopulateHPLCUsage/GetFilterHplcDetails")
       .then((response) => {
-        console.log('API Response:', response.data); // Debugging: Check the API response
+        console.log("API Response:", response.data); // Debugging: Check the API response
         setFilters(response.data); // Assuming the API response is an array of filter details
       })
       .catch((error) => {
-        console.error('Error fetching filter details:', error);
+        console.error("Error fetching filter details:", error);
       });
   }, []);
 
@@ -107,36 +111,37 @@ const HPLCLog_List = () => {
       [filterName]: value,
     });
   };
+  const [data, setData] = useState([]);
 
-
-  
   const handleSearch = () => {
     const filtered = processPeaksDataData.filter((peak) => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
-
+ 
+      // Check for filters matching
+      const filterMatch = Object.keys(selectedFilters).every((filterName) => {
+        const filterValue = selectedFilters[filterName];
+        return !filterValue || peak[filterName]?.toString() === filterValue;
+      });
+ 
       return (
         (!from || peakDate >= from) &&
         (!to || peakDate <= to) &&
-        (!instrumentId || peak.instrument_No === instrumentId) &&
-        (!productName || peak.product_Name.includes(productName)) &&
-        (!batchNumbers || peak.batch_No.includes(batchNumbers))
+        filterMatch
       );
     });
-
+ 
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page on new search
   };
-
+ 
   const handleReset = () => {
     setFromDate("");
     setToDate("");
     setSelectedFilters({});
-
-    setFilteredData(processPeaksDataData);
-    setCurrentPage(1); // Reset to first page on reset
+    setFilteredData(processPeaksDataData); // Reset filtered data
   };
+ 
   const handlePrint = () => {
     // Create a hidden iframe for printing
     const iframe = document.createElement("iframe");
@@ -202,21 +207,24 @@ const HPLCLog_List = () => {
         <thead>
           <tr>
             <th class="text-center">S.No</th>
-            ${validColumns.map(column => `<th class="text-center">${column}</th>`).join('')}
+            ${validColumns
+              .map((column) => `<th class="text-center">${column}</th>`)
+              .join("")}
           </tr>
         </thead>
         <tbody>
     `);
-    
+
     filteredData.forEach((peak, index) => {
-      iframeDoc.write('<tr>');
+      iframeDoc.write("<tr>");
       iframeDoc.write(`<td class="text-center">${index + 1}</td>`);
-      validColumns.forEach(column => {
-        iframeDoc.write(`<td class="text-center">${peak[column] || 'NULL'}</td>`);
+      validColumns.forEach((column) => {
+        iframeDoc.write(
+          `<td class="text-center">${peak[column] || "NULL"}</td>`
+        );
       });
-      iframeDoc.write('</tr>');
+      iframeDoc.write("</tr>");
     });
-    
 
     iframeDoc.write("</tbody></table>");
     iframeDoc.write("</body></html>");
@@ -235,12 +243,12 @@ const HPLCLog_List = () => {
       ["S.No", ...validColumns],
       ...filteredData.map((peak, index) => [
         index + 1,
-        ...validColumns.map(column => peak[column] || 'NULL')
+        ...validColumns.map((column) => peak[column] || "NULL"),
       ]),
     ]
-    .map(e => e.join(","))
-    .join("\n");
-    
+      .map((e) => e.join(","))
+      .join("\n");
+
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -274,6 +282,45 @@ const HPLCLog_List = () => {
     if (!isLastPage) pagesToShow.push(currentPage + 1);
   }
 
+  const getUniqueFilterOptions = (filterName) => {
+    const uniqueValues = new Set();
+    processPeaksDataData.forEach((item) => {
+      if (item[filterName]) {
+        uniqueValues.add(item[filterName]);
+      }
+    });
+    return Array.from(uniqueValues);
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    const date = new Date(dateTimeString);
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return dateTimeString; // Return as-is if it's not a valid date
+    }
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const isDateTimeString = (value) => {
+    // Ensure the value is a string
+    if (typeof value !== 'string') {
+      return false;
+    }
+    
+    // Check if the value contains a 'T' and is a valid date
+    const date = new Date(value);
+    return !isNaN(date.getTime()) && value.includes('T');
+  };
+  
   const handleValues = (values) => {
     // Check if values is defined and is a string, otherwise return a placeholder
     if (typeof values === "string") {
@@ -382,42 +429,40 @@ const HPLCLog_List = () => {
           </nav>
           <div className="row">
             <div className="col-lg-12">
-              <div
-                className="card mt-3"
-                style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
-              >
-                <div className="row">
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="fromDate" className="form-label">
-                        <b>From Date</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        id="fromDate"
-                        value={fromDate}
-                        onChange={(e) => setFromDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-sm-3">
-                    <div className="mb-3">
-                      <label htmlFor="toDate" className="form-label">
-                        <b>To Date</b>
-                        {/* <span style={{ color: "red" }}>*</span> */}
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        id="toDate"
-                        value={toDate}
-                        onChange={(e) => setToDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  {filters.length > 0 ? (
+            <div
+          className="card mt-3"
+          style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
+        >
+          <div className="row">
+            <div className="col-sm-3">
+              <div className="mb-3">
+                <label htmlFor="fromDate" className="form-label">
+                  <b>From Date</b>
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  id="fromDate"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-sm-3">
+              <div className="mb-3">
+                <label htmlFor="toDate" className="form-label">
+                  <b>To Date</b>
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  id="toDate"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </div>
+            </div>
+            {filters.length > 0 ? (
               filters.map((filter, index) => (
                 <div className="col-sm-3" key={index}>
                   <div className="mb-3">
@@ -427,18 +472,18 @@ const HPLCLog_List = () => {
                     <select
                       className="form-select"
                       id={filter.filterName}
-                      value={selectedFilters[filter.filterName] || ''}
-                      onChange={(e) => handleFilterChange(filter.filterName, e.target.value)}
+                      value={selectedFilters[filter.filterName] || ""}
+                      onChange={(e) =>
+                        handleFilterChange(filter.filterName, e.target.value)
+                      }
                     >
                       <option value="">--Select--</option>
-                      {filter.options && filter.options.length > 0 ? (
-                        filter.options.map((option, idx) => (
+                      {getUniqueFilterOptions(filter.filterName).map(
+                        (option, idx) => (
                           <option key={idx} value={option}>
                             {option}
                           </option>
-                        ))
-                      ) : (
-                        <option value="">No options available</option>
+                        )
                       )}
                     </select>
                   </div>
@@ -449,27 +494,18 @@ const HPLCLog_List = () => {
                 <p>No filters available.</p>
               </div>
             )}
-
-
-
-                  <div className="col-sm-3" style={{ marginTop: "28px" }}>
-                    <button
-                      className="btn btn-primary ms-3 MinW200 mt29"
-                      onClick={handleSearch}
-                    >
-                      Search <i className="fa-solid fa-magnifying-glass"></i>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn btn-secondary ms-2"
-                      onClick={handleReset}
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <div className="col-sm-12">
+              <button className="btn btn-primary" onClick={handleSearch}>
+                Search
+              </button>
+              <button className="btn btn-secondary ml-2" onClick={handleReset}>
+                Reset
+              </button>
+            </div>
+          </div>
+          
+        </div>
+ 
               <div>
                 <div
                   className="card mt-3"
@@ -499,34 +535,37 @@ const HPLCLog_List = () => {
                   </div>
 
                   <div className="cus-Table table-responsive">
+                    
                   <table>
-  <thead>
-    <tr>
-      {validColumns.map((column) => (
-        <th key={column}>{column}</th>
-      ))}
-    </tr>
-  </thead>
-  <tbody>
-    {filteredData.map((row, index) => (
-      <tr key={index}>
-        {validColumns.map((column) => (
-          <td key={column}>
-            {column === 'sampleSetId' && row[column] ? (
-              <Link to={`/home/HPLCLog_List/${row[column]}`} className="link-primary">
-                {row[column]}
-              </Link>
-            ) : (
-              row[column]
-            )}
-          </td>
-        ))}
-      </tr>
-    ))}
-  </tbody>
-</table>
-
-                  </div>
+        <thead>
+          <tr>
+            {validColumns.map((column) => (
+              <th key={column}>{column}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filteredData
+            .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+            .map((row, index) => (
+              <tr key={index}>
+                {validColumns.map((column) => (
+                  <td key={column}>
+                    {column === 'sampleSetId' && row[column] ? (
+                      <Link to={`/home/HPLCLog_List/${row[column]}`} className="link-primary">
+                        {row[column]}
+                      </Link>
+                    ) : (
+                      isDateTimeString(row[column]) ? formatDateTime(row[column]) : row[column]
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+        </tbody>
+      </table>
+ 
+              </div>
                 </div>
               </div>
               <div>
