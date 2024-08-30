@@ -318,7 +318,7 @@ const saveFilters = async () => {
     padding: 12px;
     border: 5px solid #ddd;
     text-align: left;
-    font-size: 18px;
+    font-size: 14px;
 }
 
 .table-container th {
@@ -446,17 +446,22 @@ const saveFilters = async () => {
           </div>
  
           <div style={{ marginTop: '20px', marginBottom: '30px' }}>
-            <label style={{ fontSize: "22px", marginRight: "10px" }}>Select Filters</label>
+            <label style={{ fontSize: "17px", marginRight: "10px" }}>Select Filters</label>
             <Select
-              isMulti
-              options={currentOriginalColumns.map(col => ({ value: col, label: col }))}
-              onChange={handleFilterChange}
-              value={currentFilters}
-              styles={{
-                container: base => ({ ...base, width: 900 }),
-                menu: provided => ({ ...provided, zIndex: 9999}),
-              }}
-            />
+  options={currentSelectedColumns.map((col) => ({
+    value: col,
+    label: col,
+  }))}
+  isMulti
+  value={currentFilters}
+  onChange={handleFilterChange}
+  styles={{
+    container: base => ({ ...base, width: 900 }),
+    menu: provided => ({ ...provided, zIndex: 9999}),
+  }}
+/>
+
+           
           </div>
          <div className="mb-5 mt-5">
           <button className="btn btn-primary" onClick={saveOrder} style={{ marginRight: '10px' ,fontSize:'13px'}}>Save Order</button>
