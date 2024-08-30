@@ -1,27 +1,20 @@
 import React, { useState,useContext, useEffect } from "react";
- 
 import { DndProvider, useDrag, useDrop } from "react-dnd";
- 
 import { HTML5Backend } from "react-dnd-html5-backend";
 import UserContext from './UserContext';
- 
 import Select from "react-select";
 const ItemType = "COLUMN";
  
 const Column = ({ header, index, moveColumn }) => {
   const [, ref] = useDrag({
     type: ItemType,
- 
     item: { index },
   });
- 
   const [, drop] = useDrop({
     accept: ItemType,
- 
     hover: (item) => {
       if (item.index !== index) {
         moveColumn(item.index, index);
- 
         item.index = index;
       }
     },
@@ -36,25 +29,16 @@ const Column = ({ header, index, moveColumn }) => {
  
 const UsageLogSetting = () => {
   const [hplcData, setHplcData] = useState([]);
- 
-  const [columnData, setColumnData] = useState([]);
- 
+ const [columnData, setColumnData] = useState([]);
   const [hplcColumns, setHplcColumns] = useState([]);
- 
   const [hplcOriginalColumns, setHplcOriginalColumns] = useState([]);
- 
   const [hplcSelectedColumns, setHplcSelectedColumns] = useState([]);
   const { userData } = useContext(UserContext);
   const [hplcFilters, setHplcFilters] = useState([]);
- 
   const [columnColumns, setColumnColumns] = useState([]);
- 
   const [columnOriginalColumns, setColumnOriginalColumns] = useState([]);
- 
   const [columnSelectedColumns, setColumnSelectedColumns] = useState([]);
- 
   const [columnFilters, setColumnFilters] = useState([]);
- 
   const [selectedData, setSelectedData] = useState("hplc"); // Default to HPLC Data
  
   useEffect(() => {
@@ -127,19 +111,9 @@ const UsageLogSetting = () => {
     }
   };
  
-  // const saveOrder = () => {
-  //   if (selectedData === "hplc") {
-  //     setHplcOriginalColumns([...hplcColumns]);
-  //   } else {
-  //     setColumnOriginalColumns([...columnColumns]);
-  //   }
- 
-  //   alert("Order saved successfully!");
-  // };
- 
+  
   const saveOrder = async () => {
     await saveOrderToBackend();
-    // You may also want to update local state or perform additional actions after saving
   };
  
  
@@ -322,6 +296,57 @@ const saveFilters = async () => {
           border: 1px solid #ddd;
  
         }
+.usage-log-setting {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.usage-log-setting h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.table-container {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table-container th,
+.table-container td {
+    padding: 12px;
+    border: 5px solid #ddd;
+    text-align: left;
+    font-size: 18px;
+}
+
+.table-container th {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.table-container tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table-container tr:hover {
+    background-color: #f1f1f1;
+    cursor: move;
+}
+
+.table-container input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    transform: scale(1.2);
+    margin-right: 10px;
+}
+
+.table-container tr {
+    transition: background-color 0.2s ease-in-out;
+}
+
+
  
       `}</style>
  
@@ -340,7 +365,7 @@ const saveFilters = async () => {
           <div style={{ marginBottom: "20px" }}>
             <label
               htmlFor="dataSelection"
-              style={{ fontSize: "18px", marginRight: "10px" }}
+              style={{ fontSize: "25px", marginRight: "10px" }}
             >
               Select Data:{" "}
             </label>
@@ -420,23 +445,24 @@ const saveFilters = async () => {
             </div>
           </div>
  
-          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-            <label style={{ fontSize: "18px", marginRight: "10px" }}>Select Filters:</label>
+          <div style={{ marginTop: '20px', marginBottom: '30px' }}>
+            <label style={{ fontSize: "22px", marginRight: "10px" }}>Select Filters</label>
             <Select
               isMulti
               options={currentOriginalColumns.map(col => ({ value: col, label: col }))}
               onChange={handleFilterChange}
               value={currentFilters}
               styles={{
-                container: base => ({ ...base, width: 300 }),
-                menu: provided => ({ ...provided, zIndex: 9999 }),
+                container: base => ({ ...base, width: 900 }),
+                menu: provided => ({ ...provided, zIndex: 9999}),
               }}
             />
           </div>
-         
-          <button className="btn btn-primary" onClick={saveOrder} style={{ marginRight: '10px' }}>Save Order</button>
-          <button className="btn btn-primary" onClick={saveFilters} style={{ marginRight: '10px' }}>Save Filters</button>
+         <div className="mb-5 mt-5">
+          <button className="btn btn-primary" onClick={saveOrder} style={{ marginRight: '10px' ,fontSize:'13px'}}>Save Order</button>
+          <button className="btn btn-primary" onClick={saveFilters} style={{ marginRight: '10px' ,fontSize:'13px' }}>Save Filters</button>
           <button className="btn btn-secondary" onClick={resetOrder}>Reset</button>
+          </div>
         </div>
       </section>
     </>
