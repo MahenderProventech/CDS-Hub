@@ -118,30 +118,28 @@ const HPLCLog_List = () => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
- 
+
       // Check for filters matching
       const filterMatch = Object.keys(selectedFilters).every((filterName) => {
         const filterValue = selectedFilters[filterName];
         return !filterValue || peak[filterName]?.toString() === filterValue;
       });
- 
+
       return (
-        (!from || peakDate >= from) &&
-        (!to || peakDate <= to) &&
-        filterMatch
+        (!from || peakDate >= from) && (!to || peakDate <= to) && filterMatch
       );
     });
- 
+
     setFilteredData(filtered);
   };
- 
+
   const handleReset = () => {
     setFromDate("");
     setToDate("");
     setSelectedFilters({});
     setFilteredData(processPeaksDataData); // Reset filtered data
   };
- 
+
   const handlePrint = () => {
     // Create a hidden iframe for printing
     const iframe = document.createElement("iframe");
@@ -294,33 +292,33 @@ const HPLCLog_List = () => {
 
   const formatDateTime = (dateTimeString) => {
     const date = new Date(dateTimeString);
-    
+
     // Check if the date is valid
     if (isNaN(date.getTime())) {
       return dateTimeString; // Return as-is if it's not a valid date
     }
-    
+
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   const isDateTimeString = (value) => {
     // Ensure the value is a string
-    if (typeof value !== 'string') {
+    if (typeof value !== "string") {
       return false;
     }
-    
+
     // Check if the value contains a 'T' and is a valid date
     const date = new Date(value);
-    return !isNaN(date.getTime()) && value.includes('T');
+    return !isNaN(date.getTime()) && value.includes("T");
   };
-  
+
   const handleValues = (values) => {
     // Check if values is defined and is a string, otherwise return a placeholder
     if (typeof values === "string") {
@@ -429,83 +427,100 @@ const HPLCLog_List = () => {
           </nav>
           <div className="row">
             <div className="col-lg-12">
-            <div
-          className="card mt-3"
-          style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
-        >
-          <div className="row">
-            <div className="col-sm-3">
-              <div className="mb-3">
-                <label htmlFor="fromDate" className="form-label">
-                  <b>From Date</b>
-                </label>
-                <input
-                  type="date"
-                  className="form-control"
-                  id="fromDate"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="col-sm-3">
-              <div className="mb-3">
-                <label htmlFor="toDate" className="form-label">
-                  <b>To Date</b>
-                </label>
-                <input
-                  type="date"
-                  className="form-control"
-                  id="toDate"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
-            </div>
-            {filters.length > 0 ? (
-              filters.map((filter, index) => (
-                <div className="col-sm-3" key={index}>
-                  <div className="mb-3">
-                    <label htmlFor={filter.filterName} className="form-label">
-                      <b>{filter.filterName}</b>
-                    </label>
-                    <select
-                      className="form-select"
-                      id={filter.filterName}
-                      value={selectedFilters[filter.filterName] || ""}
-                      onChange={(e) =>
-                        handleFilterChange(filter.filterName, e.target.value)
-                      }
+              <div
+                className="card mt-3"
+                style={{ padding: "1.5rem", width: "98%", marginLeft: "5px" }}
+              >
+                <div className="row">
+                  <div className="col-sm-3">
+                    <div className="mb-3">
+                      <label htmlFor="fromDate" className="form-label">
+                        <b>From Date</b>
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        id="fromDate"
+                        value={fromDate}
+                        onChange={(e) => setFromDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-sm-3">
+                    <div className="mb-3">
+                      <label htmlFor="toDate" className="form-label">
+                        <b>To Date</b>
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        id="toDate"
+                        value={toDate}
+                        onChange={(e) => setToDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {filters.length > 0 ? (
+                    filters.map((filter, index) => (
+                      <div className="col-sm-3" key={index}>
+                        <div className="mb-3">
+                          <label
+                            htmlFor={filter.filterName}
+                            className="form-label"
+                          >
+                            <b>{filter.filterName}</b>
+                          </label>
+
+                          {/* Input field combined with dropdown */}
+
+                          <input
+                            list={`options-${filter.filterName}`} // Use a datalist for dropdown options
+                            className="form-control"
+                            id={filter.filterName}
+                            value={selectedFilters[filter.filterName] || ""}
+                            onChange={(e) =>
+                              handleFilterChange(
+                                filter.filterName,
+                                e.target.value
+                              )
+                            }
+                            placeholder="Enter or select a value"
+                          />
+
+                          {/* Datalist to show dropdown options */}
+
+                          <datalist id={`options-${filter.filterName}`}>
+                            {getUniqueFilterOptions(filter.filterName).map(
+                              (option, idx) => (
+                                <option key={idx} value={option}>
+                                  {option}
+                                </option>
+                              )
+                            )}
+                          </datalist>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-sm-12">
+                      <p>No filters available.</p>
+                    </div>
+                  )}
+
+                  <div className="col-sm-12">
+                    <button className="btn btn-primary" onClick={handleSearch}>
+                      Search
+                    </button>
+                    <button
+                      className="btn btn-secondary ml-2"
+                      onClick={handleReset}
                     >
-                      <option value="">--Select--</option>
-                      {getUniqueFilterOptions(filter.filterName).map(
-                        (option, idx) => (
-                          <option key={idx} value={option}>
-                            {option}
-                          </option>
-                        )
-                      )}
-                    </select>
+                      Reset
+                    </button>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="col-sm-12">
-                <p>No filters available.</p>
               </div>
-            )}
-            <div className="col-sm-12">
-              <button className="btn btn-primary" onClick={handleSearch}>
-                Search
-              </button>
-              <button className="btn btn-secondary ml-2" onClick={handleReset}>
-                Reset
-              </button>
-            </div>
-          </div>
-          
-        </div>
- 
+
               <div>
                 <div
                   className="card mt-3"
@@ -535,37 +550,43 @@ const HPLCLog_List = () => {
                   </div>
 
                   <div className="cus-Table table-responsive">
-                    
-                  <table>
-        <thead>
-          <tr>
-            {validColumns.map((column) => (
-              <th key={column}>{column}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData
-            .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
-            .map((row, index) => (
-              <tr key={index}>
-                {validColumns.map((column) => (
-                  <td key={column}>
-                    {column === 'sampleSetId' && row[column] ? (
-                      <Link to={`/home/HPLCLog_List/${row[column]}`} className="link-primary">
-                        {row[column]}
-                      </Link>
-                    ) : (
-                      isDateTimeString(row[column]) ? formatDateTime(row[column]) : row[column]
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-        </tbody>
-      </table>
- 
-              </div>
+                    <table>
+                      <thead>
+                        <tr>
+                          {validColumns.map((column) => (
+                            <th key={column}>{column}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData
+                          .slice(
+                            (currentPage - 1) * rowsPerPage,
+                            currentPage * rowsPerPage
+                          )
+                          .map((row, index) => (
+                            <tr key={index}>
+                              {validColumns.map((column) => (
+                                <td key={column}>
+                                  {column === "sampleSetId" && row[column] ? (
+                                    <Link
+                                      to={`/home/HPLCLog_List/${row[column]}`}
+                                      className="link-primary"
+                                    >
+                                      {row[column]}
+                                    </Link>
+                                  ) : isDateTimeString(row[column]) ? (
+                                    formatDateTime(row[column])
+                                  ) : (
+                                    row[column]
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
               <div>

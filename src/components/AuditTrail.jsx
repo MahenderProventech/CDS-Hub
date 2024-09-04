@@ -7,6 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import http from './Http';
 import CustomPagination from './core/CustomPagination';
 import './Column_Dashboard.css';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { CSVLink } from 'react-csv';
+import { Button } from 'react-bootstrap'; // or wherever you are importing Button from
 
  
 const AuditTrail = () => {
@@ -63,22 +67,27 @@ const AuditTrail = () => {
   const submitRole = async () => {
     try {
       const filteredData = filterArrayOfObjects(getResponse, searchedData);
-      setRoleAssignments(filteredData);
+  
+      // Sort by `createdDate` in descending order
+      const sortedData = filteredData.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+      
+      setRoleAssignments(sortedData);
     } catch (error) {
       console.error('Error:', error.response ? error.response.data : error.message);
       Swal.fire({
         title: 'Error',
-        text: 'Failed to assign role. Pleas e check the input and try again.',
+        text: 'Failed to assign role. Please check the input and try again.',
         icon: 'error',
         confirmButtonText: 'Ok',
-      cancelButtonText: 'Close',
-      showCancelButton: true,
-      reverseButtons: true,
-      allowOutsideClick: false,
-      allowEscapeKey: false
+        cancelButtonText: 'Close',
+        showCancelButton: true,
+        reverseButtons: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       });
     }
   };
+  
   // Handle sorting when clicking on column headers
   const handleSort = (key) => {
     let direction = 'asc';
@@ -161,6 +170,119 @@ const AuditTrail = () => {
     // setStartDate(date.target.value);
   };
  
+  const handlePrint = () => {
+    // Create a hidden iframe for printing
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
+  
+    // Get iframe document
+    const iframeDoc = iframe.contentWindow.document;
+  
+    // Create CSS styles to be included in the iframe
+    const printStyles = `
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+        }
+        .table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .table th, .table td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+        .table th {
+          background-color: #463E96;
+          color: white;
+        }
+        @media print {
+          @page {
+            size: A4 landscape; /* Change to landscape to increase width */
+            margin: 10mm;
+          }
+          body {
+            margin: 0;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+          }
+          .table th, .table td {
+            page-break-inside: avoid;
+          }
+        }
+      </style>
+    `;
+  
+    // Write content to the iframe document
+    iframeDoc.open();
+    iframeDoc.write("<html><head><title>Print</title>");
+    iframeDoc.write(printStyles); // Inject CSS styles
+    iframeDoc.write("</head><body>");
+    iframeDoc.write("<h1>Audit Trail Report</h1>");
+  
+    // Add table headers
+    iframeDoc.write(`
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th class="text-center">S.No</th>
+            <th class="text-center">Components</th>
+            <th class="text-center">Actions</th>
+            <th class="text-center">User ID</th>
+            <th class="text-center">Comments</th>
+            <th class="text-center">DateTime</th>
+          </tr>
+        </thead>
+        <tbody>
+    `);
+  
+    // Populate table rows with roleAssignments data
+    roleAssignments.forEach((assignment, index) => {
+      iframeDoc.write("<tr>");
+      iframeDoc.write(`<td class="text-center">${index + 1}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.components || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.actions || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.name || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.reason || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.createdDate || "NULL"}</td>`);
+      iframeDoc.write("</tr>");
+    });
+  
+    iframeDoc.write("</tbody></table>");
+    iframeDoc.write("</body></html>");
+    iframeDoc.close();
+  
+    // Print the iframe content
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  
+    // Remove iframe after printing
+    document.body.removeChild(iframe);
+  };
+  
+
+  // CSV data for download
+  const csvData = [
+    ['S.No', 'Components', 'Actions', 'User id', 'Comments', 'DateTime'],
+    ...roleAssignments.map((assignment, index) => [
+      index + 1,
+      assignment.components,
+      assignment.actions,
+      assignment.name,
+      assignment.reason,
+      assignment.createdDate,
+    ]),
+  ];
+
  
   return (
     <section className="full_screen">
@@ -266,6 +388,9 @@ const AuditTrail = () => {
                 <thead>
                   <tr>
                     <th>S.No</th>
+                    <th onClick={() => handleSort('components')} style={{ cursor: 'pointer' }}>
+                     Components {sortConfig.key === 'components' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
                     <th>Actions</th>
                     <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
                      User id {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -292,7 +417,8 @@ const AuditTrail = () => {
                       <tr key={index}>
                         <td>{index + 1}</td>
                         <td>{assignment.components}</td>
-                        <td>{assignment.name}</td>
+                        <td>{assignment.actions}</td>
+                            <td>{assignment.name}</td>
                         <td hidden>{assignment.name}</td>
                         <td hidden>{assignment.createdBy}</td>
                         <td>{assignment.reason}</td>
@@ -306,6 +432,7 @@ const AuditTrail = () => {
                   )}
                 </tbody>
               </Table>
+
               <CustomPagination
                 itemsPerPage={itemsPerPage}
                 totalItems={roleAssignments.length}
@@ -317,11 +444,36 @@ const AuditTrail = () => {
             </Col>
             : null}
         </Row>
+
+        <div
+          className="d-flex justify-content-end align-items-center my-3"
+          style={{ marginRight: "20px" }}
+        >
+          <Row>
+            <Col sm={12}>
+               <Button
+       variant="success"
+    onClick={handlePrint}
+    className="mt-4"
+    style={{ marginRight: '10px' }}
+  >
+    Export to PDF
+   </Button>
+              <CSVLink data={csvData} filename={'audit_trail_report.csv'}>
+                <Button variant="info" className="mt-4">
+                  Export to CSV
+                </Button>
+              </CSVLink>
+    
+            </Col>
+          </Row>
+        </div>
       </div>
     </section>
   );
 };
- 
+
+     
 export default AuditTrail;
  
  
