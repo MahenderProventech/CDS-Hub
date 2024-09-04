@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import Select from "react-select";
 import { Scatter } from "react-chartjs-2";
@@ -11,7 +11,7 @@ import search from "../img/search.png";
 import report from "../img/report.png";
 import usermanagement from "../img/usermanagement.png";
 import po from "../img/po.svg";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import "./Column_Dashboard.css";
 import {
   Chart as ChartJS,
@@ -21,12 +21,17 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import UserContext from './UserContext';
+import http from './Http';
+
+
 
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
 const Column_Dashboard1 = () => {
   const [data, setData] = useState([]);
+  const navigate = useNavigate();
   const [projectOptions, setProjectOptions] = useState([]);
   const [sampleTypeOptions, setSampleTypeOptions] = useState([]);
   const [methodSetOptions, setMethodSetOptions] = useState([]);
@@ -40,6 +45,8 @@ const Column_Dashboard1 = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const { userData } = useContext(UserContext);
+
 
 
   useEffect(() => {
@@ -310,6 +317,17 @@ const Column_Dashboard1 = () => {
     setModalIsOpen(false);
   };
   
+  useEffect(() => {
+    if (!userData || !userData.employeeId) {
+      navigate('/');
+    }
+  }, [userData, navigate]);
+
+  const handleLogout = () => {
+    sessionStorage.clear();
+    http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+    navigate('/');
+  };
 
   const handleReset = () => {
     setProject(null);
@@ -414,11 +432,9 @@ const Column_Dashboard1 = () => {
           </div>
           <br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-            <Link to={"/"}>
-              <button type="button">
+              <button type="button" onClick={handleLogout}>
                 <img src={po} alt="Logout" />
               </button>
-            </Link>
           </div>
         </div>
       </aside>

@@ -4,7 +4,7 @@ import search from '../img/search.png';
 import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import { Link, useNavigate } from 'react-router-dom';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo,useContext } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Form, Row, Col, Table } from 'react-bootstrap';
@@ -13,10 +13,14 @@ import http from './Http';
 import CustomPagination from './core/CustomPagination';
 import po from '../img/po.svg';
 import "./Column_Dashboard.css";
+import UserContext from './UserContext';
+
 
 
  
 const Column_AuditTrail = () => {
+  const { userData } = useContext(UserContext);
+
   const [roleAssignments, setRoleAssignments] = useState([]);
   const [getResponse, setResponse] = useState([]);
   const [masterData, setMasterData] = useState([]);
@@ -93,6 +97,23 @@ const Column_AuditTrail = () => {
     }
     setSortConfig({ key, direction });
   };
+
+  useEffect(() => {
+    if (!userData || !userData.employeeId) {
+      navigate('/');
+    }
+  }, [userData, navigate]);
+
+  const handleLogout = () => {
+
+    sessionStorage.clear();
+
+    http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+
+    navigate('/');
+
+  };
+
 
   // Sorting logic based on sortConfig
   const sortedItems = useMemo(() => {
@@ -231,11 +252,9 @@ const Column_AuditTrail = () => {
           
 
                     <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-                        <Link to={"/"}>
-                            <button type="button" title='Logout'>
+                            <button type="button" onClick={handleLogout} title='Logout'>
                                 <img src={po} alt="Logout" />
                             </button>
-                        </Link>
                     </div>
         </div>
       </aside>

@@ -8,7 +8,7 @@ import po from '../img/po.svg';
 
  
 // Define any necessary functions or state here
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo ,useContext} from 'react';
 import { Table, Button, Row, Col, Modal, Form } from 'react-bootstrap';
 import Select from 'react-select';
   import axios from 'axios';
@@ -19,6 +19,8 @@ import Select from 'react-select';
   import * as Appconstant from '../services/AppConstantService';
   import MultiSelectComponent from './core/MultiSelectComponent';
   import "./Column_Dashboard.css";
+  import UserContext from './UserContext';
+
 
 
 const Column_UserManagement = () => {
@@ -44,13 +46,16 @@ const Column_UserManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10; // Number of items to show per page
     const [loading, setLoading] = useState(true);
-
+    const { userData } = useContext(UserContext);
   
     // Handle pagination change
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
   
     const navigate = useNavigate();
   
+
+   
+
     // Fetch initial data
     useEffect(() => {
       fetchAllUsers();
@@ -112,6 +117,12 @@ const Column_UserManagement = () => {
       return sortedData;
     }, [roleAssignments, sortConfig]);
   
+  
+    const handleLogout = () => {
+      sessionStorage.clear();
+      http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+      navigate('/');
+    };
   
     // Handle search input change
     const handleSearchChange = (event) => {
@@ -352,11 +363,9 @@ const Column_UserManagement = () => {
             </Link>
           </div><br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-                        <Link to={"/"}>
-                            <button type="button" title='Logout'>
+                            <button type="button" title='Logout' onClick={handleLogout}>
                                 <img src={po} alt="Logout" />
                             </button>
-                        </Link>
                     </div>
         </div>
       </aside>

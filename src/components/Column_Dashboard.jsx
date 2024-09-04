@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import Select from 'react-select';
 import { Bar } from 'react-chartjs-2';
@@ -8,12 +8,16 @@ import search from '../img/search.png';
 import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
 import po from '../img/po.svg';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate, useLocation } from 'react-router-dom';
 import './Column_Dashboard.css';
+import http from './Http';
+import UserContext from './UserContext';
+
 
 
 const Column_Dashboard = () => {
   const [data, setData] = useState([]);
+  const navigate = useNavigate();
   const [projectOptions, setProjectOptions] = useState([]);
   const [sampleTypeOptions, setSampleTypeOptions] = useState([]);
   const [methodSetOptions, setMethodSetOptions] = useState([]);
@@ -22,6 +26,21 @@ const Column_Dashboard = () => {
   const [sampleType, setSampleType] = useState(null);
   const [methodSet, setMethodSet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { userData } = useContext(UserContext);
+
+
+
+  useEffect(() => {
+    if (!userData || !userData.employeeId) {
+      navigate('/');
+    }
+  }, [userData, navigate]);
+
+  const handleLogout = () => {
+    sessionStorage.clear();
+    http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+    navigate('/');
+  };
 
 
   useEffect(() => {
@@ -190,11 +209,9 @@ const Column_Dashboard = () => {
             </Link>
           </div><br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-            <Link to={"/"}>
-              <button type="button">
+              <button type="button"   onClick={handleLogout}>
                 <img src={po} alt="Logout" />
               </button>
-            </Link>
           </div>
         </div>
       </aside>

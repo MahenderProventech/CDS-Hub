@@ -183,17 +183,18 @@ const NavbarComponent = () => {
           </div>
 
           <div className="btn-group dropend" style={{ marginTop: "5px" }}>
-            <Link to={"/"}>
+    
               <button
                 type="button"
                 title='Logout'
                 onMouseEnter={() => handleMouseEnter('logout')}
                 onMouseLeave={handleMouseLeave}
+                onClick={handleLogout}
                 style={{ ...buttonStyle, backgroundColor: hover === 'logout' ? '#3b347d' : '#463E96' }}
               >
                 <img src={po} alt="Logout" style={imgStyle} />
               </button>
-            </Link>
+            
           </div>
         </div>
       </aside>

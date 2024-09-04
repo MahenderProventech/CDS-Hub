@@ -141,7 +141,7 @@ const UsageLogSetting = () => {
       createdBy: userData?.employeeId || "unknown",
       createdDate: new Date().toISOString(),
     }));
-
+    console.log("DATA STORED PATTERN:",columnsToSave);
     try {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -169,14 +169,40 @@ const UsageLogSetting = () => {
         ? "http://localhost:58747/api/PopulateHPLCUsage/SelectfilterschangeshplcDetails"
         : "http://localhost:58747/api/PopulateColumnUsage/SelectfilterschangescolumnDetails";
 
-    const filtersToSave = currentFilters.map((filter) => ({
+    // Define all possible filters
+    const allFilters = [
+      { label: 'sampleSetId' },
+      { label: 'instrument_No' },
+      { label: 'product_Name' },
+      { label: 'test_Name' },
+      { label: 'id' },
+      { label: 'sampleSetAcquiredBy' },
+      { label: 'a_R_No' },
+      { label: 'batch_No' },
+      { label: 'sampleSetStartDate' },
+      { label: 'sampleSetFinishDate' },
+      { label: 'noOfInjections' },
+      { label: 'runtime' },
+      { label: 'dateAcquired' }
+      // Add all other possible filters here
+    ];
+
+    // Determine active filters based on currentFilters
+    const activeFilters = currentFilters.map(filter => filter.label);
+
+    // Create the list of filters to be saved
+    const filtersToSave = allFilters.map((filter, index) => ({
       filterName: filter.label,
-      filterValue: 1,
-      createdBy: userData?.employeeId || "unknown",
-      createdDate: new Date().toISOString(),
+      orderOfTheColumn: index + 1, // Assigning order based on index or other logic
+      filterValue: activeFilters.includes(filter.label) ? 1 : 0, // 1 if active, 0 otherwise
+      createdBy: userData?.employeeId || "unknown", // User ID or default value
+      createdDate: new Date().toISOString(), // Current date and time
     }));
 
+    console.log("filters stored:", filtersToSave);
+
     try {
+      // Send the data to the backend
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -196,6 +222,7 @@ const UsageLogSetting = () => {
       handleShowModal("Failed to save filters.");
     }
   };
+
 
   const resetOrder = () => {
     if (selectedData === "hplc") {
