@@ -183,7 +183,8 @@ const UsageLogSetting = () => {
       { label: 'sampleSetFinishDate' },
       { label: 'noOfInjections' },
       { label: 'runtime' },
-      { label: 'dateAcquired' }
+      { label: 'dateAcquired' },
+      { label: 'column_No' }
       // Add all other possible filters here
     ];
 

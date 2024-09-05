@@ -59,6 +59,8 @@ const Configuration = () => {
     
         if (masterName === 'Usage Log Fields') {
             navigate('/home/UsageLogSetting');
+        }else if (masterName === '21CFR Password Config') {
+            navigate('/home/Cfr');
         } else {
             navigate(`/home/configurationEdit/${masterName}`);
         }

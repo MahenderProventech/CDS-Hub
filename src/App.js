@@ -42,6 +42,8 @@ import HPLC_UserManagement from './components/HPLC_UserManagement';
 import SampleSetDetails from './components/SampleSetDetails';
 import CSampleSetDetails from './components/CSampleSetDetails';
 import UsageLogSetting from './components/UsageLogSetting.jsx';
+import InstrumentDetails from './components/InstrumentDetails.jsx';
+import Cfr from './components/Cfr.jsx';
 
 import ExecutionList from './components/MastersList/ExecutionList';
 
@@ -84,8 +86,11 @@ function App() {
             <Route path='generateResultsById/:id' element={<GenerateResultsById />} />
             <Route path='configurationEdit' element={<ConfigurationEdit />} />
             <Route path='HPLCLog_List/:sampleSetId' element={<SampleSetDetails />} />
+            {/* <Route path='instrumentdetails' element={<InstrumentDetails />} /> */}
+            <Route path='instrumentdetails/:instrument_No' element={<InstrumentDetails />} />
             <Route path='ColumnLog_List/:sampleSetId' element={<CSampleSetDetails />} />
             <Route path='UsageLogSetting' element={<UsageLogSetting />} />
+            <Route path='Cfr' element={<Cfr />} />
 
 
 

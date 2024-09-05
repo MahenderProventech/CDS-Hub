@@ -118,21 +118,26 @@ const HPLCLog_List = () => {
       const peakDate = new Date(peak.sampleSetStartDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
-
+  
+      // Convert instrument_No for comparison
+      const instrumentNoForComparison = instrumentId.replace(/_/g, '/');
+  
       // Check for filters matching
       const filterMatch = Object.keys(selectedFilters).every((filterName) => {
         const filterValue = selectedFilters[filterName];
-        return !filterValue || peak[filterName]?.toString() === filterValue;
+        return !filterValue || (filterName === 'instrument_No' 
+          ? peak[filterName]?.toString() === filterValue.replace(/_/g, '/')
+          : peak[filterName]?.toString() === filterValue);
       });
-
+  
       return (
         (!from || peakDate >= from) && (!to || peakDate <= to) && filterMatch
       );
     });
-
+  
     setFilteredData(filtered);
   };
-
+  
   const handleReset = () => {
     setFromDate("");
     setToDate("");
@@ -550,43 +555,52 @@ const HPLCLog_List = () => {
                   </div>
 
                   <div className="cus-Table table-responsive">
-                    <table>
-                      <thead>
-                        <tr>
-                          {validColumns.map((column) => (
-                            <th key={column}>{column}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredData
-                          .slice(
-                            (currentPage - 1) * rowsPerPage,
-                            currentPage * rowsPerPage
-                          )
-                          .map((row, index) => (
-                            <tr key={index}>
-                              {validColumns.map((column) => (
-                                <td key={column}>
-                                  {column === "sampleSetId" && row[column] ? (
-                                    <Link
-                                      to={`/home/HPLCLog_List/${row[column]}`}
-                                      className="link-primary"
-                                    >
-                                      {row[column]}
-                                    </Link>
-                                  ) : isDateTimeString(row[column]) ? (
-                                    formatDateTime(row[column])
-                                  ) : (
-                                    row[column]
-                                  )}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
+  <table>
+    <thead>
+      <tr>
+        {validColumns.map((column) => (
+          <th key={column}>{column}</th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {filteredData
+        .slice(
+          (currentPage - 1) * rowsPerPage,
+          currentPage * rowsPerPage
+        )
+        .map((row, index) => (
+          <tr key={index}>
+            {validColumns.map((column) => (
+              <td key={column}>
+                {column === "sampleSetId" && row[column] ? (
+                  <Link
+                    to={`/home/HPLCLog_List/${row[column]}`}
+                    className="link-primary"
+                  >
+                    {row[column]}
+                  </Link>
+                ) : column === "instrument_No" && row[column] ? (
+                  <Link
+  to={`/home/instrumentdetails/${row[column].replace(/\//g, '_')}`}
+  className="link-primary"
+>
+  {row[column]}
+</Link>
+
+                ) : isDateTimeString(row[column]) ? (
+                  formatDateTime(row[column])
+                ) : (
+                  row[column]
+                )}
+              </td>
+            ))}
+          </tr>
+        ))}
+    </tbody>
+  </table>
+</div>
+
                 </div>
               </div>
               <div>
