@@ -7,8 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import http from './Http';
 import CustomPagination from './core/CustomPagination';
 import './Column_Dashboard.css';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+
 import { CSVLink } from 'react-csv';
 import { Button } from 'react-bootstrap'; // or wherever you are importing Button from
 
