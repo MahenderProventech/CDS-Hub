@@ -61,49 +61,52 @@ const ChangePassword = () => {
   const validateForm = () => {
     const { oldPassword, newPassword, confirmPassword } = formData;
     const newErrors = {};
-
+  
     // Minimum password length check
     if (newPassword.length < (apiSettings?.minPasswordLength || 8)) {
       newErrors.newPassword = `Password must be at least ${apiSettings?.minPasswordLength || 8} characters long`;
     }
-
+  
+    // Sort previous passwords by changedDate in descending order
+    const sortedPasswords = [...previousPasswords].sort((a, b) => new Date(b.changedDate) - new Date(a.changedDate));
+  
+    // Get the most recent passwords based on the configured limit
+    const recentPasswords = sortedPasswords.slice(0, apiSettings?.passwordRepetition || 0).map(p => p.newPassword);
+  
     // Password repetition check
-    if (apiSettings?.passwordRepetition && previousPasswords.length > 0) {
-      const repeatedPasswords = previousPasswords.slice(0, apiSettings.passwordRepetition).map(p => p.newPassword);
-      if (repeatedPasswords.includes(newPassword)) {
-        newErrors.newPassword = `You cannot use one of your last ${apiSettings.passwordRepetition} passwords`;
-      }
+    if (recentPasswords.includes(newPassword)) {
+      newErrors.newPassword = `You cannot use one of your last ${apiSettings?.passwordRepetition} passwords`;
     }
-
+  
     // Uppercase check
     if ((apiSettings?.uppercaseRequired === true || apiSettings?.uppercaseRequired === 1) && !/[A-Z]/.test(newPassword)) {
       newErrors.newPassword = "Password must contain at least one uppercase letter";
     }
-
+  
     // Lowercase check
     if ((apiSettings?.lowercaseRequired === true || apiSettings?.lowercaseRequired === 1) && !/[a-z]/.test(newPassword)) {
       newErrors.newPassword = "Password must contain at least one lowercase letter";
     }
-
+  
     // Number check
     if ((apiSettings?.numberRequired === true || apiSettings?.numberRequired === 1) && !/[0-9]/.test(newPassword)) {
       newErrors.newPassword = "Password must contain at least one number";
     }
-
+  
     // Symbols check
     if ((apiSettings?.symbolsRequired === true || apiSettings?.symbolsRequired === 1) && !/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
       newErrors.newPassword = "Password must contain at least one symbol";
     }
-
+  
     // Password match check
     if (newPassword !== confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
-
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
