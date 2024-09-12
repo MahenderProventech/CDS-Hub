@@ -61,6 +61,8 @@ const Configuration = () => {
             navigate('/home/UsageLogSetting');
         }else if (masterName === '21CFR Password Config') {
             navigate('/home/Cfr');
+        }else if (masterName === 'Change Password') {
+            navigate('/home/ChangePassword');
         } else {
             navigate(`/home/configurationEdit/${masterName}`);
         }
@@ -121,6 +123,7 @@ const Configuration = () => {
                                 </div>
                             </Link>
                         </div> */}
+                        
                     </div>
                 </div>
             </div>

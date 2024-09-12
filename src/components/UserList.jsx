@@ -11,14 +11,14 @@ import http from './Http';
 import * as Appconstant from '../services/AppConstantService';
 import MultiSelectComponent from './core/MultiSelectComponent';
 import './Column_Dashboard.css';
-
-
+ 
+ 
 const UserList = () => {
   const [show, setShow] = useState(false);
   const [deptResponse, setDeptResponse] = useState([]);
   const [groupResponse, setGroupResponse] = useState([]);
   const [plantResponse, setPlantResponse] = useState([]);
-
+ 
   const [getDesignationResponse, setGetDesignationResponse] = useState([]);
   const [getRolesResponse, setGetRolesResponse] = useState([]);
   const [archiveduser, setArchivedUser] = useState(null);
@@ -35,13 +35,13 @@ const UserList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items to show per page
   const [loading, setLoading] = useState(true);
-
-
+ 
+ 
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
+ 
   const navigate = useNavigate();
-
+ 
   // Fetch initial data
   useEffect(() => {
     fetchAllUsers();
@@ -76,7 +76,7 @@ const UserList = () => {
         console.log("Error fetching users:", err);
       });
   };
-
+ 
   // Handle sorting when clicking on column headers
   const handleSort = (key) => {
     let direction = 'asc';
@@ -85,7 +85,7 @@ const UserList = () => {
     }
     setSortConfig({ key, direction });
   };
-
+ 
   // Sorting logic based on sortConfig
   const sortedItems = useMemo(() => {
     let sortedData = [...roleAssignments];
@@ -102,8 +102,8 @@ const UserList = () => {
     }
     return sortedData;
   }, [roleAssignments, sortConfig]);
-
-
+ 
+ 
   // Handle search input change
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -113,20 +113,20 @@ const UserList = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = sortedItems.slice(indexOfFirstItem, indexOfLastItem);
-
+ 
   // Filter items based on search query
   const filteredItems = currentItems.filter((assignment) =>
     assignment.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     assignment.emailId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     assignment.userRole.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+ 
   // Format date function
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return `${date.toLocaleDateString('en-GB')} ${date.toLocaleTimeString([], { hour12: false })}`;
   };
-
+ 
   // Show alert function
   const showAlert = (msg) => {
     Swal.fire({
@@ -145,7 +145,7 @@ const UserList = () => {
       }
     });
   };
-
+ 
   // Handle form data change
   const handleFormData = (e) => {
     const { name, value } = e.target;
@@ -154,7 +154,7 @@ const UserList = () => {
       [name]: value
     });
   };
-
+ 
   // Handle form data change for dropdowns
   const handleFormDataDropdown = (e, key) => {
     setSelectedUser({
@@ -162,12 +162,12 @@ const UserList = () => {
       [key]: e.label
     });
   };
-
+ 
   // Submit user form
   const SubmitUserForm = async () => {
     console.log(selectedRolesOptions);
     console.log(selectedPlantsOptions)
-
+ 
     // selectedUser['userConfigurations'] = userConfigurations;
     // or
     selectedUser['userRoles'] = selectedRolesOptions;
@@ -179,7 +179,7 @@ const UserList = () => {
         setErrors({ passwordError });
         return;
       }
-
+ 
       if (selectedUser.password !== selectedUser.confirmPassword) {
         setErrors({
           ...errors,
@@ -190,7 +190,7 @@ const UserList = () => {
     }
     // delete selectedUser.userConfigurations;
     console.log(selectedUser)
-
+ 
     try {
       const response = await http.post(Appconstant.submitUserForm, selectedUser);
       if (response) {
@@ -208,17 +208,17 @@ const UserList = () => {
   const validatePassword = () => {
     const { password } = selectedUser;
     let passwordError = '';
-
+ 
     const strongRegex = new RegExp(
       "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
     );
-
+ 
     if (!strongRegex.test(password)) {
-      passwordError = `Password must be alphanumeric with at least one uppercase letter, 
-      one special character, 
+      passwordError = `Password must be alphanumeric with at least one uppercase letter,
+      one special character,
       and minimum 8 characters long.`;
     }
-
+ 
     return passwordError;
   };
   const handleClose = () => {
@@ -228,7 +228,7 @@ const UserList = () => {
     setSelectedGroupOptions([]);
     setSelectedRolesOptions([]);
   }
-
+ 
   // Show modal
   const handleShowModal = async () => {
     setShowModal(true);
@@ -238,7 +238,7 @@ const UserList = () => {
     setSelectedGroupOptions([]);
     setSelectedRolesOptions([]);
   };
-
+ 
   // Get user data for editing
   const getUserData = (data) => {
     console.log(data)
@@ -249,7 +249,7 @@ const UserList = () => {
     isEditMode(true);
     setShowModal(true);
   };
-
+ 
   // Show archive modal
   const handleShowArchiveModal = (data) => {
     setShow(true);
@@ -259,11 +259,11 @@ const UserList = () => {
       employeeId: data.employeeId
     });
   };
-
+ 
   // Close archive modal
   const handleCloseArchiveModal = () => setShow(false);
   // const handleCloseArchieveModal = () => setShow(false);
-
+ 
   // Archive user
   const handleArchiveUser = async () => {
     try {
@@ -280,7 +280,7 @@ const UserList = () => {
   const [selectedRolesOptions, setSelectedRolesOptions] = useState([]);
   const [selectedPlantsOptions, setSelectedPlantsOptions] = useState([]);
   const [selectedGroupOptions, setSelectedGroupOptions] = useState([]);
-
+ 
   return (
     <section className="full_screen">
       {loading && (
@@ -296,7 +296,7 @@ const UserList = () => {
         {/* <Row>
           <h6>Users:</h6>
         </Row> */}
-
+ 
         <Row className='mb-3'>
           <Col sm={9}>
             <h6>Users</h6>
@@ -317,14 +317,14 @@ const UserList = () => {
             </button>
           </Col>
         </Row>
-
+ 
         <Row>
           <Col sm={12}>
             {/* <h6 className="mt-5">List of Users</h6> */}
             <Table striped bordered hover>
               <thead>
                 <tr>
-
+ 
                   <th>SNo</th>
                   <th onClick={() => handleSort('employeeId')} style={{ cursor: 'pointer' }}>
                     User ID {sortConfig.key === 'employeeId' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -372,7 +372,7 @@ const UserList = () => {
                   </tr>
                 )}
               </tbody>
-
+ 
             </Table>
             <CustomPagination
               itemsPerPage={itemsPerPage}
@@ -383,7 +383,7 @@ const UserList = () => {
             />
           </Col>
         </Row>
-
+ 
         <Modal show={showModal} onHide={handleClose} size='lg'>
           <Modal.Header closeButton >
             <Modal.Title>Create User</Modal.Title>
@@ -402,7 +402,7 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-
+ 
                 <div className="col-md-6 ">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
@@ -416,7 +416,7 @@ const UserList = () => {
                   </Form.Group>
                 </div>
               </div>
-
+ 
               <div className="row w-100">
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
@@ -428,7 +428,7 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-
+ 
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label column >
@@ -458,7 +458,7 @@ const UserList = () => {
                       Role
                     </Form.Label>
                     <Col>
-
+ 
                       <Select
                         options={getRolesResponse.map(option => ({
                           value: option.configureId, label: option.configureValue
@@ -493,8 +493,8 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              
-              
+             
+             
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
@@ -511,7 +511,7 @@ const UserList = () => {
                         setSelectedOptions={(data) => setSelectedPlantsOptions(data)}
                         selectedOptions={selectedPlantsOptions}
                       />
-
+ 
                     </Col>
                   </Form.Group>
                 </div>
@@ -522,7 +522,7 @@ const UserList = () => {
                       Groups
                     </Form.Label>
                     <Col>
-
+ 
                       <MultiSelectComponent
                         options={groupResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
                         placeholder="--Select--"
@@ -535,7 +535,7 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-              
+             
               <div className="row w-100">
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
@@ -555,7 +555,7 @@ const UserList = () => {
                     </Col>
                   </Form.Group>
                 </div>
-
+ 
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
@@ -570,8 +570,8 @@ const UserList = () => {
                   </Form.Group>
                 </div>
               </div>
-
-
+ 
+ 
               {!isEdit &&
                 <div className="row w-100">
                   <div className="col-md-6">
@@ -585,7 +585,7 @@ const UserList = () => {
                       </Col>
                     </Form.Group>
                   </div>
-
+ 
                   <div className="col-md-6">
                     <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                       <Form.Label>
@@ -598,11 +598,11 @@ const UserList = () => {
                     </Form.Group>
                   </div>
                 </div>
-
+ 
               }
-
-
-
+ 
+ 
+ 
             </Form>
           </Modal.Body>
           <Modal.Footer>
@@ -614,7 +614,7 @@ const UserList = () => {
             </Button>
           </Modal.Footer>
         </Modal>
-
+ 
         <Modal show={show} onHide={handleCloseArchiveModal}>
           <Modal.Header closeButton>
             <Modal.Title>Archive User</Modal.Title>
@@ -634,7 +634,7 @@ const UserList = () => {
                 })
               }} />
             </Form.Group>
-
+ 
             {/* </Form> */}
           </Modal.Body>
           <Modal.Footer>
@@ -650,5 +650,7 @@ const UserList = () => {
     </section>
   );
 };
-
+ 
 export default UserList;
+ 
+ 

@@ -44,6 +44,7 @@ import CSampleSetDetails from './components/CSampleSetDetails';
 import UsageLogSetting from './components/UsageLogSetting.jsx';
 import InstrumentDetails from './components/InstrumentDetails.jsx';
 import Cfr from './components/Cfr.jsx';
+import ChangePassword from './components/ChangePassword.jsx';
 
 import ExecutionList from './components/MastersList/ExecutionList';
 
@@ -91,6 +92,7 @@ function App() {
             <Route path='ColumnLog_List/:sampleSetId' element={<CSampleSetDetails />} />
             <Route path='UsageLogSetting' element={<UsageLogSetting />} />
             <Route path='Cfr' element={<Cfr />} />
+            <Route path='ChangePassword' element={<ChangePassword />} />
 
 
 

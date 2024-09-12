@@ -1,8 +1,13 @@
-import React, { useState } from "react";
+import React, { useState,useEffect, useContext } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from "axios"; // Import axios for making HTTP requests
+import UserContext from './UserContext';
 
 const Cfr = () => {
+  const { userData } = useContext(UserContext);
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     minPasswordLength: "",
     passwordExpiryDays: "",
@@ -16,6 +21,13 @@ const Cfr = () => {
     symbolsRequired: false,
   });
 
+  
+  useEffect(() => {
+    if (!userData || !userData.employeeId) {
+      navigate('/');
+    }
+  }, [userData, navigate]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -26,23 +38,32 @@ const Cfr = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log("Form Data Before Sending:", formData); // Print form data to console for debugging
-
+  
+    // Assuming you have user data from context or other source
+    const createdBy = userData?.userRole || 'defaultUsername'; // Replace 'defaultUsername' with actual logic
+  
+    // Add createdBy to formData
+    const updatedFormData = {
+      ...formData,
+      createdBy, // Append the createdBy field
+    };
+  
+    console.log("Form Data Before Sending:", updatedFormData); // Debugging form data
+  
     try {
-      // Post request to .NET backend API
-      const response = await axios.post('/api/save-settings', formData, {
+      const response = await axios.post('http://localhost:58747/api/Settings/Savesettings', updatedFormData, {
         headers: {
-          'Content-Type': 'application/json', // Ensure data is sent as JSON
+          'Content-Type': 'application/json',
         },
       });
-      console.log("Response from server:", response.data); // Print the response for debugging
+      console.log("Response from server:", response.data); // Debugging response
       alert("Settings saved successfully!");
     } catch (error) {
       console.error("There was an error saving the settings:", error);
       alert("Failed to save settings. Please try again.");
     }
   };
+  
 
   return (
     <section
@@ -186,7 +207,7 @@ const Cfr = () => {
                       />
                       <label className="form-check-label">
                         <b>Uppercase Required</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                     </div>
                   </div>
@@ -202,7 +223,7 @@ const Cfr = () => {
                       />
                       <label className="form-check-label">
                         <b>Lowercase Required</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                     </div>
                   </div>
@@ -219,7 +240,7 @@ const Cfr = () => {
                       />
                       <label className="form-check-label">
                         <b>Number Required</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                     </div>
                   </div>
@@ -235,7 +256,7 @@ const Cfr = () => {
                       />
                       <label className="form-check-label">
                         <b>Symbols Required</b>
-                        <span style={{ color: "red" }}>*</span>
+                        {/* <span style={{ color: "red" }}>*</span> */}
                       </label>
                     </div>
                   </div>
