@@ -777,6 +777,19 @@ const getUserData = (data) => {
       </Col>
     </Form.Group>
   </div>
+                <div className="col-md-6 mb-3">
+                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail" >
+                    <Form.Label>
+                      Status 
+                    </Form.Label>
+                    <Col>
+                      <Form.Select name="isActive" value={selectedUser?.isActive} onChange={handleFormData} disabled={!isEdit}>
+                        <option value={true}>Active</option>
+                        <option value={false}>InActive</option>
+                      </Form.Select>
+                    </Col>
+                  </Form.Group>
+                </div>
               </div>
  
  
