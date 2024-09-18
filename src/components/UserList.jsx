@@ -167,16 +167,34 @@ const UserList = () => {
     });
   };
 
-  const checkEmployeeIdExists = async (employeeId) => {
+  const checkEmployeeIdOrEmailExists = async (employeeId, emailId) => {
     try {
       const response = await http.get(Appconstant.getAllUsers);
       const existingUsers = response.data.item2;
-      return existingUsers.some(user => user.employeeId === employeeId);
+  
+      // Check if the employeeId or email already exists
+      const isEmployeeIdExists = existingUsers.some(user => user.employeeId === employeeId);
+      const isEmailExists = existingUsers.some(user => user.emailId === emailId);
+  
+      if (isEmployeeIdExists || isEmailExists) {
+        return {
+          isEmployeeIdExists,
+          isEmailExists
+        };
+      }
+      return {
+        isEmployeeIdExists: false,
+        isEmailExists: false
+      };
     } catch (error) {
-      console.error("Error checking employee ID:", error);
-      return false;
+      console.error("Error checking employee ID or email:", error);
+      return {
+        isEmployeeIdExists: false,
+        isEmailExists: false
+      };
     }
   };
+  
   const validateForm = () => {
     const newErrors = {};
     const mobileNoPattern = /^\d{10}$/; // Regular expression for 10 digits
@@ -227,10 +245,16 @@ const UserList = () => {
     }
     
     if (!isEdit) {
-      const isEmployeeIdExists = await checkEmployeeIdExists(selectedUser.employeeId);
+      const { isEmployeeIdExists, isEmailExists } = await checkEmployeeIdOrEmailExists(selectedUser.employeeId, selectedUser.emailId);
+      
       if (isEmployeeIdExists) {
         showAlert('Employee ID already exists. Please use a different Employee ID.');
         return; // Stop form submission if employeeId exists
+      }
+  
+      if (isEmailExists) {
+        showAlert('Email ID already exists. Please use a different Email ID.');
+        return; // Stop form submission if email exists
       }
     }
 
@@ -600,7 +624,7 @@ const getUserData = (data) => {
                     </Form.Label>
                     <Col sm="12">
                       <Form.Control type="email" placeholder="Email ID" name="emailId" value={selectedUser?.emailId}
-                        onChange={handleFormData}
+                        onChange={handleFormData} disabled={isEdit}
                       />
                     </Col>
                   </Form.Group>
