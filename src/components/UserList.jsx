@@ -11,14 +11,18 @@ import http from './Http';
 import * as Appconstant from '../services/AppConstantService';
 import MultiSelectComponent from './core/MultiSelectComponent';
 import './Column_Dashboard.css';
- 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+
  
 const UserList = () => {
   const [show, setShow] = useState(false);
   const [deptResponse, setDeptResponse] = useState([]);
   const [groupResponse, setGroupResponse] = useState([]);
   const [plantResponse, setPlantResponse] = useState([]);
- 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   const [getDesignationResponse, setGetDesignationResponse] = useState([]);
   const [getRolesResponse, setGetRolesResponse] = useState([]);
   const [archiveduser, setArchivedUser] = useState(null);
@@ -35,7 +39,7 @@ const UserList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items to show per page
   const [loading, setLoading] = useState(true);
- 
+  const [apiSettings, setApiSettings] = useState({});
  
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -67,15 +71,15 @@ const UserList = () => {
     }
   }
   // Fetch all users from API
-  const fetchAllUsers = () => {
-    http.get(Appconstant.getAllUsers)
-      .then((resp) => {
-        setRoleAssignments(resp.data.item2);
-      })
-      .catch((err) => {
-        console.log("Error fetching users:", err);
-      });
+  const fetchAllUsers = async () => {
+    try {
+      const resp = await http.get(Appconstant.getAllUsers);
+      setRoleAssignments(resp.data.item2);
+    } catch (err) {
+      console.log("Error fetching users:", err);
+    }
   };
+  
  
   // Handle sorting when clicking on column headers
   const handleSort = (key) => {
@@ -162,6 +166,38 @@ const UserList = () => {
       [key]: e.label
     });
   };
+
+  const checkEmployeeIdExists = async (employeeId) => {
+    try {
+      const response = await http.get(Appconstant.getAllUsers);
+      const existingUsers = response.data.item2;
+      return existingUsers.some(user => user.employeeId === employeeId);
+    } catch (error) {
+      console.error("Error checking employee ID:", error);
+      return false;
+    }
+  };
+  const validateForm = () => {
+    const newErrors = {};
+    const mobileNoPattern = /^\d{10}$/; // Regular expression for 10 digits
+  
+    // Validate mobile number
+    if (!mobileNoPattern.test(selectedUser.mobileNo)) {
+      newErrors.mobileNo = 'Mobile number must be exactly 10 digits.';
+    }
+  
+    // Add other validations as needed
+    const passwordValidation = validatePassword();
+    if (!passwordValidation.isValid) {
+      newErrors.password = passwordValidation.errors.password;
+    }
+  
+    return {
+      isValid: Object.keys(newErrors).length === 0,
+      errors: newErrors
+    };
+  };
+  
  
   // Submit user form
   const SubmitUserForm = async () => {
@@ -173,56 +209,156 @@ const UserList = () => {
     selectedUser['userRoles'] = selectedRolesOptions;
     selectedUser['userPlants'] = selectedPlantsOptions;
     selectedUser['userGroups'] = selectedGroupOptions;
+    selectedUser.isActive = selectedUser.isActive === 'true' ? true : false;
+    // Validate password first
     if (!isEdit) {
-      const passwordError = validatePassword();
-      if (passwordError) {
-        setErrors({ passwordError });
-        return;
-      }
- 
-      if (selectedUser.password !== selectedUser.confirmPassword) {
-        setErrors({
-          ...errors,
-          confirmPasswordError: "Passwords do not match."
-        });
-        return;
+      const validationResult = validatePassword();
+      if (!validationResult.isValid) {
+        setErrors(validationResult.errors);
+        console.log("Validation Errors:", validationResult.errors);
+        return; // Stop form submission if validation fails
       }
     }
-    // delete selectedUser.userConfigurations;
-    console.log(selectedUser)
+    const validationResult = validateForm();
+    if (!validationResult.isValid) {
+      setErrors(validationResult.errors);
+      console.log("Validation Errors:", validationResult.errors);
+      return; // Stop form submission if validation fails
+    }
+    
+    if (!isEdit) {
+      const isEmployeeIdExists = await checkEmployeeIdExists(selectedUser.employeeId);
+      if (isEmployeeIdExists) {
+        showAlert('Employee ID already exists. Please use a different Employee ID.');
+        return; // Stop form submission if employeeId exists
+      }
+    }
+
+
+    console.log("selected values:",selectedUser)
+    // Prepare data for submission
+    // const payload = {
+    //   ...selectedUser,
+    //   userRoles: Array.isArray(selectedRolesOptions) ? selectedRolesOptions.map(option => ({ id: parseInt(option.value, 10) })) : [],
+    //   userPlants: Array.isArray(selectedPlantsOptions) ? selectedPlantsOptions.map(option => ({ id: option.value ? parseInt(option.value, 10) : 0 })) : [], // Ensure id is an integer
+    //   userGroups: Array.isArray(selectedGroupOptions) ? selectedGroupOptions.map(option => ({ id: parseInt(option.value, 10) })) : [],
+    // };
  
+    // console.log("Payload for submission:", JSON.stringify(payload, null, 2));
+ 
+   
     try {
       const response = await http.post(Appconstant.submitUserForm, selectedUser);
       if (response) {
-        showAlert('User Saved Successfully.');
+       
+        showAlert(isEdit ? 'User Updated Successfully.' : 'User Saved Successfully.');
         fetchAllUsers();
         setShowModal(false);
         setSelectedRolesOptions([]);
         setSelectedPlantsOptions([]);
         setSelectedGroupOptions([]);
+        handleClose(); 
       }
     } catch (error) {
       // Handle error
     }
   };
+   
+ 
+ 
+ 
+  useEffect(() => {
+    // Fetch API settings on component mount
+    axios
+      .get("http://localhost:58747/api/Settings/Savesettings")
+      .then((response) => {
+        if (response.data && response.data.length > 0) {
+          setApiSettings(response.data[0]); // Assuming the API returns an array, take the first element
+          console.log("API Settings fetched: ", response.data[0]);
+        }
+      })
+      .catch((error) => {
+        console.error("There was an error fetching settings:", error);
+      });
+  }, []);
+ 
+ 
   const validatePassword = () => {
-    const { password } = selectedUser;
-    let passwordError = '';
- 
-    const strongRegex = new RegExp(
-      "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
-    );
- 
-    if (!strongRegex.test(password)) {
-      passwordError = `Password must be alphanumeric with at least one uppercase letter,
-      one special character,
-      and minimum 8 characters long.`;
+    const { password = "", confirmPassword = "" } = selectedUser || {}; // Default to empty strings
+    const newErrors = {};
+  
+    // Skip password validation if we're editing a user and no password is provided
+    if (isEdit && (!password || password.trim() === "")) {
+      return { isValid: true, errors: {} }; // If editing, no need to validate password
     }
- 
-    return passwordError;
+  
+    // Minimum password length check
+    if (password.length < (apiSettings?.minPasswordLength || 8)) {
+      newErrors.password = `Password must be at least ${apiSettings?.minPasswordLength || 8} characters long`;
+    }
+  
+    // Uppercase check
+    if (
+      (apiSettings?.uppercaseRequired === true || apiSettings?.uppercaseRequired === 1) &&
+      !/[A-Z]/.test(password)
+    ) {
+      newErrors.password = "Password must contain at least one uppercase letter";
+    }
+  
+    // Lowercase check
+    if (
+      (apiSettings?.lowercaseRequired === true || apiSettings?.lowercaseRequired === 1) &&
+      !/[a-z]/.test(password)
+    ) {
+      newErrors.password = "Password must contain at least one lowercase letter";
+    }
+  
+    // Number check
+    if (
+      (apiSettings?.numberRequired === true || apiSettings?.numberRequired === 1) &&
+      !/[0-9]/.test(password)
+    ) {
+      newErrors.password = "Password must contain at least one number";
+    }
+  
+    // Symbols check
+    if (
+      (apiSettings?.symbolsRequired === true || apiSettings?.symbolsRequired === 1) &&
+      !/[!@#$%^&*(),.?":{}|<>]/.test(password)
+    ) {
+      newErrors.password = "Password must contain at least one symbol";
+    }
+  
+    // Password match check
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+  
+    return {
+      isValid: Object.keys(newErrors).length === 0,
+      errors: newErrors,
+    };
   };
+  
+  const resetForm = () => {
+    setSelectedUser({
+      // Initialize with default values if necessary
+      mobileNo: '',
+      password: '',
+      confirmPassword: '',
+      // Add other fields as required
+    });
+    setErrors({
+      mobileNo: '',
+      password: '',
+      confirmPassword: ''
+    });
+  };
+  
+ 
   const handleClose = () => {
     setShowModal(false);
+    resetForm();
     setSelectedUser([]);
     setSelectedPlantsOptions([]);
     setSelectedGroupOptions([]);
@@ -233,6 +369,7 @@ const UserList = () => {
   const handleShowModal = async () => {
     setShowModal(true);
     isEditMode(false);
+    resetForm();
     setSelectedUser([]);
     setSelectedPlantsOptions([]);
     setSelectedGroupOptions([]);
@@ -240,15 +377,42 @@ const UserList = () => {
   };
  
   // Get user data for editing
-  const getUserData = (data) => {
-    console.log(data)
+const getUserData = (data) => {
+    console.log("edit data:", data);
+
+    // Set the selected user data
     setSelectedUser(data);
-    setSelectedPlantsOptions(data.userPlants);
-    setSelectedGroupOptions(data.userGroups);
-    setSelectedRolesOptions(data.userRoles);
+
+    // Map userPlants to the correct value/label pairs for MultiSelectComponent
+    const selectedPlants = data.userPlants.map(plant => {
+        let readableLabel = plant.configurevalue;
+        
+        // Convert "Plants001" to "Plant1", "Plants002" to "Plant2", etc.
+        if (plant.configurevalue === 'Plants001') {
+            readableLabel = 'Plant1';
+        } else if (plant.configurevalue === 'Plants002') {
+            readableLabel = 'Plant2';
+        }
+        
+        return {
+            value: plant.configurevalue,  // Keep the original value
+            label: readableLabel           // Display the transformed readable label
+        };
+    });
+
+    // Update the plants and groups
+    setSelectedPlantsOptions(selectedPlants);
+    setSelectedGroupOptions(data.userGroups || []);
+
+    // Set the role correctly using userRole (single value)
+    setSelectedRolesOptions([{ value: data.userRole, label: data.userRole }]);
+
+    // Set edit mode and show modal
     isEditMode(true);
     setShowModal(true);
-  };
+};
+
+
  
   // Show archive modal
   const handleShowArchiveModal = (data) => {
@@ -259,7 +423,32 @@ const UserList = () => {
       employeeId: data.employeeId
     });
   };
- 
+  
+  const formValid = () => {
+    // Check if required fields are filled for both create and edit modes
+    const commonValidations =
+      selectedUser?.firstName &&
+      selectedUser?.lastName &&
+      selectedUser?.employeeId &&
+      selectedUser?.emailId &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(selectedUser?.emailId) &&  // Email validation
+      selectedUser?.mobileNo;                      // Mobile number should be 10 digits
+  
+    if (isEdit) {
+      // If editing, no need to validate password fields
+      return commonValidations;
+    } else {
+      // If creating a new user, validate password and confirm password fields
+      return (
+        commonValidations &&
+        selectedUser?.password &&                                     // Password field validation
+        selectedUser?.confirmPassword                        // Confirm password field validation
+        // selectedUser?.password === selectedUser?.confirmPassword      // Password and confirm password match
+      );
+    }
+  };
+  
+  
   // Close archive modal
   const handleCloseArchiveModal = () => setShow(false);
   // const handleCloseArchieveModal = () => setShow(false);
@@ -386,15 +575,16 @@ const UserList = () => {
  
         <Modal show={showModal} onHide={handleClose} size='lg'>
           <Modal.Header closeButton >
-            <Modal.Title>Create User</Modal.Title>
+            <Modal.Title>{isEdit ? 'Edit User' : 'Create User'}</Modal.Title>
           </Modal.Header>
+       
           <Modal.Body>
             <Form>
               <div className="row w-100">
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
-                      Employee ID
+                      Employee ID<span className="text-danger">*</span>
                     </Form.Label>
                     <Col>
                       <Form.Control type="text" placeholder="Employee ID" name="employeeId" value={selectedUser?.employeeId}
@@ -406,7 +596,7 @@ const UserList = () => {
                 <div className="col-md-6 ">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label>
-                      Email ID
+                      Email ID<span className="text-danger">*</span>
                     </Form.Label>
                     <Col sm="12">
                       <Form.Control type="email" placeholder="Email ID" name="emailId" value={selectedUser?.emailId}
@@ -421,7 +611,7 @@ const UserList = () => {
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label column >
-                      First Name
+                      First Name<span className="text-danger">*</span>
                     </Form.Label>
                     <Col sm="12">
                       <Form.Control style={{ outline: "1px solid black" }} type="text" placeholder="First Name*" name="firstName" onChange={handleFormData} value={selectedUser?.firstName || ''}></Form.Control>
@@ -432,7 +622,7 @@ const UserList = () => {
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label column >
-                      Last Name
+                      Last Name<span className="text-danger">*</span>
                     </Form.Label>
                     <Col sm="12">
                       <Form.Control style={{ outline: "1px solid black" }} type="text" placeholder="Last Name*" name="lastName" onChange={handleFormData} value={selectedUser?.lastName || ''}></Form.Control>
@@ -442,81 +632,106 @@ const UserList = () => {
               </div>
               <div className="row w-100">
               <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Mobile Number
-                    </Form.Label>
-                    <Col>
-                      <Form.Control type="text" placeholder="Enter 10 Digits Number" name="mobileNo" value={selectedUser?.mobileNo}
-                        onChange={handleFormData} disabled={isEdit} />
-                    </Col>
-                  </Form.Group>
-                </div>
+  <Form.Group as={Row} className="mb-3" controlId="formPlaintextMobileNo">
+    <Form.Label>
+      Mobile Number<span className="text-danger">*</span>
+    </Form.Label>
+    <Col>
+      <Form.Control
+        type="text"
+        placeholder="Mobile Number"
+        name="mobileNo"
+        value={selectedUser?.mobileNo}
+        onChange={handleFormData}
+        // disabled={isEdit}
+      />
+      <Form.Text className="text-danger">{errors.mobileNo}</Form.Text> {/* Display error message here */}
+    </Col>
+  </Form.Group>
+</div>
+
+               
                 <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Role
-                    </Form.Label>
-                    <Col>
+  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+    <Form.Label>
+      Role <span className="text-danger">*</span>
+    </Form.Label>
+    <Col>
+      <Select
+        options={getRolesResponse.map(option => ({
+          value: option.configureId,
+          label: option.configureValue
+        }))}
+        placeholder="--Select--"
+        classNamePrefix="react-select"
+        className="react-select-container"
+        name="userRole"
+        // Make sure to set value to an object or null
+        value={selectedRolesOptions.length ? selectedRolesOptions[0] : null}
+        onChange={(selectedOption) => {
+          setSelectedRolesOptions(selectedOption ? [selectedOption] : []);
+          handleFormDataDropdown(selectedOption, 'userRole');
+        }}
+      />
+    </Col>
+  </Form.Group>
+</div>
+
  
-                      <Select
-                        options={getRolesResponse.map(option => ({
-                          value: option.configureId, label: option.configureValue
-                        }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        name="userRole"
-                        setSelectedOptions={(data) => setSelectedRolesOptions(data)}
-                        selectedOptions={selectedRolesOptions}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
 </div>
                 <div className="row w-100">
-              <div className="col-md-6">
-              <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label >
-                    Department
-                    </Form.Label>
-                    <Col>
-                      <Select
-                        options={deptResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        value={selectedUser?.department ? { value: selectedUser?.department, label: selectedUser?.department } : null}
-                        name="department"
-                        onChange={(e) => handleFormDataDropdown(e, "department")}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
-             
+                <div className="col-md-6">
+    <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+      <Form.Label>
+        Department<span className="text-danger">*</span>
+      </Form.Label>
+      <Col>
+        <Select
+          options={deptResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
+          placeholder="--Select--"
+          classNamePrefix="react-select"
+          className="react-select-container"
+          value={selectedUser?.department ? { value: selectedUser?.department, label: selectedUser?.department } : null}
+          name="department"
+          onChange={(e) => handleFormDataDropdown(e, "department")}
+          styles={{
+            menu: (provided) => ({
+              ...provided,
+              zIndex: 1050 // Ensure the dropdown appears above other elements
+            })
+          }}
+        />
+      </Col>
+    </Form.Group>
+  </div>
              
                 <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label >
-                      Plants
-                    </Form.Label>
-                    <Col>
-                      <MultiSelectComponent
-                        options={plantResponse.map(option => ({ value: option.configureId, label: option.configureValue, configureId: option.configureId }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        // value={selectedUser?.userRole ? { value: selectedUser?.userRole, label: selectedUser?.userRole } : null}
-                        name="userRole"
-                        setSelectedOptions={(data) => setSelectedPlantsOptions(data)}
-                        selectedOptions={selectedPlantsOptions}
-                      />
+    <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+        <Form.Label>
+            Plants<span className="text-danger">*</span>
+        </Form.Label>
+        <Col>
+            <MultiSelectComponent
+                options={plantResponse.map(option => ({
+                    value: option.configureId,
+                    label: option.configureValue,
+                    configureId: option.configureId
+                }))}
+                placeholder="--Select--"
+                classNamePrefix="react-select"
+                className="react-select-container"
+                name="userPlants"
+                setSelectedOptions={(data) => setSelectedPlantsOptions(data)}
+                selectedOptions={selectedPlantsOptions}  // Correctly mapped selected options
+            />
+        </Col>
+    </Form.Group>
+</div>
+
  
-                    </Col>
-                  </Form.Group>
+ 
                 </div>
-                </div>
-                <div hidden className="col-md-6">
+                {/* <div hidden className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
                     <Form.Label >
                       Groups
@@ -528,87 +743,127 @@ const UserList = () => {
                         placeholder="--Select--"
                         classNamePrefix="react-select"
                         className="react-select-container"
+                       
                         name="userRole"
                         setSelectedOptions={(data) => setSelectedGroupOptions(data)}
                         selectedOptions={selectedGroupOptions}
                       />
                     </Col>
                   </Form.Group>
-                </div>
+                </div> */}
              
               <div className="row w-100">
-                <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Designation
-                    </Form.Label>
-                    <Col>
-                      <Select
-                        options={getDesignationResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        value={selectedUser?.designation ? { value: selectedUser?.designation, label: selectedUser?.designation } : null}
-                        name="designation"
-                        onChange={(e) => handleFormDataDropdown(e, "designation")}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
- 
-                <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Status
-                    </Form.Label>
-                    <Col>
-                      <Form.Select name="isActive" value={selectedUser?.isActive} onChange={handleFormData}>
-                        <option value={true}>Active</option>
-                        <option value={false}>InActive</option>
-                      </Form.Select>
-                    </Col>
-                  </Form.Group>
-                </div>
+              <div className="col-md-6">
+    <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
+      <Form.Label>
+        Designation<span className="text-danger">*</span>
+      </Form.Label>
+      <Col>
+        <Select
+          options={getDesignationResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
+          placeholder="--Select--"
+          classNamePrefix="react-select"
+          className="react-select-container"
+          value={selectedUser?.designation ? { value: selectedUser?.designation, label: selectedUser?.designation } : null}
+          name="designation"
+          onChange={(e) => handleFormDataDropdown(e, "designation")}
+          styles={{
+            menu: (provided) => ({
+              ...provided,
+              zIndex: 1050 // Ensure the dropdown appears above other elements
+            })
+          }}
+        />
+      </Col>
+    </Form.Group>
+  </div>
               </div>
  
  
               {!isEdit &&
                 <div className="row w-100">
-                  <div className="col-md-6">
-                    <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                      <Form.Label >
-                        Password
-                      </Form.Label>
-                      <Col>
-                        <Form.Control type="password" placeholder="Password" name="password" value={selectedUser?.password} onChange={handleFormData} />
-                        <Form.Text className="text-danger">{errors.passwordError}</Form.Text>
-                      </Col>
-                    </Form.Group>
-                  </div>
- 
-                  <div className="col-md-6">
-                    <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                      <Form.Label>
-                        Confirm Password
-                      </Form.Label>
-                      <Col >
-                        <Form.Control type="password" placeholder="Confirm Password" name="confirmPassword" value={selectedUser?.confirmPassword} onChange={handleFormData} />
-                        <Form.Text className="text-danger">{errors.confirmPasswordError}</Form.Text>
-                      </Col>
-                    </Form.Group>
-                  </div>
+                <div className="col-md-6">
+                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextPassword">
+                    <Form.Label>
+                      Password<span className="text-danger">*</span>
+                    </Form.Label>
+                    <Col>
+                      <div className="position-relative">
+                        <Form.Control
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password"
+                          name="password"
+                          value={selectedUser?.password}
+                          onChange={handleFormData}
+                        />
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <Form.Text className="text-danger">{errors.password}</Form.Text>
+                    </Col>
+                  </Form.Group>
                 </div>
+              
+                <div className="col-md-6">
+                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextConfirmPassword">
+                    <Form.Label>
+                      Confirm Password<span className="text-danger">*</span>
+                    </Form.Label>
+                    <Col>
+                      <div className="position-relative">
+                        <Form.Control
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm Password"
+                          name="confirmPassword"
+                          value={selectedUser?.confirmPassword}
+                          onChange={handleFormData}
+                        />
+                        <FontAwesomeIcon
+                          icon={showConfirmPassword ? faEyeSlash : faEye}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <Form.Text className="text-danger">{errors.confirmPassword}</Form.Text>
+                    </Col>
+                  </Form.Group>
+                </div>
+              </div>
+              
  
               }
  
  
  
-            </Form>
+ </Form>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="primary" onClick={SubmitUserForm}>
-              Submit
-            </Button>
+          <Button
+  variant="primary"
+  onClick={SubmitUserForm}
+  disabled={!formValid()}  // The button is disabled until the form is valid based on create or edit mode
+>
+  Submit
+</Button>
+
+
+
+
             <Button variant="secondary" onClick={handleClose}>
               Close
             </Button>
@@ -641,7 +896,7 @@ const UserList = () => {
             <Button variant="secondary" onClick={handleCloseArchiveModal}>
               Close
             </Button>
-            <Button variant="primary" onClick={handleArchiveUser}>
+            <Button variant="primary" onClick={handleArchiveUser} disabled={!archiveduser?.comments}>
               Yes
             </Button>
           </Modal.Footer>
