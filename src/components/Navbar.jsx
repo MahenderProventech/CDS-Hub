@@ -15,6 +15,7 @@ import bprofile from '../img/BlackProfile.jpg';
 import http from './Http';
 import UserContext from './UserContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Swal from 'sweetalert2';
 
 const NavbarComponent = () => {
   const { userData } = useContext(UserContext);
@@ -30,10 +31,28 @@ const NavbarComponent = () => {
   }, [userData, navigate]);
 
   const handleLogout = () => {
-    sessionStorage.clear();
-    http.get(`Login/Logout?employeeId=${userData.employeeId}`);
-    navigate('/');
-  };
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'You will be logged out!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, log me out!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+            sessionStorage.clear();
+            navigate('/');
+            Swal.fire(
+                'Logged Out!',
+                'You have been logged out successfully.',
+                'success'
+            );
+        }
+    });
+};
 
   const handleShow = () => setShowModal(true);
   const handleClose = () => setShowModal(false);
