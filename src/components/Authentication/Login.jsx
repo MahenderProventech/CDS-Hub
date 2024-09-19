@@ -123,30 +123,68 @@ const showModal = (title, message) => {
             });
     };
 
-    const verifyUser = () => {
-        let payload = {
-            LoginId: state.username,
-            Password: state.password,
-        };
-
-        http.post("/Login/AuthenticateData", payload)
-        .then((resp) => {
-            if (resp.data.item1) {
-                const userData = resp.data.item2;
-                setUserData(userData);
-                checkForPasswordChange(userData);
-            } else {
-                showModal("Error", "Please enter valid details");
+    const verifyUser = async () => {
+        try {
+            // Fetch users
+            const usersResponse = await axios.get('http://localhost:58747/api/User/GetListOfUsers');
+            
+            // Log the response to verify its structure
+            console.log(usersResponse.data);
+            
+            // Destructure response to get user data
+            const { item1, item2 } = usersResponse.data;
+    
+            if (!item1) {
+                showModal("Error", "Unable to fetch users.");
+                return;
             }
-        }).catch((err) => {
-            setState((prev) => ({
+    
+            const users = Array.isArray(item2) ? item2 : [];
+    
+            if (users.length === 0) {
+                showModal("Error", "No users found.");
+                return;
+            }
+    
+            // Find the user with the provided username
+            const user = users.find(u => u.employeeId === state.username);
+    
+            if (user) {
+                // Check user status
+                if (!user.isActive) {
+                    showModal("Error", "User is locked. Please contact admin.");
+                    return;
+                }
+    
+                // Proceed with authentication
+                const payload = {
+                    LoginId: state.username,
+                    Password: state.password,
+                };
+    
+                const authResponse = await http.post("/Login/AuthenticateData", payload);
+    
+                if (authResponse.data.item1) {
+                    const userData = authResponse.data.item2;
+                    setUserData(userData);
+                    checkForPasswordChange(userData);
+                } else {
+                    showModal("Error", "Invalid username or password.");
+                }
+            } else {
+                showModal("Error", "User does not exist.");
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showModal("Error", "An error occurred. Please try again.");
+        } finally {
+            setState(prev => ({
                 ...prev,
                 loadingClass: "d-none",
             }));
-            showModal("Error", "Please enter valid details");
-        });
-    
+        }
     };
+    
 
     const checkForPasswordChange = (userData) => {
         const employeeId = userData.employeeId;
