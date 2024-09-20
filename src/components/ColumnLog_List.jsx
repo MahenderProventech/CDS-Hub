@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useContext, useState } from 'react';
 import dash from "../img/dashboard.png";
 import HplcLogList from "../img/hplc_loglist.png";
 import search from "../img/search.png";
 import report from "../img/report.png";
 import usermanagement from "../img/usermanagement.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import "./print.css";
 import po from "../img/po.svg";
 import "./Column_Dashboard.css";
 import axios from "axios";
+import Swal from "sweetalert2";
+import http from './Http';
+import UserContext from './UserContext';
+
 
 const ColumnLog_List= () => {
+  const { userData } = useContext(UserContext);
+  const navigate = useNavigate();
   const [processPeaksDataData, setProcessPeaksDataData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [instruments, setInstruments] = useState([]);
@@ -334,6 +340,30 @@ const ColumnLog_List= () => {
     return <div>No Data</div>;
   };
 
+  const handleLogout = () => {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'You will be logged out!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, log me out!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+            sessionStorage.clear();
+            navigate('/');
+            Swal.fire(
+                'Logged Out!',
+                'You have been logged out successfully.',
+                'success'
+            );
+        }
+    });
+};
+
   return (
     <div>
       {loading && (
@@ -345,39 +375,32 @@ const ColumnLog_List= () => {
           </div>
         </div>
       )}
-      <aside className="col-md-1 p_sideNav">
+       <aside className="col-md-1 p_sideNav">
         <div className="main">
           <div className="btn-group dropend">
             <Link to={"/home/Column_Dashboard1"}>
               <button type="button">
-                <img src={dash} alt="ColumnDashboard1" title="ColumnDashboard1" />
+                <img src={dash} alt="Dashboard1" title="Dashboard1" />
                 <p>Analysis</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
-            <Link to={"/home/_ColumnDashboard"}>
+            <Link to={"/home/Column_Dashboard"}>
               <button type="button">
-                <img src={dash} alt="ColumnDashboard" title="ColumnDashboard" />
+                <img src={dash} alt="Dashboard" title="Dashboard" />
                 <p>Dashboard</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
             <Link to={"/home/ColumnLog_List"}>
               <button type="button">
-                <img
-                  src={HplcLogList}
-                  alt="Column Log List"
-                  title="Column Log List"
-                />
-                <p> Column Log List</p>
+                <img src={HplcLogList} alt="Column Log List" title="Column Log List" />
+                <p>Column Log List</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_Search"}>
               <button type="button">
@@ -385,8 +408,7 @@ const ColumnLog_List= () => {
                 <p>Search</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
@@ -394,27 +416,19 @@ const ColumnLog_List= () => {
                 <p>Audit Trial</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend">
             <Link to={"/home/Column_UserManagement"}>
               <button type="button">
-                <img
-                  src={usermanagement}
-                  alt="User Management"
-                  title="User Management"
-                />
+                <img src={usermanagement} alt="User Management" title="User Management" />
                 <p>User Management</p>
               </button>
             </Link>
-          </div>
-          <br />
+          </div><br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
-            <Link to={"/"}>
-              <button type="button" title="Logout">
+              <button type="button"   onClick={handleLogout}>
                 <img src={po} alt="Logout" />
               </button>
-            </Link>
           </div>
         </div>
       </aside>
