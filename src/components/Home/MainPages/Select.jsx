@@ -1,31 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import './select.css';
 import check from '../../../img/check.png';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 
 
 const Select = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showAlertModal, setShowAlertModal] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
-
-  useEffect(() => {
-    // Fetch the alert message from the backend API
-    axios.get('http://localhost:58747/api/User/GetListOfUsers')
-      .then(response => {
-        const { alertMessage } = response.data;
-        if (alertMessage) {
-          setAlertMessage(alertMessage);
-          setShowAlertModal(true);
-        }
-      })
-      .catch(error => console.error('Error fetching alert message:', error));
-  }, []);
-
-  const handleClose = () => setShowAlertModal(false);
 
   const handleLogout = () => {
     // Perform logout functionality here
@@ -171,19 +153,6 @@ const Select = () => {
             </Button>
           </div>
         </Modal.Body>
-      </Modal>
-      <Modal show={showAlertModal} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Alert</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>{alertMessage}</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-        </Modal.Footer>
       </Modal>
     </div>
   );

@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import './Column_Dashboard.css';
 
 
-const Column_Dashboard = () => {
+const HPLC_Dashboard = () => {
   const [data, setData] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
   const [sampleTypeOptions, setSampleTypeOptions] = useState([]);
@@ -67,21 +67,16 @@ const Column_Dashboard = () => {
     setFilteredData(filtered);
   }, [project, sampleType, methodSet, data]);
 
-  const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
+  const getPleasantColor = () => '#baf977'; // Replace with your preferred color
 
   const getBarChartData = (column) => {
     const counts = filteredData.reduce((acc, row) => {
       acc[row[column]] = (acc[row[column]] || 0) + 1;
       return acc;
     }, {});
-    const colors = Object.keys(counts).map(() => getRandomColor());
+  
+    const colors = Object.keys(counts).map(() => getPleasantColor());
+  
     return {
       labels: Object.keys(counts),
       datasets: [{
@@ -91,6 +86,7 @@ const Column_Dashboard = () => {
       }]
     };
   };
+  
 
   const barChartOptions = (titleText, xText, yText) => ({
     responsive: true,
@@ -264,4 +260,4 @@ const Column_Dashboard = () => {
   );
 };
 
-export default Column_Dashboard;
+export default HPLC_Dashboard;

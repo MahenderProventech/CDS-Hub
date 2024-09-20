@@ -3,6 +3,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from "axios"; // Import axios for making HTTP requests
 import UserContext from './UserContext';
+import Swal from "sweetalert2";
+import http from "./Http";
+
 
 const Cfr = () => {
   const { userData } = useContext(UserContext);
@@ -25,8 +28,36 @@ const Cfr = () => {
   useEffect(() => {
     if (!userData || !userData.employeeId) {
       navigate('/');
+    } else {
+    fetchSettingsData();
+  }
+}, [userData, navigate]);
+
+const fetchSettingsData = async () => {
+  try {
+    const response = await http.get('Settings/Savesettings');
+    if (response.data && response.data.length > 0) {
+      const settingsData = response.data[0]; // Assuming you're only fetching one record
+      setFormData({
+        minPasswordLength: settingsData.minPasswordLength,
+        passwordExpiryDays: settingsData.passwordExpiryDays,
+        promptExpiry: settingsData.promptExpiry,
+        userLoginAttempts: settingsData.userLoginAttempts,
+        autoLogout: settingsData.autoLogout,
+        passwordRepetition: settingsData.passwordRepetition,
+        uppercaseRequired: settingsData.uppercaseRequired,
+        lowercaseRequired: settingsData.lowercaseRequired,
+        numberRequired: settingsData.numberRequired,
+        symbolsRequired: settingsData.symbolsRequired,
+      });
     }
-  }, [userData, navigate]);
+  } catch (error) {
+    console.error("Error fetching settings data:", error);
+    Swal.fire("Error", "Unable to fetch settings data", "error");
+  }
+};
+
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -38,29 +69,58 @@ const Cfr = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Assuming you have user data from context or other source
-    const createdBy = userData?.userRole || 'defaultUsername'; // Replace 'defaultUsername' with actual logic
-  
-    // Add createdBy to formData
-    const updatedFormData = {
-      ...formData,
-      createdBy, // Append the createdBy field
-    };
-  
-    console.log("Form Data Before Sending:", updatedFormData); // Debugging form data
-  
-    try {
-      const response = await axios.post('http://localhost:58747/api/Settings/Savesettings', updatedFormData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      console.log("Response from server:", response.data); // Debugging response
-      alert("Settings saved successfully!");
-    } catch (error) {
-      console.error("There was an error saving the settings:", error);
-      alert("Failed to save settings. Please try again.");
+
+    // Show SweetAlert to ask for e-signature (password)
+    const { value: password } = await Swal.fire({
+      title: 'E-signature Required',
+      html: `
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <input type="text" value='${userData.employeeId}' disabled class="swal2-input" placeholder="Username" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+          <input type="password" id="password" class="swal2-input" placeholder="Password" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+        </div>
+      `,
+      focusConfirm: false,
+      preConfirm: () => {
+        const password = Swal.getPopup().querySelector('#password').value;
+        if (!password) {
+          Swal.showValidationMessage('Please enter your password');
+        }
+        return password;
+      },
+      showCancelButton: true,
+      cancelButtonText: 'Cancel',
+      confirmButtonText: 'Submit',
+    });
+
+    // If password is provided, proceed with form submission
+    if (password) {
+      try {
+        // Verify the e-signature by authenticating with the password
+        const authPayload = {
+          LoginId: userData.employeeId,
+          Password: password,
+        };
+
+        const authResponse = await http.post("/Login/AuthenticateData", authPayload);
+        if (authResponse.data.item1) {
+          const createdBy = `${userData.firstName}/${userData.employeeId}`;
+          const updatedFormData = { ...formData, createdBy };
+
+          // Proceed with form submission if authentication is successful
+          const response = await http.post('Settings/Savesettings', updatedFormData, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          Swal.fire('Success', 'Settings saved successfully!', 'success');
+        } else {
+          Swal.fire('Authentication failed', 'Invalid password.', 'error');
+        }
+      } catch (error) {
+        console.error("There was an error saving the settings:", error);
+        Swal.fire("Failed to save settings. Please try again.");
+      }
     }
   };
   

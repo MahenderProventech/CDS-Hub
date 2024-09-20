@@ -25,7 +25,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
-const Column_Dashboard1 = () => {
+const HPLC_Dashboard1 = () => {
   const [data, setData] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
   const [sampleTypeOptions, setSampleTypeOptions] = useState([]);
@@ -616,4 +616,4 @@ const Column_Dashboard1 = () => {
   );
 };
 
-export default Column_Dashboard1;
+export default HPLC_Dashboard1;
