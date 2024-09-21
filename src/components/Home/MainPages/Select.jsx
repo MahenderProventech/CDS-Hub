@@ -1,14 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import './select.css';
 import check from '../../../img/check.png';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import UserContext from './../../UserContext';
 
 
 
 const Select = () => {
+  const { userData } = useContext(UserContext); // Access user data from context
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showExpiryModal, setShowExpiryModal] = useState(false);
+  const [expiryMessage, setExpiryMessage] = useState('');
 
+  useEffect(() => {
+    if (!userData || !userData.employeeId) {
+      console.error('User is not logged in or employee ID is not available.');
+      return; // Exit if user is not logged in
+    }
+
+    axios.get('http://localhost:58747/api/User/GetListOfUsers')
+      .then(response => {
+        console.log('API response:', response.data);
+        const usersData = response.data;
+
+        const users = usersData.item2; // Access the correct property
+
+        if (Array.isArray(users)) {
+          // Find the user with the specific EmployeeId from context
+          const user = users.find(user => user.employeeId === userData.employeeId);
+          if (user && user.promptExpiryDate) {
+            const promptExpiryDate = new Date(user.promptExpiryDate);
+            const currentDate = new Date();
+
+            if (currentDate >= promptExpiryDate) {
+              setExpiryMessage(`Your prompt expiry date has passed. It was on ${promptExpiryDate.toDateString()}. Please take action.`);
+              setShowExpiryModal(true);
+            }
+          }
+        } else {
+          console.error('Expected an array of users, but got:', users);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user data:', error);
+      });
+  }, [userData]); // Add userData as a dependency
   const handleLogout = () => {
     // Perform logout functionality here
     console.log('Logging out...');
@@ -153,6 +191,20 @@ const Select = () => {
             </Button>
           </div>
         </Modal.Body>
+      </Modal>
+      {/* Expiry Date Modal */}
+      <Modal show={showExpiryModal} onHide={() => setShowExpiryModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Expiry Alert</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>{expiryMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={() => setShowExpiryModal(false)}>
+            OK
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );
