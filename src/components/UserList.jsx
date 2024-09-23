@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo,useContext } from 'react';
 import { Table, Button, Row, Col, Modal, Form } from 'react-bootstrap';
 import Select from 'react-select';
 import axios from 'axios';
@@ -13,7 +13,7 @@ import MultiSelectComponent from './core/MultiSelectComponent';
 import './Column_Dashboard.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-
+import UserContext from './UserContext';
  
 const UserList = () => {
   const [show, setShow] = useState(false);
@@ -22,7 +22,8 @@ const UserList = () => {
   const [plantResponse, setPlantResponse] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+  const [showEditModal, setShowEditModal] = useState(false); // Controls modal visibility
+
   const [getDesignationResponse, setGetDesignationResponse] = useState([]);
   const [getRolesResponse, setGetRolesResponse] = useState([]);
   const [archiveduser, setArchivedUser] = useState(null);
@@ -40,7 +41,7 @@ const UserList = () => {
   const itemsPerPage = 10; // Number of items to show per page
   const [loading, setLoading] = useState(true);
   const [apiSettings, setApiSettings] = useState({});
- 
+  const { userData } = useContext(UserContext); // Access logged-in user data from context
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
  
@@ -220,33 +221,25 @@ const UserList = () => {
   // Submit user form
   const SubmitUserForm = async () => {
     console.log(selectedRolesOptions);
-    console.log(selectedPlantsOptions)
- 
-    // selectedUser['userConfigurations'] = userConfigurations;
-    // or
+    console.log(selectedPlantsOptions);
+  
     selectedUser['userRoles'] = selectedRolesOptions;
     selectedUser['userPlants'] = selectedPlantsOptions;
     selectedUser['userGroups'] = selectedGroupOptions;
     selectedUser.isActive = selectedUser.isActive === 'true' ? true : false;
-    // Validate password first
-    if (!isEdit) {
-      const validationResult = validatePassword();
-      if (!validationResult.isValid) {
-        setErrors(validationResult.errors);
-        console.log("Validation Errors:", validationResult.errors);
-        return; // Stop form submission if validation fails
-      }
-    }
+  
+    // Validate form fields
     const validationResult = validateForm();
     if (!validationResult.isValid) {
       setErrors(validationResult.errors);
       console.log("Validation Errors:", validationResult.errors);
       return; // Stop form submission if validation fails
     }
-    
+  
+    // Check if the email or employee ID exists when creating a new user
     if (!isEdit) {
       const { isEmployeeIdExists, isEmailExists } = await checkEmployeeIdOrEmailExists(selectedUser.employeeId, selectedUser.emailId);
-      
+  
       if (isEmployeeIdExists) {
         showAlert('Employee ID already exists. Please use a different Employee ID.');
         return; // Stop form submission if employeeId exists
@@ -256,25 +249,37 @@ const UserList = () => {
         showAlert('Email ID already exists. Please use a different Email ID.');
         return; // Stop form submission if email exists
       }
+  
+      // If creating a new user, validate password
+      const passwordValidationResult = validatePassword();
+      if (!passwordValidationResult.isValid) {
+        setErrors(passwordValidationResult.errors);
+        console.log("Validation Errors:", passwordValidationResult.errors);
+        return; // Stop form submission if password validation fails
+      }
     }
-
-
-    console.log("selected values:",selectedUser)
-    // Prepare data for submission
-    // const payload = {
-    //   ...selectedUser,
-    //   userRoles: Array.isArray(selectedRolesOptions) ? selectedRolesOptions.map(option => ({ id: parseInt(option.value, 10) })) : [],
-    //   userPlants: Array.isArray(selectedPlantsOptions) ? selectedPlantsOptions.map(option => ({ id: option.value ? parseInt(option.value, 10) : 0 })) : [], // Ensure id is an integer
-    //   userGroups: Array.isArray(selectedGroupOptions) ? selectedGroupOptions.map(option => ({ id: parseInt(option.value, 10) })) : [],
-    // };
- 
-    // console.log("Payload for submission:", JSON.stringify(payload, null, 2));
- 
-   
+  
+    // In edit mode, validate password only if provided
+    if (isEdit) {
+      if (selectedUser.password || selectedUser.confirmPassword) {
+        const passwordValidationResult = validatePassword();
+        if (!passwordValidationResult.isValid) {
+          setErrors(passwordValidationResult.errors);
+          console.log("Password validation errors:", passwordValidationResult.errors);
+          return; // Stop form submission if password validation fails
+        }
+      } else {
+        // Remove password fields from the payload if both are empty
+        delete selectedUser.password;
+        delete selectedUser.confirmPassword;
+      }
+    }
+  
+    console.log("Selected values:", selectedUser);
+  
     try {
       const response = await http.post(Appconstant.submitUserForm, selectedUser);
       if (response) {
-       
         showAlert(isEdit ? 'User Updated Successfully.' : 'User Saved Successfully.');
         fetchAllUsers();
         setShowModal(false);
@@ -284,11 +289,10 @@ const UserList = () => {
         handleClose(); 
       }
     } catch (error) {
-      // Handle error
+      console.error('Error saving user:', error);
     }
   };
-   
- 
+  
  
  
   useEffect(() => {
@@ -401,39 +405,49 @@ const UserList = () => {
   };
  
   // Get user data for editing
+const loggedInUser = userData; // Assuming loggedInUser has been set with user data
+
+  // Get user data for editing
+ // Get user data for editing
 const getUserData = (data) => {
-    console.log("edit data:", data);
+  console.log("edit data:", data);
 
-    // Set the selected user data
-    setSelectedUser(data);
+  // Check if the employeeId of the user being edited matches the logged-in user's employeeId
+  if (data.employeeId === userData.employeeId) {
+    showAlert("You cannot edit your own account."); // Alert message
+    return; // Exit the function, don't proceed with editing
+  }
 
-    // Map userPlants to the correct value/label pairs for MultiSelectComponent
-    const selectedPlants = data.userPlants.map(plant => {
-        let readableLabel = plant.configurevalue;
-        
-        // Convert "Plants001" to "Plant1", "Plants002" to "Plant2", etc.
-        if (plant.configurevalue === 'Plants001') {
-            readableLabel = 'Plant1';
-        } else if (plant.configurevalue === 'Plants002') {
-            readableLabel = 'Plant2';
-        }
-        
-        return {
-            value: plant.configurevalue,  // Keep the original value
-            label: readableLabel           // Display the transformed readable label
-        };
-    });
+  // Set the selected user data
+  setSelectedUser(data);
 
-    // Update the plants and groups
-    setSelectedPlantsOptions(selectedPlants);
-    setSelectedGroupOptions(data.userGroups || []);
+  // Map userPlants to the correct value/label pairs for MultiSelectComponent
+  const selectedPlants = data.userPlants.map(plant => {
+      let readableLabel = plant.configurevalue;
+      
+      // Convert "Plants001" to "Plant1", "Plants002" to "Plant2", etc.
+      if (plant.configurevalue === 'Plants001') {
+          readableLabel = 'Plant1';
+      } else if (plant.configurevalue === 'Plants002') {
+          readableLabel = 'Plant2';
+      }
+      
+      return {
+          value: plant.configurevalue,  // Keep the original value
+          label: readableLabel           // Display the transformed readable label
+      };
+  });
 
-    // Set the role correctly using userRole (single value)
-    setSelectedRolesOptions([{ value: data.userRole, label: data.userRole }]);
+  // Update the plants and groups
+  setSelectedPlantsOptions(selectedPlants);
+  setSelectedGroupOptions(data.userGroups || []);
 
-    // Set edit mode and show modal
-    isEditMode(true);
-    setShowModal(true);
+  // Set the role correctly using userRole (single value)
+  setSelectedRolesOptions([{ value: data.userRole, label: data.userRole }]);
+
+  // Set edit mode and show modal
+  isEditMode(true);
+  setShowModal(true);
 };
 
 
@@ -449,28 +463,34 @@ const getUserData = (data) => {
   };
   
   const formValid = () => {
-    // Check if required fields are filled for both create and edit modes
     const commonValidations =
       selectedUser?.firstName &&
       selectedUser?.lastName &&
       selectedUser?.employeeId &&
       selectedUser?.emailId &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(selectedUser?.emailId) &&  // Email validation
-      selectedUser?.mobileNo;                      // Mobile number should be 10 digits
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(selectedUser?.emailId) &&
+      selectedUser?.mobileNo;
   
     if (isEdit) {
-      // If editing, no need to validate password fields
-      return commonValidations;
+      // In edit mode, validate passwords only if they are filled
+      if (selectedUser?.password || selectedUser?.confirmPassword) {
+        return (
+          commonValidations &&
+          selectedUser?.password === selectedUser?.confirmPassword
+        );
+      }
+      return commonValidations; // Skip password validation if not filled
     } else {
-      // If creating a new user, validate password and confirm password fields
+      // In create mode, require password and confirm password fields
       return (
         commonValidations &&
-        selectedUser?.password &&                                     // Password field validation
-        selectedUser?.confirmPassword                        // Confirm password field validation
-        // selectedUser?.password === selectedUser?.confirmPassword      // Password and confirm password match
+        selectedUser?.password &&
+        selectedUser?.confirmPassword &&
+        selectedUser?.password === selectedUser?.confirmPassword
       );
     }
   };
+  
   
   
   // Close archive modal
@@ -817,7 +837,7 @@ const getUserData = (data) => {
               </div>
  
  
-              {!isEdit &&
+              {!isEdit || isEdit && (
                 <div className="row w-100">
                 <div className="col-md-6">
                   <Form.Group as={Row} className="mb-3" controlId="formPlaintextPassword">
@@ -881,7 +901,7 @@ const getUserData = (data) => {
                   </Form.Group>
                 </div>
               </div>
-              
+              )
  
               }
  
