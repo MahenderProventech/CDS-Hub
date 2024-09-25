@@ -45,6 +45,7 @@ import UsageLogSetting from './components/UsageLogSetting.jsx';
 import InstrumentDetails from './components/InstrumentDetails.jsx';
 import Cfr from './components/Cfr.jsx';
 import ChangePassword from './components/ChangePassword.jsx';
+import ColumnFailurePredict from './components/ColumnFailurePredict.jsx';
 
 import ExecutionList from './components/MastersList/ExecutionList';
 
@@ -93,6 +94,8 @@ function App() {
             <Route path='UsageLogSetting' element={<UsageLogSetting />} />
             <Route path='Cfr' element={<Cfr />} />
             <Route path='ChangePassword' element={<ChangePassword />} />
+            <Route path='ColumnFailurePredict' element={<ColumnFailurePredict />} />
+
 
 
 

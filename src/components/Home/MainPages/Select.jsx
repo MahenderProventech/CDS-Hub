@@ -146,6 +146,8 @@ const Select = () => {
             </div> */}
             
             <div className="col col-lg-2">
+        <Link to={"/home/ColumnFailurePredict"}>
+
               <div className="card nc d-flex flex-column" style={{height:"250px"}}>
                 <div className="checkIcon">
                   <img src={check} alt="check" />
@@ -155,6 +157,8 @@ const Select = () => {
                 </div>
                 <p className="text-left">Column Failure Prediction</p>
               </div>
+              </Link>
+
             </div>
 
             {/* <div className="col-lg-2 mb-4">
