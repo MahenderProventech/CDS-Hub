@@ -209,6 +209,7 @@ const UserList = () => {
     const passwordValidation = validatePassword();
     if (!passwordValidation.isValid) {
       newErrors.password = passwordValidation.errors.password;
+      newErrors.confirmPassword = passwordValidation.errors.confirmPassword; 
     }
   
     return {
