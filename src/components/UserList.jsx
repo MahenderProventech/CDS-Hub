@@ -210,7 +210,6 @@ const UserList = () => {
     if (!passwordValidation.isValid) {
       newErrors.password = passwordValidation.errors.password;
     }
-   
   
     return {
       isValid: Object.keys(newErrors).length === 0,
@@ -237,24 +236,45 @@ const UserList = () => {
       return; // Stop form submission if validation fails
     }
   
-    // Password validation already happens in `validateForm` or `validatePassword`
-    if (!isEdit && selectedUser.password !== selectedUser.confirmPassword) {
-      setErrors({ confirmPassword: "Passwords do not match" });
-      console.log("Passwords do not match");
-      return; // Stop form submission if passwords don't match
-    }
+    // Check if the email or employee ID exists when creating a new user
+    if (!isEdit) {
+      const { isEmployeeIdExists, isEmailExists } = await checkEmployeeIdOrEmailExists(selectedUser.employeeId, selectedUser.emailId);
   
-    if (isEdit && (selectedUser.password || selectedUser.confirmPassword)) {
+      if (isEmployeeIdExists) {
+        showAlert('Employee ID already exists. Please use a different Employee ID.');
+        return; // Stop form submission if employeeId exists
+      }
+  
+      if (isEmailExists) {
+        showAlert('Email ID already exists. Please use a different Email ID.');
+        return; // Stop form submission if email exists
+      }
+  
+      // If creating a new user, validate password
       const passwordValidationResult = validatePassword();
       if (!passwordValidationResult.isValid) {
         setErrors(passwordValidationResult.errors);
-        console.log("Password validation errors:", passwordValidationResult.errors);
+        console.log("Validation Errors:", passwordValidationResult.errors);
         return; // Stop form submission if password validation fails
       }
-    } else {
-      // Remove password fields from the payload if both are empty
-      delete selectedUser.password;
-      delete selectedUser.confirmPassword;
+    }
+  
+    // In edit mode, validate password only if provided
+    if (isEdit) {
+      if (selectedUser.password || selectedUser.confirmPassword) {
+        const passwordValidationResult = validatePassword();
+        if (!passwordValidationResult.isValid) {
+          setErrors(passwordValidationResult.errors);
+          console.log("Password validation errors:", passwordValidationResult.errors);
+          return; // Stop form submission if password validation fails
+        }
+  
+        // If password fields are valid, update the password in the backend
+      } else {
+        // Remove password fields from the payload if both are empty
+        delete selectedUser.password;
+        delete selectedUser.confirmPassword;
+      }
     }
   
     console.log("Selected values:", selectedUser);
@@ -268,13 +288,15 @@ const UserList = () => {
         setSelectedRolesOptions([]);
         setSelectedPlantsOptions([]);
         setSelectedGroupOptions([]);
-        handleClose();
+        handleClose(); 
       }
     } catch (error) {
       console.error('Error saving user:', error);
     }
   };
   
+  // Function to update the password
+
  
  
   useEffect(() => {
@@ -349,7 +371,6 @@ const UserList = () => {
       errors: newErrors,
     };
   };
-  
   
   const resetForm = () => {
     setSelectedUser({
@@ -455,21 +476,18 @@ const getUserData = (data) => {
       selectedUser?.mobileNo;
   
     if (isEdit) {
-      // In edit mode, validate passwords only if they are filled
-      if (selectedUser?.password || selectedUser?.confirmPassword) {
-        return commonValidations;
-      }
-      return commonValidations; // Skip password validation if not filled
+      // In edit mode, disable button only if common validations fail
+      return commonValidations;
     } else {
-      // In create mode, require password and confirm password fields
+      // In create mode, password and confirm password fields must be filled
       return (
         commonValidations &&
         selectedUser?.password &&
-        selectedUser?.confirmPassword 
-        // selectedUser?.password === selectedUser?.confirmPassword
+        selectedUser?.confirmPassword
       );
     }
   };
+  
   
   
   
@@ -817,138 +835,73 @@ const getUserData = (data) => {
               </div>
  
  
-              {!isEdit && 
-  <div className="row w-100">
-    <div className="col-md-6">
-      <Form.Group as={Row} className="mb-3" controlId="formPlaintextPassword">
-        <Form.Label>
-          Password<span className="text-danger">*</span>
-        </Form.Label>
-        <Col>
-          <div className="position-relative">
-            <Form.Control
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              name="password"
-              value={selectedUser?.password || ''}
-              onChange={handleFormData}
-            />
-            <FontAwesomeIcon
-              icon={showPassword ? faEyeSlash : faEye}
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer'
-              }}
-            />
-          </div>
-          <Form.Text className="text-danger">{errors.password}</Form.Text>
-        </Col>
-      </Form.Group>
-    </div>
-
-    <div className="col-md-6">
-      <Form.Group as={Row} className="mb-3" controlId="formPlaintextConfirmPassword">
-        <Form.Label>
-          Confirm Password<span className="text-danger">*</span>
-        </Form.Label>
-        <Col>
-          <div className="position-relative">
-            <Form.Control
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              name="confirmPassword"
-              value={selectedUser?.confirmPassword || ''}
-              onChange={handleFormData}
-            />
-            <FontAwesomeIcon
-              icon={showConfirmPassword ? faEyeSlash : faEye}
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer'
-              }}
-            />
-          </div>
-          <Form.Text className="text-danger">{errors.confirmPassword}</Form.Text>
-        </Col>
-      </Form.Group>
-    </div>
-  </div>
-}
-
-{isEdit && 
-  <div className="row w-100">
-    <div className="col-md-6">
-      <Form.Group as={Row} className="mb-3" controlId="formPlaintextPassword">
-        <Form.Label>
-          Password 
-        </Form.Label>
-        <Col>
-          <div className="position-relative">
-            <Form.Control
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              name="password"
-              value={selectedUser?.password || ''}
-              onChange={handleFormData}
-            />
-            <FontAwesomeIcon
-              icon={showPassword ? faEyeSlash : faEye}
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer'
-              }}
-            />
-          </div>
-          <Form.Text className="text-danger">{errors.password}</Form.Text>
-        </Col>
-      </Form.Group>
-    </div>
-
-    <div className="col-md-6">
-      <Form.Group as={Row} className="mb-3" controlId="formPlaintextConfirmPassword">
-        <Form.Label>
-          Confirm Password 
-        </Form.Label>
-        <Col>
-          <div className="position-relative">
-            <Form.Control
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              name="confirmPassword"
-              value={selectedUser?.confirmPassword || ''}
-              onChange={handleFormData}
-            />
-            <FontAwesomeIcon
-              icon={showConfirmPassword ? faEyeSlash : faEye}
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer'
-              }}
-            />
-          </div>
-          <Form.Text className="text-danger">{errors.confirmPassword}</Form.Text>
-        </Col>
-      </Form.Group>
-    </div>
-  </div>
-}
-
+              {/* {!isEdit &&  */}
+                <div className="row w-100">
+                <div className="col-md-6">
+                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextPassword">
+                    <Form.Label>
+                      Password<span className="text-danger">*</span>
+                    </Form.Label>
+                    <Col>
+                      <div className="position-relative">
+                        <Form.Control
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password"
+                          name="password"
+                          value={selectedUser?.password}
+                          onChange={handleFormData}
+                        />
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <Form.Text className="text-danger">{errors.password}</Form.Text>
+                    </Col>
+                  </Form.Group>
+                </div>
+              
+                <div className="col-md-6">
+                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextConfirmPassword">
+                    <Form.Label>
+                      Confirm Password<span className="text-danger">*</span>
+                    </Form.Label>
+                    <Col>
+                      <div className="position-relative">
+                        <Form.Control
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm Password"
+                          name="confirmPassword"
+                          value={selectedUser?.confirmPassword}
+                          onChange={handleFormData}
+                        />
+                        <FontAwesomeIcon
+                          icon={showConfirmPassword ? faEyeSlash : faEye}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <Form.Text className="text-danger">{errors.confirmPassword}</Form.Text>
+                    </Col>
+                  </Form.Group>
+                </div>
+              </div>
+              
+ 
+              
  
  
  
