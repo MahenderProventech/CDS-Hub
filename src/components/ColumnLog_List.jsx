@@ -8,7 +8,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import "./print.css";
 import po from "../img/po.svg";
 import "./Column_Dashboard.css";
-import axios from "axios";
 import Swal from "sweetalert2";
 import http from './Http';
 import UserContext from './UserContext';
@@ -39,8 +38,8 @@ const ColumnLog_List= () => {
     setLoading(true);
 
     // Fetch valid column headers
-    const fetchValidColumns = axios
-      .get("http://localhost:58747/api/PopulateColumnUsage/GetSavedColumnDetails")
+    const fetchValidColumns = 
+      http.get("PopulateColumnUsage/GetSavedColumnDetails")
       .then((response) => {
         const columns = response.data.map((item) => item.nameOfTheColumn);
         return columns;
@@ -51,9 +50,8 @@ const ColumnLog_List= () => {
       });
 
     // Fetch actual data
-    const fetchData = axios
-      .get(
-        "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
+    const fetchData = 
+      http.get("ProcessPeaksData/GetProcessPeaksDataDetails"
       )
       .then((response) => {
         return response.data;
@@ -100,8 +98,7 @@ const ColumnLog_List= () => {
 
   useEffect(() => {
     // Fetch filter details from the API
-    axios
-      .get("http://localhost:58747/api/PopulateColumnUsage/GetFilterColumnDetails")
+      http.get("PopulateColumnUsage/GetFilterColumnDetails")
       .then((response) => {
         console.log("API Response:", response.data); // Debugging: Check the API response
         setFilters(response.data); // Assuming the API response is an array of filter details

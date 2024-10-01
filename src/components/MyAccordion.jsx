@@ -69,7 +69,7 @@ const MyAccordion = () => {
   useEffect(() => {
     console.log("params", params)
     if (params.hasOwnProperty("id")) {
-      http.get(`/GetFormulaById?formulaId=${params.id}`).then((resp) => {
+      http.get(`GetFormulaById?formulaId=${params.id}`).then((resp) => {
         console.log("GetFormulaById resp", resp.data)
         setState((prev) => {
           return {
@@ -174,7 +174,7 @@ const MyAccordion = () => {
       formulaVariableInformation: variableInputs
     }
 
-    http.post("/CreateorUpdateFormula", payload).then((resp) => {
+    http.post("CreateorUpdateFormula", payload).then((resp) => {
       console.log("resp", resp.data)
       showAlert();
     }).catch((err) => {

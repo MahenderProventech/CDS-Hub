@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useContext, useState, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Modal } from 'react-bootstrap';
 import ProcalImg from '../img/PROCDSHUB1.svg';
@@ -18,41 +18,117 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Swal from 'sweetalert2';
 
 const NavbarComponent = () => {
-  const { userData } = useContext(UserContext);
+  const { userData, setUserData } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation(); // Get the current path
   const [showModal, setShowModal] = useState(false);
   const [hover, setHover] = useState(null);
+  const [autoLogoutTime, setAutoLogoutTime] = useState(2 * 60 * 1000); // Default to 2 minutes in ms
+  const logoutTimerRef = useRef(null); // Ref to track logout timer
 
+  // Fetch the settings from the API
+  useEffect(() => {
+    const fetchAutoLogoutTime = async () => {
+      try {
+        const response = await http.get('Settings/Savesettings');
+        console.log('API Response:', response);  // Log the entire response
+  
+        // Access the autoLogout value from the first element of the response data array
+        const settings = response?.data?.[0]; // Assuming the autoLogout is in the first element of the array
+        if (settings?.autoLogout !== undefined) {
+          const logoutTimeInMinutes = settings.autoLogout;
+          const logoutTimeInMs = logoutTimeInMinutes * 60 * 1000; // Convert minutes to milliseconds
+          setAutoLogoutTime(logoutTimeInMs);
+  
+          console.log(`Auto Logout Time fetched from API: ${logoutTimeInMinutes} minutes (${logoutTimeInMs} ms)`);
+        } else {
+          console.error('autoLogout field is missing in the API response.');
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    };
+  
+    fetchAutoLogoutTime(); // Fetch auto-logout time on component mount
+  }, []);
+  
   useEffect(() => {
     if (!userData || !userData.employeeId) {
       navigate('/');
     }
   }, [userData, navigate]);
 
+  // Function to handle manual logout
   const handleLogout = () => {
+    clearListenersAndTimers(); // Ensure timers are cleared on manual logout
     Swal.fire({
-        title: 'Are you sure?',
-        text: 'You will be logged out!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, log me out!',
-        cancelButtonText: 'Cancel'
+      title: 'Are you sure?',
+      text: 'You will be logged out!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, log me out!',
+      cancelButtonText: 'Cancel',
     }).then((result) => {
-        if (result.isConfirmed) {
-            http.get(`Login/Logout?employeeId=${userData.employeeId}`);
-            sessionStorage.clear();
-            navigate('/');
-            Swal.fire(
-                'Logged Out!',
-                'You have been logged out successfully.',
-                'success'
-            );
-        }
+      if (result.isConfirmed) {
+        http.get(`Login/Logout?employeeId=${userData.employeeId}`);
+        sessionStorage.clear();
+        setUserData(null); // Clear user data
+        navigate('/'); // Navigate to login page
+        Swal.fire('Logged Out!', 'You have been logged out successfully.', 'success');
+      }
     });
-};
+  };
+
+  // Clear all timers and listeners
+  const clearListenersAndTimers = useCallback(() => {
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+      logoutTimerRef.current = null; // Ensure the ref is cleared
+    }
+    window.removeEventListener('mousemove', resetLogoutTimer);
+    window.removeEventListener('keydown', resetLogoutTimer);
+  }, []);
+
+  // Auto logout function
+  const autoLogout = useCallback(() => {
+    clearListenersAndTimers(); // Ensure timers and listeners are cleared on auto logout
+    Swal.fire({
+      title: 'Session Expired',
+      text: 'You have been logged out due to inactivity.',
+      icon: 'warning',
+      confirmButtonText: 'OK',
+      allowOutsideClick: false,
+    }).then(() => {
+      setUserData(null); // Clear user data
+      navigate('/'); // Navigate to login page
+    });
+  }, [clearListenersAndTimers, navigate, setUserData]);
+
+  // Reset logout timer on user activity
+  const resetLogoutTimer = useCallback(() => {
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+    }
+    logoutTimerRef.current = setTimeout(autoLogout, autoLogoutTime); // Use dynamic logout time
+  }, [autoLogout, autoLogoutTime]);
+
+  useEffect(() => {
+    const isOnLoginPage = location.pathname === '/';
+    if (userData && !isOnLoginPage) {
+      // Add event listeners to reset timer on user activity
+      window.addEventListener('mousemove', resetLogoutTimer);
+      window.addEventListener('keydown', resetLogoutTimer);
+      resetLogoutTimer(); // Initialize logout timer
+    } else {
+      clearListenersAndTimers(); // Clear everything if not logged in or on the login page
+    }
+
+    return () => {
+      clearListenersAndTimers(); // Cleanup listeners and timers on component unmount
+    };
+  }, [userData, location.pathname, resetLogoutTimer, clearListenersAndTimers]);
 
   const handleShow = () => setShowModal(true);
   const handleClose = () => setShowModal(false);
@@ -84,6 +160,7 @@ const NavbarComponent = () => {
   };
 
   const isActive = (path) => location.pathname === path; // Check if the current path matches the given path
+
 
   return (
     <>

@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import "./print.css";
 import po from "../img/po.svg";
 import "./Column_Dashboard.css";
-import axios from "axios";
+import http from "./Http";
 
 const HPLCLog_List = () => {
   const [processPeaksDataData, setProcessPeaksDataData] = useState([]);
@@ -33,8 +33,7 @@ const HPLCLog_List = () => {
     setLoading(true);
 
     // Fetch valid column headers
-    const fetchValidColumns = axios
-      .get("http://localhost:58747/api/PopulateHPLCUsage/GetSavedHplcDetails")
+    const fetchValidColumns = http.get("PopulateHPLCUsage/GetSavedHplcDetails")
       .then((response) => {
         const columns = response.data.map((item) => item.nameOfTheColumn);
         return columns;
@@ -45,9 +44,7 @@ const HPLCLog_List = () => {
       });
 
     // Fetch actual data
-    const fetchData = axios
-      .get(
-        "http://localhost:58747/api/ProcessPeaksData/GetProcessPeaksDataDetails"
+    const fetchData = http.get("ProcessPeaksData/GetProcessPeaksDataDetails"
       )
       .then((response) => {
         return response.data;
@@ -94,8 +91,7 @@ const HPLCLog_List = () => {
 
   useEffect(() => {
     // Fetch filter details from the API
-    axios
-      .get("http://localhost:58747/api/PopulateHPLCUsage/GetFilterHplcDetails")
+    http.get("PopulateHPLCUsage/GetFilterHplcDetails")
       .then((response) => {
         console.log("API Response:", response.data); // Debugging: Check the API response
         setFilters(response.data); // Assuming the API response is an array of filter details

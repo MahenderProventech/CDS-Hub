@@ -52,8 +52,7 @@ const Column_Dashboard1 = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+        const response = await http.get("Peaks/GetPeaksDetails"
         );
         const result = await response.json();
         console.log("Fetched data:", result);

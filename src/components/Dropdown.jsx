@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Dropdown, DropdownButton } from 'react-bootstrap';
-
+import http from './Http';
 const FunctionDropdown = ({ handleButtonClick, index }) => {
   const [functions, setFunctions] = useState([]);
 
   useEffect(() => {
     // Fetch default functions from API when the component mounts
     // fetch('http://localhost:58747/api/Formulas/GetDefaultFunctions')
-    fetch('http://172.26.8.225:8086/api/Formulas/GetDefaultFunctions')
+    http.get('Formulas/GetDefaultFunctions')
       .then(response => response.json())
       .then(data => {
         if (data.item2) {

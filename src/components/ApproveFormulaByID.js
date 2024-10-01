@@ -224,7 +224,7 @@ const ApproveFormulaByID = () => {
             Password: password
           };
           
-          http.post("/Login/AuthenticateData", payload)
+          http.post("Login/AuthenticateData", payload)
             .then((resp) => {
               if (resp.data.item1) {
           callback(comments);  

@@ -12,7 +12,7 @@ import HplcLogList from "../img/hplc_loglist.png";
 import search from "../img/search.png";
 import report from "../img/report.png";
 import usermanagement from "../img/usermanagement.png";
- 
+ import http from './Http';
 const InstrumentDetails = () => {
   const { instrument_No } = useParams();
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -28,7 +28,7 @@ const InstrumentDetails = () => {
     const fetchData = async () => {
       try {
         // Replace <InstrumentId> with instrument_No
-        const response = await axios.get(`http://localhost:58747/api/DetailsOfInstrumentId/GetDetailsOfInstrumentIdDetails?InstrumentId=${instrument_No_forApi}`);
+        const response = await http.get(`DetailsOfInstrumentId/GetDetailsOfInstrumentIdDetails?InstrumentId=${instrument_No_forApi}`);
         const data = response.data;
        
         // Set the table headers and data

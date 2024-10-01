@@ -13,6 +13,7 @@ import usermanagement from "../img/usermanagement.png";
 import po from "../img/po.svg";
 import { Link } from "react-router-dom";
 import "./Column_Dashboard.css";
+import http from "./Http";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -45,8 +46,7 @@ const HPLC_Dashboard1 = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+        const response = await http.get("Peaks/GetPeaksDetails"
         );
         const result = await response.json();
         console.log("Fetched data:", result);

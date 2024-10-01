@@ -411,7 +411,7 @@ const CreateFormula = () => {
 
       console.log("obj", obj);
       // const resp = await axios.post("http://localhost:58747/api/Formulas/SaveFormulaData", obj);
-      const resp = await axios.post("http://172.26.8.225:8086/api/Formulas/SaveFormulaData", obj); 
+      const resp = await http.post("Formulas/SaveFormulaData", obj); 
       console.log("resp", resp.data.item2);
       setSaveDataId(resp.data.item2);
       showChildAlert(resp.data.item2);
@@ -544,7 +544,7 @@ const CreateFormula = () => {
       };
 
       console.log("obj", obj);
-      const resp = await axios.post("http://172.26.8.225:8086/api/Formulas/CreateorUpdateFormula", obj);
+      const resp = await http.post("Formulas/CreateorUpdateFormula", obj);
     //  const resp = await axios.post("http://localhost:58747/api/Formulas/CreateorUpdateFormula", obj); 
       console.log("resp", resp.data);
       // showChildAlert1();

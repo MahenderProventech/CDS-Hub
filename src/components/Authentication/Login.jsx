@@ -78,7 +78,7 @@ const showModal = (title, message) => {
 
     // Fetch API settings and previous passwords for the employee
     useEffect(() => {
-        axios.get('http://localhost:58747/api/Settings/Savesettings')
+        http.get('Settings/Savesettings')
             .then(response => {
                 if (response.data && response.data.length > 0) {
                     setApiSettings(response.data[0]);
@@ -87,7 +87,7 @@ const showModal = (title, message) => {
             .catch(error => console.error("There was an error fetching settings:", error));
 
         if (userData?.employeeId) {
-            axios.get(`http://localhost:58747/api/User/GetAllChangePasswordRequests`, {
+            http.get(`User/GetAllChangePasswordRequests`, {
                 params: { employeeId: userData.employeeId }
             })
                 .then(response => setPreviousPasswords(response.data))
@@ -126,7 +126,7 @@ const showModal = (title, message) => {
     const verifyUser = async () => {
         try {
             // Fetch users
-            const usersResponse = await axios.get('http://localhost:58747/api/User/GetListOfUsers');
+            const usersResponse = await http.get('User/GetListOfUsers');
             
             // Log the response to verify its structure
             console.log(usersResponse.data);
@@ -162,7 +162,7 @@ const showModal = (title, message) => {
                     Password: state.password,
                 };
     
-                const authResponse = await http.post("/Login/AuthenticateData", payload);
+                const authResponse = await http.post("Login/AuthenticateData", payload);
     
                 if (authResponse.data.item1) {
                     const userData = authResponse.data.item2;
@@ -189,7 +189,7 @@ const showModal = (title, message) => {
     const checkForPasswordChange = (userData) => {
         const employeeId = userData.employeeId;
 
-        http.get(`/User/GetAllChangePasswordRequests?employeeId=${employeeId}`)
+        http.get(`User/GetAllChangePasswordRequests?employeeId=${employeeId}`)
             .then((response) => {
                 const changeRequests = response.data;
                 if (changeRequests.length === 1) {
@@ -288,7 +288,7 @@ const showModal = (title, message) => {
         }
     
         try {
-            const response = await http.post("/User/ChangeOldPassword", payload);
+            const response = await http.post("User/ChangeOldPassword", payload);
             showModal("Success", "Password changed successfully.");
             setShowPasswordModal(false);
             setTokenAndNavigate(state.username);

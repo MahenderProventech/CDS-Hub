@@ -146,7 +146,7 @@ const CreateFormula = () => {
       formulaVariableInformation: variableInputs
     }
 
-    http.post("/CreateorUpdateFormula", payload).then((resp) => {
+    http.post("CreateorUpdateFormula", payload).then((resp) => {
       console.log("resp", resp.data)
       showAlert();
     }).catch((err) => {

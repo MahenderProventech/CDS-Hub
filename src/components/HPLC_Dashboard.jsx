@@ -10,7 +10,7 @@ import usermanagement from '../img/usermanagement.png';
 import po from '../img/po.svg';
 import { Link } from 'react-router-dom';
 import './Column_Dashboard.css';
-
+import http from './Http';
 
 const HPLC_Dashboard = () => {
   const [data, setData] = useState([]);
@@ -27,7 +27,7 @@ const HPLC_Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:58747/api/Peaks/GetPeaksDetails");
+        const response = await http.get("Peaks/GetPeaksDetails");
         const data = await response.json();
         console.log("Fetched data:", data);
   

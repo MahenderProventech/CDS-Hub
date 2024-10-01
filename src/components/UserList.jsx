@@ -23,6 +23,7 @@ const UserList = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false); // Controls modal visibility
+  const [validationMessage, setValidationMessage] = useState('');
 
   const [getDesignationResponse, setGetDesignationResponse] = useState([]);
   const [getRolesResponse, setGetRolesResponse] = useState([]);
@@ -75,6 +76,7 @@ const UserList = () => {
   const fetchAllUsers = async () => {
     try {
       const resp = await http.get(Appconstant.getAllUsers);
+      
       setRoleAssignments(resp.data.item2);
     } catch (err) {
       console.log("Error fetching users:", err);
@@ -114,24 +116,30 @@ const UserList = () => {
     setSearchQuery(event.target.value);
     setCurrentPage(1); // Reset pagination to first page when searching
   };
+ 
+  // Filter items based on search query
+  const filteredItems = sortedItems.filter((assignment) => {
+    const employeeId = (assignment.employeeId || '').toLowerCase();
+    const emailId = (assignment.emailId || '').toLowerCase();
+    const userRole = (assignment.userRole || '').toLowerCase();
+    const query = searchQuery.toLowerCase();
+ 
+    return employeeId.includes(query) ||
+      emailId.includes(query) ||
+      userRole.includes(query);
+  });
+ 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = sortedItems.slice(indexOfFirstItem, indexOfLastItem);
- 
-  // Filter items based on search query
-  const filteredItems = currentItems.filter((assignment) =>
-    assignment.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    assignment.emailId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    assignment.userRole.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
  
   // Format date function
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return `${date.toLocaleDateString('en-GB')} ${date.toLocaleTimeString([], { hour12: false })}`;
   };
- 
+
   // Show alert function
   const showAlert = (msg) => {
     Swal.fire({
@@ -223,7 +231,7 @@ const UserList = () => {
   const SubmitUserForm = async () => {
     console.log(selectedRolesOptions);
     console.log(selectedPlantsOptions);
-  
+    
     selectedUser['userRoles'] = selectedRolesOptions;
     selectedUser['userPlants'] = selectedPlantsOptions;
     selectedUser['userGroups'] = selectedGroupOptions;
@@ -237,73 +245,107 @@ const UserList = () => {
       return; // Stop form submission if validation fails
     }
   
-    // Check if the email or employee ID exists when creating a new user
-    if (!isEdit) {
-      const { isEmployeeIdExists, isEmailExists } = await checkEmployeeIdOrEmailExists(selectedUser.employeeId, selectedUser.emailId);
-  
-      if (isEmployeeIdExists) {
-        showAlert('Employee ID already exists. Please use a different Employee ID.');
-        return; // Stop form submission if employeeId exists
-      }
-  
-      if (isEmailExists) {
-        showAlert('Email ID already exists. Please use a different Email ID.');
-        return; // Stop form submission if email exists
-      }
-  
-      // If creating a new user, validate password
-      const passwordValidationResult = validatePassword();
-      if (!passwordValidationResult.isValid) {
-        setErrors(passwordValidationResult.errors);
-        console.log("Validation Errors:", passwordValidationResult.errors);
-        return; // Stop form submission if password validation fails
-      }
-    }
-  
-    // In edit mode, validate password only if provided
-    if (isEdit) {
-      if (selectedUser.password || selectedUser.confirmPassword) {
-        const passwordValidationResult = validatePassword();
-        if (!passwordValidationResult.isValid) {
-          setErrors(passwordValidationResult.errors);
-          console.log("Password validation errors:", passwordValidationResult.errors);
-          return; // Stop form submission if password validation fails
+    // Show SweetAlert for e-signature
+    const { value: password } = await Swal.fire({
+      title: 'E-signature Required',
+      html: `
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <input type="text" value='${userData.employeeId}' disabled class="swal2-input" placeholder="Username" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+          <input type="password" id="password" class="swal2-input" placeholder="Password" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+        </div>
+      `,
+      focusConfirm: false,
+      preConfirm: () => {
+        const password = Swal.getPopup().querySelector('#password').value;
+        if (!password) {
+          Swal.showValidationMessage('Please enter your password');
         }
+        return password;
+      },
+      showCancelButton: true,
+      cancelButtonText: 'Cancel',
+      confirmButtonText: 'Submit',
+    });
   
-        // If password fields are valid, update the password in the backend
-      } else {
-        // Remove password fields from the payload if both are empty
-        delete selectedUser.password;
-        delete selectedUser.confirmPassword;
+    // If password is provided, proceed with form submission
+    if (password) {
+      try {
+        // Verify the e-signature by authenticating with the password
+        const authPayload = {
+          LoginId: userData.employeeId,
+          Password: password,
+        };
+  
+        const authResponse = await http.post("Login/AuthenticateData", authPayload);
+        if (authResponse.data.item1) {
+          console.log("Selected values:", selectedUser);
+          
+          // If creating a new user, check for email/employee ID existence and validate password
+          if (!isEdit) {
+            const { isEmployeeIdExists, isEmailExists } = await checkEmployeeIdOrEmailExists(selectedUser.employeeId, selectedUser.emailId);
+  
+            if (isEmployeeIdExists) {
+              showAlert('Employee ID already exists. Please use a different Employee ID.');
+              return; // Stop form submission if employeeId exists
+            }
+  
+            if (isEmailExists) {
+              showAlert('Email ID already exists. Please use a different Email ID.');
+              return; // Stop form submission if email exists
+            }
+  
+            // If creating a new user, validate password
+            const passwordValidationResult = validatePassword();
+            if (!passwordValidationResult.isValid) {
+              setErrors(passwordValidationResult.errors);
+              console.log("Validation Errors:", passwordValidationResult.errors);
+              return; // Stop form submission if password validation fails
+            }
+          }
+  
+          // In edit mode, validate password only if provided
+          if (isEdit) {
+            if (selectedUser.password || selectedUser.confirmPassword) {
+              const passwordValidationResult = validatePassword();
+              if (!passwordValidationResult.isValid) {
+                setErrors(passwordValidationResult.errors);
+                console.log("Password validation errors:", passwordValidationResult.errors);
+                return; // Stop form submission if password validation fails
+              }
+            } else {
+              // Remove password fields from the payload if both are empty
+              delete selectedUser.password;
+              delete selectedUser.confirmPassword;
+            }
+          }
+  
+          const response = await http.post(Appconstant.submitUserForm, selectedUser);
+          if (response) {
+            showAlert(isEdit ? 'User Updated Successfully.' : 'User Saved Successfully.');
+            fetchAllUsers();
+            setShowModal(false);
+            setSelectedRolesOptions([]);
+            setSelectedPlantsOptions([]);
+            setSelectedGroupOptions([]);
+            handleClose(); 
+          }
+        } else {
+          Swal.fire('Authentication failed', 'Invalid password.', 'error');
+        }
+      } catch (error) {
+        console.error('Error saving user:', error);
+        Swal.fire("Failed to save settings. Please try again.");
       }
-    }
-  
-    console.log("Selected values:", selectedUser);
-  
-    try {
-      const response = await http.post(Appconstant.submitUserForm, selectedUser);
-      if (response) {
-        showAlert(isEdit ? 'User Updated Successfully.' : 'User Saved Successfully.');
-        fetchAllUsers();
-        setShowModal(false);
-        setSelectedRolesOptions([]);
-        setSelectedPlantsOptions([]);
-        setSelectedGroupOptions([]);
-        handleClose(); 
-      }
-    } catch (error) {
-      console.error('Error saving user:', error);
     }
   };
   
-  // Function to update the password
+
 
  
  
   useEffect(() => {
     // Fetch API settings on component mount
-    axios
-      .get("http://localhost:58747/api/Settings/Savesettings")
+    http.get("Settings/Savesettings")
       .then((response) => {
         if (response.data && response.data.length > 0) {
           setApiSettings(response.data[0]); // Assuming the API returns an array, take the first element
@@ -497,18 +539,56 @@ const getUserData = (data) => {
   // const handleCloseArchieveModal = () => setShow(false);
  
   // Archive user
-  const handleArchiveUser = async () => {
+const handleArchiveUser = async () => {
+  // Show SweetAlert for e-signature
+  const { value: password } = await Swal.fire({
+    title: 'E-signature Required',
+    html: `
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <input type="text" value='${userData.employeeId}' disabled class="swal2-input" placeholder="Username" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <input type="password" id="password" class="swal2-input" placeholder="Password" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+      </div>
+    `,
+    focusConfirm: false,
+    preConfirm: () => {
+      const password = Swal.getPopup().querySelector('#password').value;
+      if (!password) {
+        Swal.showValidationMessage('Please enter your password');
+      }
+      return password;
+    },
+    showCancelButton: true,
+    cancelButtonText: 'Cancel',
+    confirmButtonText: 'Submit',
+  });
+
+  // If password is provided, proceed with archiving the user
+  if (password) {
     try {
-      const deptResponse = await axios.post(Appconstant.UpdateUserStatus, archiveduser);
-      if (deptResponse) {
-        showAlert('User Archived.');
-        fetchAllUsers();
-        handleCloseArchiveModal();
+      // Verify the e-signature by authenticating with the password
+      const authPayload = {
+        LoginId: userData.employeeId,
+        Password: password,
+      };
+
+      const authResponse = await http.post("Login/AuthenticateData", authPayload);
+      if (authResponse.data.item1) {
+        const deptResponse = await axios.post(Appconstant.UpdateUserStatus, archiveduser);
+        if (deptResponse) {
+          showAlert('User Archived.');
+          fetchAllUsers();
+          handleCloseArchiveModal();
+        }
+      } else {
+        Swal.fire('Authentication failed', 'Invalid password.', 'error');
       }
     } catch (error) {
       console.error("Error archiving user:", error);
+      Swal.fire("Failed to archive user. Please try again.");
     }
-  };
+  }
+};
+
   const [selectedRolesOptions, setSelectedRolesOptions] = useState([]);
   const [selectedPlantsOptions, setSelectedPlantsOptions] = useState([]);
   const [selectedGroupOptions, setSelectedGroupOptions] = useState([]);
@@ -577,8 +657,8 @@ const getUserData = (data) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.length > 0 ? (
-                  filteredItems.map((assignment, index) => (
+                {currentItems.length > 0 ? (
+                  currentItems.map((assignment, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
                       <td>{assignment.employeeId}</td>

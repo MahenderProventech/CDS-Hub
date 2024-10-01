@@ -10,7 +10,7 @@ import usermanagement from "../img/usermanagement.png";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-
+import http from './Http';
 const SampleSetDetails = () => {
   const { sampleSetId } = useParams();
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -21,7 +21,7 @@ const SampleSetDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:58747/api/GetPeaksDetailsBySampleSetId/GetGetPeaksDetailsBySampleSetIdDetails?sampleSetId=${sampleSetId}`);
+        const response = await http.get(`GetPeaksDetailsBySampleSetId/GetGetPeaksDetailsBySampleSetIdDetails?sampleSetId=${sampleSetId}`);
         const data = response.data;
         setFilteredData(data); // Set the fetched data
       } catch (error) {

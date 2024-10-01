@@ -5,7 +5,7 @@ import check from '../../../img/check.png';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import UserContext from './../../UserContext';
-
+import http from '../../Http';
 
 
 const Select = () => {
@@ -20,7 +20,7 @@ const Select = () => {
       return; // Exit if user is not logged in
     }
 
-    axios.get('http://localhost:58747/api/User/GetListOfUsers')
+    http.get('User/GetListOfUsers')
       .then(response => {
         console.log('API response:', response.data);
         const usersData = response.data;

@@ -101,7 +101,7 @@ const fetchSettingsData = async () => {
           Password: password,
         };
 
-        const authResponse = await http.post("/Login/AuthenticateData", authPayload);
+        const authResponse = await http.post("Login/AuthenticateData", authPayload);
         if (authResponse.data.item1) {
           const createdBy = `${userData.firstName}/${userData.employeeId}`;
           const updatedFormData = { ...formData, createdBy };

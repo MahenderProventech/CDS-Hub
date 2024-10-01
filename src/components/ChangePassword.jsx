@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import UserContext from './UserContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-
+import http from './Http';
 const ChangePassword = () => {
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const ChangePassword = () => {
     }
 
     // Fetch API settings on component mount
-    axios.get('http://localhost:58747/api/Settings/Savesettings')
+    http.get('Settings/Savesettings')
       .then(response => {
         if (response.data && response.data.length > 0) {
           setApiSettings(response.data[0]); // Assuming the API returns an array, take the first element
@@ -38,7 +38,7 @@ const ChangePassword = () => {
       });
 
     // Fetch previous passwords for repetition check
-    axios.get(`http://localhost:58747/api/User/GetAllChangePasswordRequests`, {
+   http.get(`User/GetAllChangePasswordRequests`, {
         params: { employeeId: userData.employeeId } // Pass employeeId as query parameter
       })
       .then(response => {
@@ -123,7 +123,7 @@ const ChangePassword = () => {
       console.log("Request Data:", requestData);
 
       // Make the POST request
-      const response = await axios.post('http://localhost:58747/api/User/ChangeOldPassword', requestData, {
+      const response = await http.get('User/ChangeOldPassword', requestData, {
         headers: {
           'Accept': '*/*',
           'Content-Type': 'application/json'

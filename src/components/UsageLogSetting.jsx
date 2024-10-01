@@ -4,7 +4,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import UserContext from "./UserContext";
 import Select from "react-select";
 import { Modal, Button } from "react-bootstrap"; // Import Bootstrap Modal
-
+import http from "./Http";
 const ItemType = "COLUMN";
 
 const Column = ({ header, index, moveColumn }) => {
@@ -46,8 +46,7 @@ const UsageLogSetting = () => {
   useEffect(() => {
     const fetchHPLCData = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:58747/api/PopulateHPLCUsage/GetPopulateHPLCUsageDetails"
+        const response = await http.get("PopulateHPLCUsage/GetPopulateHPLCUsageDetails"
         );
 
         const result = await response.json();
@@ -70,8 +69,7 @@ const UsageLogSetting = () => {
 
     const fetchColumnData = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:58747/api/PopulateColumnUsage/GetPopulateColumnUsageDetails"
+        const response = await http.get("PopulateColumnUsage/GetPopulateColumnUsageDetails"
         );
 
         const result = await response.json();
@@ -129,8 +127,8 @@ const UsageLogSetting = () => {
   const saveOrderToBackend = async () => {
     const endpoint =
       selectedData === "hplc"
-        ? "http://localhost:58747/api/PopulateHPLCUsage/SavechangeshplcDetails"
-        : "http://localhost:58747/api/PopulateColumnUsage/SavechangesColumnDetails";
+        ? "/PopulateHPLCUsage/SavechangeshplcDetails"
+        : "/PopulateColumnUsage/SavechangesColumnDetails";
 
     const columnsToSave = (
       selectedData === "hplc" ? hplcColumns : columnColumns
@@ -166,8 +164,8 @@ const UsageLogSetting = () => {
   const saveFilters = async () => {
     const endpoint =
       selectedData === "hplc"
-        ? "http://localhost:58747/api/PopulateHPLCUsage/SelectfilterschangeshplcDetails"
-        : "http://localhost:58747/api/PopulateColumnUsage/SelectfilterschangescolumnDetails";
+        ? "/PopulateHPLCUsage/SelectfilterschangeshplcDetails"
+        : "/PopulateColumnUsage/SelectfilterschangescolumnDetails";
 
     // Define all possible filters
     const allFilters = [

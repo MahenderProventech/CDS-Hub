@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import './print.css';
 import po from '../img/po.svg';
 import './Column_Dashboard.css';
-
+import http from "./Http";
 
 
 const HPLC_Search = () => {
@@ -28,8 +28,7 @@ const HPLC_Search = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+        const response = await http.get("Peaks/GetPeaksDetails"
         );
         const data = await response.json();
         console.log("Fetched data:", data);

@@ -1,4 +1,5 @@
-const Domain_url = "http://localhost:58747/api/";
+//const Domain_url = "http://172.26.8.225:9010/api/";
+ const Domain_url = "http://localhost:58747/api/";
 // const Domain_url = "http://172.26.8.225:8086/api/";
 // const Domain_url = "http://10.203.103.142:8086/api/";
 

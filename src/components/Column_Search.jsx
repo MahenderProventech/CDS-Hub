@@ -7,7 +7,7 @@ import usermanagement from '../img/usermanagement.png';
 import { Link } from 'react-router-dom';
 import './print.css';
 import "./Column_Dashboard.css";
-
+import http from './Http';
 
 const Column_Search = () => {
   const [peaksData, setPeaksData] = useState([]);
@@ -26,8 +26,7 @@ const Column_Search = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:58747/api/Peaks/GetPeaksDetails"
+        const response = await http.get("Peaks/GetPeaksDetails"
         );
         const data = await response.json();
         console.log("Fetched data:", data);
