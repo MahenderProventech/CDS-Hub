@@ -55,15 +55,15 @@ const UserList = () => {
   }, []);
   const fetConfigurations = async () => {
     try {
-      const deptResponse = await axios.get(Appconstant.getDepartments);
+      const deptResponse = await http.get(Appconstant.getDepartments);
       setDeptResponse(deptResponse.data.item2);
-      const getDesignationResponse = await axios.get(Appconstant.getDesignation);
+      const getDesignationResponse = await http.get(Appconstant.getDesignation);
       setGetDesignationResponse(getDesignationResponse.data.item2);
-      const plantResponse = await axios.get(Appconstant.getPlants);
+      const plantResponse = await http.get(Appconstant.getPlants);
       setPlantResponse(plantResponse.data.item2);
-      const getGroupResponse = await axios.get(Appconstant.getGroups);
+      const getGroupResponse = await http.get(Appconstant.getGroups);
       setGroupResponse(getGroupResponse.data.item2);
-      const getRolesResponse = await axios.get(Appconstant.getRoles);
+      const getRolesResponse = await http.get(Appconstant.getRoles);
       setGetRolesResponse(getRolesResponse.data.item2);
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
@@ -226,17 +226,20 @@ const UserList = () => {
     };
   };
   
- 
+  const [comments, setComments] = useState('');  // Initialize comments in state
+  const handleCommentsChange = (e) => {
+    setComments(e.target.value);  // Update comments based on input
+  };
   // Submit user form
   const SubmitUserForm = async () => {
     console.log(selectedRolesOptions);
     console.log(selectedPlantsOptions);
-    
+  
     selectedUser['userRoles'] = selectedRolesOptions;
     selectedUser['userPlants'] = selectedPlantsOptions;
     selectedUser['userGroups'] = selectedGroupOptions;
     selectedUser.isActive = selectedUser.isActive === 'true' ? true : false;
-  
+    selectedUser.comments = comments;
     // Validate form fields
     const validationResult = validateForm();
     if (!validationResult.isValid) {
@@ -245,97 +248,62 @@ const UserList = () => {
       return; // Stop form submission if validation fails
     }
   
-    // Show SweetAlert for e-signature
-    const { value: password } = await Swal.fire({
-      title: 'E-signature Required',
-      html: `
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <input type="text" value='${userData.employeeId}' disabled class="swal2-input" placeholder="Username" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
-          <input type="password" id="password" class="swal2-input" placeholder="Password" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
-        </div>
-      `,
-      focusConfirm: false,
-      preConfirm: () => {
-        const password = Swal.getPopup().querySelector('#password').value;
-        if (!password) {
-          Swal.showValidationMessage('Please enter your password');
-        }
-        return password;
-      },
-      showCancelButton: true,
-      cancelButtonText: 'Cancel',
-      confirmButtonText: 'Submit',
-    });
+    // Check if the email or employee ID exists when creating a new user
+    if (!isEdit) {
+      const { isEmployeeIdExists, isEmailExists } = await checkEmployeeIdOrEmailExists(selectedUser.employeeId, selectedUser.emailId);
   
-    // If password is provided, proceed with form submission
-    if (password) {
-      try {
-        // Verify the e-signature by authenticating with the password
-        const authPayload = {
-          LoginId: userData.employeeId,
-          Password: password,
-        };
-  
-        const authResponse = await http.post("Login/AuthenticateData", authPayload);
-        if (authResponse.data.item1) {
-          console.log("Selected values:", selectedUser);
-          
-          // If creating a new user, check for email/employee ID existence and validate password
-          if (!isEdit) {
-            const { isEmployeeIdExists, isEmailExists } = await checkEmployeeIdOrEmailExists(selectedUser.employeeId, selectedUser.emailId);
-  
-            if (isEmployeeIdExists) {
-              showAlert('Employee ID already exists. Please use a different Employee ID.');
-              return; // Stop form submission if employeeId exists
-            }
-  
-            if (isEmailExists) {
-              showAlert('Email ID already exists. Please use a different Email ID.');
-              return; // Stop form submission if email exists
-            }
-  
-            // If creating a new user, validate password
-            const passwordValidationResult = validatePassword();
-            if (!passwordValidationResult.isValid) {
-              setErrors(passwordValidationResult.errors);
-              console.log("Validation Errors:", passwordValidationResult.errors);
-              return; // Stop form submission if password validation fails
-            }
-          }
-  
-          // In edit mode, validate password only if provided
-          if (isEdit) {
-            if (selectedUser.password || selectedUser.confirmPassword) {
-              const passwordValidationResult = validatePassword();
-              if (!passwordValidationResult.isValid) {
-                setErrors(passwordValidationResult.errors);
-                console.log("Password validation errors:", passwordValidationResult.errors);
-                return; // Stop form submission if password validation fails
-              }
-            } else {
-              // Remove password fields from the payload if both are empty
-              delete selectedUser.password;
-              delete selectedUser.confirmPassword;
-            }
-          }
-  
-          const response = await http.post(Appconstant.submitUserForm, selectedUser);
-          if (response) {
-            showAlert(isEdit ? 'User Updated Successfully.' : 'User Saved Successfully.');
-            fetchAllUsers();
-            setShowModal(false);
-            setSelectedRolesOptions([]);
-            setSelectedPlantsOptions([]);
-            setSelectedGroupOptions([]);
-            handleClose(); 
-          }
-        } else {
-          Swal.fire('Authentication failed', 'Invalid password.', 'error');
-        }
-      } catch (error) {
-        console.error('Error saving user:', error);
-        Swal.fire("Failed to save settings. Please try again.");
+      if (isEmployeeIdExists) {
+        showAlert('Employee ID already exists. Please use a different Employee ID.');
+        return; // Stop form submission if employeeId exists
       }
+  
+      if (isEmailExists) {
+        showAlert('Email ID already exists. Please use a different Email ID.');
+        return; // Stop form submission if email exists
+      }
+  
+      // If creating a new user, validate password
+      const passwordValidationResult = validatePassword();
+      if (!passwordValidationResult.isValid) {
+        setErrors(passwordValidationResult.errors);
+        console.log("Validation Errors:", passwordValidationResult.errors);
+        return; // Stop form submission if password validation fails
+      }
+    }
+  
+    // In edit mode, validate password only if provided
+    if (isEdit) {
+      if (selectedUser.password || selectedUser.confirmPassword) {
+        const passwordValidationResult = validatePassword();
+        if (!passwordValidationResult.isValid) {
+          setErrors(passwordValidationResult.errors);
+          console.log("Password validation errors:", passwordValidationResult.errors);
+          return; // Stop form submission if password validation fails
+        }
+  
+        // If password fields are valid, update the password in the backend
+      } else {
+        // Remove password fields from the payload if both are empty
+        delete selectedUser.password;
+        delete selectedUser.confirmPassword;
+      }
+    }
+  
+    console.log("Selected values:", selectedUser);
+  
+    try {
+      const response = await http.post(Appconstant.submitUserForm, selectedUser);
+      if (response) {
+        showAlert(isEdit ? 'User Updated Successfully.' : 'User Saved Successfully.');
+        fetchAllUsers();
+        setShowModal(false);
+        setSelectedRolesOptions([]);
+        setSelectedPlantsOptions([]);
+        setSelectedGroupOptions([]);
+        handleClose(); 
+      }
+    } catch (error) {
+      console.error('Error saving user:', error);
     }
   };
   
@@ -539,59 +507,97 @@ const getUserData = (data) => {
   // const handleCloseArchieveModal = () => setShow(false);
  
   // Archive user
-const handleArchiveUser = async () => {
-  // Show SweetAlert for e-signature
-  const { value: password } = await Swal.fire({
-    title: 'E-signature Required',
-    html: `
-      <div style="display: flex; flex-direction: column; align-items: center;">
-        <input type="text" value='${userData.employeeId}' disabled class="swal2-input" placeholder="Username" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
-        <input type="password" id="password" class="swal2-input" placeholder="Password" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
-      </div>
-    `,
-    focusConfirm: false,
-    preConfirm: () => {
-      const password = Swal.getPopup().querySelector('#password').value;
-      if (!password) {
-        Swal.showValidationMessage('Please enter your password');
-      }
-      return password;
-    },
-    showCancelButton: true,
-    cancelButtonText: 'Cancel',
-    confirmButtonText: 'Submit',
-  });
-
-  // If password is provided, proceed with archiving the user
-  if (password) {
+  const handleArchiveUser = async (comments) => {
     try {
-      // Verify the e-signature by authenticating with the password
-      const authPayload = {
-        LoginId: userData.employeeId,
-        Password: password,
-      };
-
-      const authResponse = await http.post("Login/AuthenticateData", authPayload);
-      if (authResponse.data.item1) {
-        const deptResponse = await axios.post(Appconstant.UpdateUserStatus, archiveduser);
-        if (deptResponse) {
-          showAlert('User Archived.');
-          fetchAllUsers();
-          handleCloseArchiveModal();
-        }
-      } else {
-        Swal.fire('Authentication failed', 'Invalid password.', 'error');
+      archiveduser.comments = comments;  // Assign comments to the archived user object
+      const deptResponse = await http.post(Appconstant.UpdateUserStatus, archiveduser);
+      if (deptResponse) {
+        showAlert('User Archived.');
+        fetchAllUsers();  // Fetch updated user list
+        handleCloseArchiveModal();  // Close the archive modal
       }
     } catch (error) {
       console.error("Error archiving user:", error);
-      Swal.fire("Failed to archive user. Please try again.");
     }
-  }
-};
-
+  };
   const [selectedRolesOptions, setSelectedRolesOptions] = useState([]);
   const [selectedPlantsOptions, setSelectedPlantsOptions] = useState([]);
   const [selectedGroupOptions, setSelectedGroupOptions] = useState([]);
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  // const [validationMessage, setValidationMessage] = useState('');
+  const [isArchiving, setIsArchiving] = useState(false);
+
+  // This function triggers the authentication modal for archiving
+  const handleShowArchiveAuthModal = () => {
+    setIsArchiving(true);  // Set archiving mode to true
+    setShowAuthModal(true);  // Show the authentication modal
+  };
+  
+  // This function triggers the authentication modal for submitting the user form
+  const handleShowSubmitAuthModal = () => {
+    setIsArchiving(false);  // Set archiving mode to false
+    setShowAuthModal(true);  // Show the authentication modal
+  };
+  
+  
+ 
+  const handleCloseAuthModal = () => {
+    setShowAuthModal(false);
+  };
+ 
+  const handleAuthSubmit = () => {
+    setValidationMessage('');
+  
+    // Get values from modal inputs
+    const username = document.getElementById('auth-username').value;
+    const password = document.getElementById('auth-password').value;
+    const comments = document.getElementById('auth-comments').value;
+  
+    // Validate inputs
+    if (!password) {
+      setValidationMessage('Please enter password');
+      return;
+    }
+  
+    if (comments === '') {
+      setValidationMessage('Please add comments');
+      return;
+    }
+  
+    // Check if username matches
+    if (username === userData.employeeId) {
+      const payload = {
+        LoginId: username,
+        Password: password
+      };
+  
+      // Authenticate user with backend
+      http.post("Login/AuthenticateData", payload)
+        .then((resp) => {
+          if (resp.data.item1) {
+            // Handle archiving or submitting based on isArchiving
+            if (isArchiving) {
+              handleArchiveUser(comments);  // Pass comments to archive user
+            } else {
+              SubmitUserForm(comments);  // Handle regular form submission
+            }
+          } else {
+            Swal.fire('Authentication failed', 'Please enter valid details', 'error');
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          Swal.fire('Authentication failed', 'Invalid username or password', 'error');
+        });
+    } else {
+      Swal.fire('Authentication failed', 'Invalid username', 'error');
+    }
+  
+    // Close authentication modal after submission
+    handleCloseAuthModal();
+  };
+  
  
   return (
     <section className="full_screen">
@@ -695,6 +701,45 @@ const handleArchiveUser = async () => {
             />
           </Col>
         </Row>
+
+           {/* Custom Authentication Modal */}
+           <Modal show={showAuthModal} onHide={handleCloseAuthModal} className="auth-modal"
+          backdrop="static" // Prevent closing on outside click
+          keyboard={false} // Optional: Prevent closing with the Esc key
+        >
+          <Modal.Header closeButton>
+            <Modal.Title style={{ color: 'grey' }}>Authentication Required</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group controlId="auth-username">
+                <Form.Label>Username</Form.Label>
+                <Form.Control type="text" placeholder="Username" value={userData.employeeId} readOnly />
+              </Form.Group>
+              <Form.Group controlId="auth-password">
+                <Form.Label>Password</Form.Label>
+                <Form.Control type="password" placeholder="Password" />
+              </Form.Group>
+              <Form.Group controlId="auth-comments">
+                <Form.Label>Comments</Form.Label>
+                <Form.Control as="textarea" rows={3} placeholder="Comments" />
+              </Form.Group>
+ 
+              {validationMessage && (
+                <div className="text-danger mt-2">{validationMessage}</div>
+              )}
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={handleAuthSubmit}>
+              Submit
+            </Button>
+            <Button variant="secondary" onClick={handleCloseAuthModal}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+ 
  
         <Modal show={showModal} onHide={handleClose} size='lg'>
           <Modal.Header closeButton >
@@ -991,7 +1036,7 @@ const handleArchiveUser = async () => {
           <Modal.Footer>
           <Button
   variant="primary"
-  onClick={SubmitUserForm}
+  onClick={handleShowSubmitAuthModal}
   disabled={!formValid()}  // The button is disabled until the form is valid based on create or edit mode
 >
   Submit
@@ -1032,7 +1077,7 @@ const handleArchiveUser = async () => {
             <Button variant="secondary" onClick={handleCloseArchiveModal}>
               Close
             </Button>
-            <Button variant="primary" onClick={handleArchiveUser} disabled={!archiveduser?.comments}>
+            <Button variant="primary" onClick={handleShowArchiveAuthModal} disabled={!archiveduser?.comments}>
               Yes
             </Button>
           </Modal.Footer>
