@@ -115,20 +115,27 @@ const NavbarComponent = () => {
   }, [autoLogout, autoLogoutTime]);
 
   useEffect(() => {
-    const isOnLoginPage = location.pathname === '/';
-    if (userData && !isOnLoginPage) {
-      // Add event listeners to reset timer on user activity
+    const isOnLoginPage = location.pathname === '/'; // Check if the current path is login page
+  
+    // If on the login page, do not calculate session logout, return early
+    if (isOnLoginPage) {
+      clearListenersAndTimers();  // Ensure any existing listeners/timers are cleared if user navigates to login page
+      return;  // Early return to prevent session timeout logic from running
+    }
+  
+    // Only add event listeners and set timers if the user is logged in and not on the login page
+    if (userData) {
       window.addEventListener('mousemove', resetLogoutTimer);
       window.addEventListener('keydown', resetLogoutTimer);
-      resetLogoutTimer(); // Initialize logout timer
-    } else {
-      clearListenersAndTimers(); // Clear everything if not logged in or on the login page
+      resetLogoutTimer(); // Initialize the logout timer
     }
-
+  
+    // Cleanup on component unmount or when user navigates to the login page
     return () => {
-      clearListenersAndTimers(); // Cleanup listeners and timers on component unmount
+      clearListenersAndTimers();  // Clear all listeners and timers
     };
   }, [userData, location.pathname, resetLogoutTimer, clearListenersAndTimers]);
+  
 
   const handleShow = () => setShowModal(true);
   const handleClose = () => setShowModal(false);
