@@ -49,7 +49,9 @@ const UsageLogSetting = () => {
         const response = await http.get("PopulateHPLCUsage/GetPopulateHPLCUsageDetails"
         );
 
-        const result = await response.json();
+        // const result = await response.json();
+            const result = response.data;
+
 
         setHplcData(result);
 
@@ -72,7 +74,9 @@ const UsageLogSetting = () => {
         const response = await http.get("PopulateColumnUsage/GetPopulateColumnUsageDetails"
         );
 
-        const result = await response.json();
+        // const result = await response.json();
+        const result = response.data;
+
 
         setColumnData(result);
 
@@ -129,7 +133,7 @@ const UsageLogSetting = () => {
       selectedData === "hplc"
         ? "/PopulateHPLCUsage/SavechangeshplcDetails"
         : "/PopulateColumnUsage/SavechangesColumnDetails";
-
+  
     const columnsToSave = (
       selectedData === "hplc" ? hplcColumns : columnColumns
     ).map((header, index) => ({
@@ -139,35 +143,30 @@ const UsageLogSetting = () => {
       createdBy: userData?.employeeId || "unknown",
       createdDate: new Date().toISOString(),
     }));
-    console.log("DATA STORED PATTERN:",columnsToSave);
+  
+    console.log("DATA STORED PATTERN:", columnsToSave);
+  
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(columnsToSave),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error saving column order: ${errorText}`);
+      const response = await http.post(endpoint, columnsToSave);
+  
+      if (response.status !== 200) {
+        throw new Error(`Error saving column order: ${response.statusText}`);
       }
-
+  
       handleShowModal("Order saved successfully!");
     } catch (error) {
-      console.error("Error saving column order:", error);
+      console.error("Error saving column order:", error.response ? error.response.data : error);
       handleShowModal("Failed to save order.");
     }
   };
+  
 
   const saveFilters = async () => {
     const endpoint =
       selectedData === "hplc"
-        ? "/PopulateHPLCUsage/SelectfilterschangeshplcDetails"
-        : "/PopulateColumnUsage/SelectfilterschangescolumnDetails";
-
-    // Define all possible filters
+        ? "PopulateHPLCUsage/SelectfilterschangeshplcDetails"
+        : "PopulateColumnUsage/SelectfilterschangescolumnDetails";
+  
     const allFilters = [
       { label: 'sampleSetId' },
       { label: 'instrument_No' },
@@ -182,45 +181,36 @@ const UsageLogSetting = () => {
       { label: 'noOfInjections' },
       { label: 'runtime' },
       { label: 'dateAcquired' },
-      { label: 'column_No' }
-      // Add all other possible filters here
+      { label: 'column_No' },
+      // Add more filters here
     ];
-
-    // Determine active filters based on currentFilters
+  
     const activeFilters = currentFilters.map(filter => filter.label);
-
-    // Create the list of filters to be saved
+  
     const filtersToSave = allFilters.map((filter, index) => ({
       filterName: filter.label,
-      orderOfTheColumn: index + 1, // Assigning order based on index or other logic
-      filterValue: activeFilters.includes(filter.label) ? 1 : 0, // 1 if active, 0 otherwise
-      createdBy: userData?.employeeId || "unknown", // User ID or default value
-      createdDate: new Date().toISOString(), // Current date and time
+      orderOfTheColumn: index + 1,
+      filterValue: activeFilters.includes(filter.label) ? 1 : 0,
+      createdBy: userData?.employeeId || "unknown",
+      createdDate: new Date().toISOString(),
     }));
-
+  
     console.log("filters stored:", filtersToSave);
-
+  
     try {
-      // Send the data to the backend
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(filtersToSave),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error saving filters: ${errorText}`);
+      const response = await http.post(endpoint, filtersToSave);
+  
+      if (response.status !== 200) {
+        throw new Error(`Error saving filters: ${response.statusText}`);
       }
-
+  
       handleShowModal("Filters saved successfully!");
     } catch (error) {
-      console.error("Error saving filters:", error);
+      console.error("Error saving filters:", error.response ? error.response.data : error);
       handleShowModal("Failed to save filters.");
     }
   };
+  
 
 
   const resetOrder = () => {
