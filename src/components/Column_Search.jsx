@@ -28,7 +28,8 @@ const Column_Search = () => {
       try {
         const response = await http.get("Peaks/GetPeaksDetails"
         );
-        const data = await response.json();
+        const data = response.data;
+        //const data = await response.json();
         console.log("Fetched data:", data);
 
         if (Array.isArray(data.item2)) {

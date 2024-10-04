@@ -28,9 +28,9 @@ const HPLC_Search = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await http.get("Peaks/GetPeaksDetails"
-        );
-        const data = await response.json();
+        const response = await http.get("Peaks/GetPeaksDetails");
+        const data = response.data; 
+        //const data = await response.json();
         console.log("Fetched data:", data);
 
         if (Array.isArray(data.item2)) {

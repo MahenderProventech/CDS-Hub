@@ -46,9 +46,9 @@ const HPLC_Dashboard1 = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await http.get("Peaks/GetPeaksDetails"
-        );
-        const result = await response.json();
+        const response = await http.get("Peaks/GetPeaksDetails");
+        const result = response.data;
+        //const result = await response.json();
         console.log("Fetched data:", result);
 
         if (Array.isArray(result.item2)) {

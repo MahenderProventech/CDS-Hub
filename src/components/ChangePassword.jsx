@@ -123,7 +123,7 @@ const ChangePassword = () => {
       console.log("Request Data:", requestData);
 
       // Make the POST request
-      const response = await http.get('User/ChangeOldPassword', requestData, {
+      const response = await http.post('User/ChangeOldPassword', requestData, {
         headers: {
           'Accept': '*/*',
           'Content-Type': 'application/json'
