@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import UserContext from './../../UserContext';
 import http from '../../Http';
+import Swal from 'sweetalert2';
 
 
 const Select = () => {
@@ -28,20 +29,64 @@ const Select = () => {
         const users = usersData.item2; // Access the correct property
 
         if (Array.isArray(users)) {
-          // Find the user with the specific EmployeeId from context
           const user = users.find(user => user.employeeId === userData.employeeId);
-          if (user && user.promptExpiryDate) {
-            const promptExpiryDate = new Date(user.promptExpiryDate);
-            const currentDate = new Date();
+          console.log(user);
 
-            if (currentDate >= promptExpiryDate) {
-              setExpiryMessage(`Your prompt expiry date has passed. It was on ${promptExpiryDate.toDateString()}. Please take action.`);
-              setShowExpiryModal(true);
-            }
+          if (user && user.promptExpiryDate) {
+              const promptExpiryDate = new Date(user.promptExpiryDate); // Fetch the promptExpiryDate
+              const expiryDate = new Date(user.expiryDate); // Fetch the expiryDate
+              const currentDate = new Date();
+
+              // Check if the current date is greater than or equal to the promptExpiryDate
+              if (currentDate >= promptExpiryDate) {
+                  setShowExpiryModal(true); // Set the flag to indicate that the modal has been shown
+
+                  // Show Swal.fire popup with the expiryDate in the message
+                  Swal.fire({
+                      title: 'Password Expiry Notice',
+                      text: `Your password will expire soon. Please change your password before ${expiryDate.toDateString()}.`,
+                      icon: 'warning',
+                      confirmButtonText: 'OK',
+                  });
+              }
           }
-        } else {
+      } else {
           console.error('Expected an array of users, but got:', users);
-        }
+      }
+
+
+    //   if (Array.isArray(users)) {
+    //     const user = users.find(user => user.employeeId === userData.employeeId);
+    //     console.log(user);
+    
+    //     if (user && user.promptExpiryDate) {
+    //         const promptExpiryDate = new Date(user.promptExpiryDate); // Fetch the promptExpiryDate
+    //         const expiryDate = new Date(user.expiryDate); // Fetch the expiryDate
+    //         const currentDate = new Date();
+    
+    //         // Calculate the days left from the current date to the expiry date
+    //         const daysLeft = Math.ceil((expiryDate - currentDate) / (1000 * 60 * 60 * 24));
+    
+    //         // Check if the current date is greater than or equal to the promptExpiryDate
+    //         if (currentDate >= promptExpiryDate) {
+    //             setShowExpiryModal(true); // Set the flag to indicate that the modal has been shown
+    
+    //             // Show Swal.fire popup with the days left and expiryDate in the message
+    //             Swal.fire({
+    //                 title: 'Password Expiry Notice',
+    //                 text: `Your password will expire in ${daysLeft} days, on ${expiryDate.toDateString()}. Please change your password before it expires.`,
+    //                 icon: 'warning',
+    //                 confirmButtonText: 'OK',
+    //             });
+    //         }
+    //     } else {
+    //         console.error('Expected an array of users, but got:', users);
+    //     }
+    // }
+    
+
+        
+        
       })
       .catch(error => {
         console.error('Error fetching user data:', error);
@@ -197,19 +242,7 @@ const Select = () => {
         </Modal.Body>
       </Modal>
       {/* Expiry Date Modal */}
-      <Modal show={showExpiryModal} onHide={() => setShowExpiryModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Expiry Alert</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>{expiryMessage}</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={() => setShowExpiryModal(false)}>
-            OK
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      
     </div>
   );
 };

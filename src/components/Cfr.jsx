@@ -68,61 +68,130 @@ const fetchSettingsData = async () => {
   };
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
-
-    // Show SweetAlert to ask for e-signature (password)
-    const { value: password } = await Swal.fire({
+  
+    // Show SweetAlert to ask for e-signature (password and comments)
+  
+    const { value: swalData } = await Swal.fire({
+  
       title: 'E-signature Required',
+  
       html: `
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <input type="text" value='${userData.employeeId}' disabled class="swal2-input" placeholder="Username" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
-          <input type="password" id="password" class="swal2-input" placeholder="Password" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
-        </div>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+  <input type="text" value='${userData.employeeId}' disabled class="swal2-input" placeholder="Username" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+  <input type="password" id="password" class="swal2-input" placeholder="Password" style="padding: 5px; width: 90%; font-size: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+  <textarea id="swal-comments" class="swal2-input" placeholder="Comments" style="padding: 5px; width: 90%; margin-top: 10px; font-size: 12px; height: 80px; border-radius: 4px; border: 1px solid #ccc;"></textarea>
+  </div>
+  
       `,
+  
       focusConfirm: false,
+  
       preConfirm: () => {
+  
         const password = Swal.getPopup().querySelector('#password').value;
+  
+        const swalComments = Swal.getPopup().querySelector('#swal-comments').value;
+   
         if (!password) {
+  
           Swal.showValidationMessage('Please enter your password');
+  
+          return false;
+  
         }
-        return password;
+  
+        if (!swalComments) {
+  
+          Swal.showValidationMessage('Please add comments');
+  
+          return false;
+  
+        }
+  
+        return { password, swalComments };
+  
       },
+  
       showCancelButton: true,
+  
       cancelButtonText: 'Cancel',
+  
       confirmButtonText: 'Submit',
+  
     });
-
-    // If password is provided, proceed with form submission
-    if (password) {
+   
+    // If swalData is provided, proceed with form submission
+  
+    if (swalData) {
+  
+      const { password, swalComments } = swalData;
+   
       try {
+  
         // Verify the e-signature by authenticating with the password
+  
         const authPayload = {
+  
           LoginId: userData.employeeId,
+  
           Password: password,
+  
         };
-
-        const authResponse = await http.post("Login/AuthenticateData", authPayload);
+   
+        const authResponse = await http.post("/Login/AuthenticateData", authPayload);
+  
         if (authResponse.data.item1) {
+  
           const createdBy = `${userData.firstName}/${userData.employeeId}`;
-          const updatedFormData = { ...formData, createdBy };
-
+  
+          // Merge the original formData with SweetAlert data
+  
+          const updatedFormData = {
+  
+            ...formData, // this is the actual form data you want to submit
+  
+            createdBy,
+  
+            comments: swalComments, // or swalData.swalComments
+  
+          };
+   
           // Proceed with form submission if authentication is successful
+  
           const response = await http.post('Settings/Savesettings', updatedFormData, {
+  
             headers: {
+  
               'Content-Type': 'application/json',
+  
             },
+  
           });
-
+   
           Swal.fire('Success', 'Settings saved successfully!', 'success');
+  
         } else {
+  
           Swal.fire('Authentication failed', 'Invalid password.', 'error');
+  
         }
+  
       } catch (error) {
+  
         console.error("There was an error saving the settings:", error);
+  
         Swal.fire("Failed to save settings. Please try again.");
+  
       }
+  
     }
+  
   };
+  
+   
+ 
   
 
   return (

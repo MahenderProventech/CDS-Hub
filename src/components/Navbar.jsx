@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Modal } from 'react-bootstrap';
+import { Modal,Button } from 'react-bootstrap';
 import ProcalImg from '../img/PROCDSHUB1.svg';
 import dailyreview from '../img/dailyreview.png';
 import search from '../img/search.png';
@@ -16,7 +16,7 @@ import http from './Http';
 import UserContext from './UserContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Swal from 'sweetalert2';
-
+import { FaTimes } from 'react-icons/fa';
 const NavbarComponent = () => {
   const { userData, setUserData } = useContext(UserContext);
   const navigate = useNavigate();
@@ -136,6 +136,12 @@ const NavbarComponent = () => {
     };
   }, [userData, location.pathname, resetLogoutTimer, clearListenersAndTimers]);
   
+ 
+
+  const handleChangePassword = () => {
+    handleClose();
+    navigate('/home/ChangePassword'); // Navigate to the ChangePassword page
+  };
 
   const handleShow = () => setShowModal(true);
   const handleClose = () => setShowModal(false);
@@ -304,17 +310,60 @@ const NavbarComponent = () => {
 
       {/* Profile Modal */}
       <Modal show={showModal} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>View Profile</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="text-center">
-            <img src={bprofile} alt="Profile" style={{ width: "100px", height: "100px", display: "block", borderRadius: "50%", margin: "0 auto 20px" }} />
-            <h5>{userData?.employeeId}</h5>
-            <p>{userData?.userRole}</p>
-          </div>
-        </Modal.Body>
-      </Modal>
+  <Modal.Header closeButton>
+    <Modal.Title>View Profile</Modal.Title>
+    <Button 
+          variant="link" 
+          onClick={handleClose} 
+          style={{ position: 'absolute', right: '10px', top: '10px' }}
+        >
+          <FaTimes style={{ color: 'grey' }} /> {/* Change color if needed */}
+        </Button>
+  </Modal.Header>
+  <Modal.Body>
+    <div className="text-center" style={{ backgroundColor: '#a6a6a6',color:'white',padding:'15px',borderRadius:'7px',marginBottom:'20px' }}>
+      <img 
+        src={bprofile} 
+        alt="Profile" 
+        style={{ 
+          width: "100px", 
+          height: "100px", 
+          display: "block", 
+          borderRadius: "50%", 
+          margin: "0 auto 20px", 
+          backgroundColor: "#ccc" 
+        }} 
+      />
+      <h5>{userData?.firstName +' '+ userData?.lastName}</h5>
+      <p>{userData?.employeeId}</p>
+      <Button variant="primary" className="mb-3"  onClick={handleChangePassword}>
+        Change Password
+      </Button>
+    </div>
+    <table 
+  className="table" 
+  style={{ 
+    borderColor: '#cbcbcb', 
+    borderWidth: '1px', 
+    borderStyle: 'solid', 
+    // borderCollapse: 'collapse' // Optional: Ensures borders collapse into a single border
+  }}
+>
+  <tbody>
+    <tr>
+      <td><strong>Employee ID</strong></td>
+      <td>{userData?.employeeId}</td>
+    </tr>
+    <tr>
+      <td><strong>Role</strong></td>
+      <td>{userData?.userRole}</td>
+    </tr>
+  </tbody>
+</table>
+
+  </Modal.Body>
+</Modal>
+
     </>
   );
 };

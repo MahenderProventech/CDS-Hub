@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Add axios import if not already included
 import { Modal, Button } from 'react-bootstrap';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 
 const Login = () => {
     useEffect(() => {
@@ -48,14 +49,14 @@ const [showErrorModal, setShowErrorModal] = useState(false);
 const [showSuccessModal, setShowSuccessModal] = useState(false);
 const [modalMessage, setModalMessage] = useState("");
 
-const showModal = (title, message) => {
-    setModalMessage(message);
-    if (title === "Error") {
-        setShowErrorModal(true);
-    } else if (title === "Success") {
-        setShowSuccessModal(true);
-    }
-};
+// const showModal = (title, message) => {
+//     setModalMessage(message);
+//     if (title === "Error") {
+//         setShowErrorModal(true);
+//     } else if (title === "Success") {
+//         setShowSuccessModal(true);
+//     }
+// };
 
 
     useEffect(() => {
@@ -135,14 +136,14 @@ const showModal = (title, message) => {
             const { item1, item2 } = usersResponse.data;
     
             if (!item1) {
-                showModal("Error", "Unable to fetch users.");
+                Swal.fire("Error", "Unable to fetch users.","Error");
                 return;
             }
     
             const users = Array.isArray(item2) ? item2 : [];
     
             if (users.length === 0) {
-                showModal("Error", "No users found.");
+                Swal.fire("info", "No users found.","info");
                 return;
             }
     
@@ -152,7 +153,7 @@ const showModal = (title, message) => {
             if (user) {
                 // Check user status
                 if (!user.isActive) {
-                    showModal("Error", "User is locked. Please contact admin.");
+                    Swal.fire('info', "User is locked. Please contact admin.","info");
                     return;
                 }
     
@@ -169,14 +170,14 @@ const showModal = (title, message) => {
                     setUserData(userData);
                     checkForPasswordChange(userData);
                 } else {
-                    showModal("Error", "Invalid username or password.");
+                    Swal.fire("info", "Invalid username or password.","info");
                 }
             } else {
-                showModal("Error", "User does not exist.");
+                Swal.fire("info", "User does not exist.","info");
             }
         } catch (error) {
             console.error('Error:', error);
-            showModal("Error", "An error occurred. Please try again.");
+            Swal.fire("Error", "An error occurred. Please try again.","Error");
         } finally {
             setState(prev => ({
                 ...prev,
@@ -194,6 +195,8 @@ const showModal = (title, message) => {
                 const changeRequests = response.data;
                 if (changeRequests.length === 1) {
                     const latestRequest = changeRequests[0];
+                    // const latestRequest = changeRequests[changeRequests.length - 1];
+
                     if (!latestRequest.OldPassword) {
                         setShowPasswordModal(true);
                     } else {
@@ -262,7 +265,7 @@ const showModal = (title, message) => {
                 ...prevErrors,
                 oldPassword: 'Old password is incorrect'
             }));
-            showModal("Error", "Old password is incorrect");
+            Swal.fire("Error", "Old password is incorrect","Error");
             return;
         }
     
@@ -283,18 +286,20 @@ const showModal = (title, message) => {
         };
     
         if (!state.username || !changePasswordData.oldPassword || !changePasswordData.newPassword) {
-            showModal("Error", "Please fill in all fields.");
+            Swal.fire("Error", "Please fill in all fields.","Error");
             return;
         }
     
         try {
             const response = await http.post("User/ChangeOldPassword", payload);
-            showModal("Success", "Password changed successfully.");
+            Swal.fire("Success", "Password changed successfully.","success");
             setShowPasswordModal(false);
-            setTokenAndNavigate(state.username);
+            // setTokenAndNavigate(state.username);
+            navigate("/", { replace: true });
+
         } catch (error) {
             console.error('Error response:', error.response);
-            showModal("Error", "Failed to change password. Please check the entered information.");
+            Swal.fire("Error", "Failed to change password. Please check the entered information.","Error");
         }
     };
     

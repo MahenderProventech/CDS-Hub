@@ -5,6 +5,8 @@ import UserContext from "./UserContext";
 import Select from "react-select";
 import { Modal, Button } from "react-bootstrap"; // Import Bootstrap Modal
 import http from "./Http";
+import Swal from 'sweetalert2';
+
 const ItemType = "COLUMN";
 
 const Column = ({ header, index, moveColumn }) => {
@@ -99,14 +101,14 @@ const UsageLogSetting = () => {
     fetchColumnData();
   }, []);
 
-  const [modalMessage, setModalMessage] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  // const [modalMessage, setModalMessage] = useState("");
+  // const [showModal, setShowModal] = useState(false);
 
-  const handleCloseModal = () => setShowModal(false);
-  const handleShowModal = (message) => {
-    setModalMessage(message);
-    setShowModal(true);
-  };
+  // const handleCloseModal = () => setShowModal(false);
+  // const handleShowModal = (message) => {
+  //   setModalMessage(message);
+  //   setShowModal(true);
+  // };
 
   const moveColumn = (fromIndex, toIndex) => {
     const updatedColumns = [
@@ -153,10 +155,10 @@ const UsageLogSetting = () => {
         throw new Error(`Error saving column order: ${response.statusText}`);
       }
   
-      handleShowModal("Order saved successfully!");
+      Swal.fire("Successful","Order saved successfully!","success");
     } catch (error) {
       console.error("Error saving column order:", error.response ? error.response.data : error);
-      handleShowModal("Failed to save order.");
+      Swal.fire("Error","Failed to save order.","error");
     }
   };
   
@@ -204,10 +206,10 @@ const UsageLogSetting = () => {
         throw new Error(`Error saving filters: ${response.statusText}`);
       }
   
-      handleShowModal("Filters saved successfully!");
+      Swal.fire("Successful","Filters saved successfully!","success");
     } catch (error) {
       console.error("Error saving filters:", error.response ? error.response.data : error);
-      handleShowModal("Failed to save filters.");
+      Swal.fire("Error","Failed to save filters.","error");
     }
   };
   
@@ -511,7 +513,7 @@ const UsageLogSetting = () => {
               Reset
             </button>
           </div>
-          <Modal show={showModal} onHide={handleCloseModal}>
+          {/* <Modal show={showModal} onHide={handleCloseModal}>
             <Modal.Header closeButton>
               <Modal.Title>Notification</Modal.Title>
             </Modal.Header>
@@ -521,7 +523,7 @@ const UsageLogSetting = () => {
                 Close
               </Button>
             </Modal.Footer>
-          </Modal>
+          </Modal> */}
         </div>
       </section>
     </>

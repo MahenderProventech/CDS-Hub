@@ -666,7 +666,8 @@ const getUserData = (data) => {
                 {currentItems.length > 0 ? (
                   currentItems.map((assignment, index) => (
                     <tr key={index}>
-                      <td>{index + 1}</td>
+                      {/* <td>{index + 1}</td> */}
+                      <td>{indexOfFirstItem + index + 1}</td>
                       <td>{assignment.employeeId}</td>
                       <td>{assignment.emailId}</td>
                       <td>{formatDate(assignment.createdOn)}</td>
@@ -693,12 +694,13 @@ const getUserData = (data) => {
  
             </Table>
             <CustomPagination
-              itemsPerPage={itemsPerPage}
-              totalItems={roleAssignments.length}
-              paginate={paginate}
-              currentPage={currentPage}
-              style={{ display: 'flex', float: 'right' }}
-            />
+  itemsPerPage={itemsPerPage}
+  totalItems={filteredItems.length} // Use filteredItems length for total items
+  paginate={paginate}
+  currentPage={currentPage}
+  style={{ display: 'flex', float: 'right' }}
+/>
+
           </Col>
         </Row>
 
