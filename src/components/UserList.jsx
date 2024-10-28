@@ -294,7 +294,7 @@ const UserList = () => {
     try {
       const response = await http.post(Appconstant.submitUserForm, selectedUser);
       if (response) {
-        showAlert(isEdit ? 'User Updated Successfully.' : 'User Saved Successfully.');
+        showAlert(isEdit ?  `User with Employee ID: ${selectedUser.employeeId} Updated Successfully.`: `User with Employee ID: ${selectedUser.employeeId} Saved Successfully.`);
         fetchAllUsers();
         setShowModal(false);
         setSelectedRolesOptions([]);

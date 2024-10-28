@@ -26,8 +26,7 @@ const Column_Search = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await http.get("Peaks/GetPeaksDetails"
-        );
+        const response = await http.get("Peaks/GetPeaksDetails");
         const data = response.data;
         //const data = await response.json();
         console.log("Fetched data:", data);
