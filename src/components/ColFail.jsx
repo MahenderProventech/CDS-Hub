@@ -199,8 +199,8 @@ const ColFail = () => {
                                     <td>{item.USPPlateCountDiff}</td>
                                     <td>{item.PercentageDifference}</td>
                                     <td>{item.uspTailing}</td>
-                                    <td>{item.IsFailure}</td>
-                                </tr>
+                                    <td>{item.IsFailure === 1 ? "Fail" : "Pass"}</td>
+                                    </tr>
                             ))}
                         </tbody>
                     </Table>
