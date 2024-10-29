@@ -326,11 +326,11 @@ const Column_Search = () => {
               </button>
             </Link>
           </div><br />
-          <div className="btn-group dropend">
+          {/* <div className="btn-group dropend">
             <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
                 <img src={report} alt="Audit Trial" title="Audit Trial" />
-                <p>Audit Trial</p>
+                <p>Audit Trail</p>
               </button>
             </Link>
           </div><br />
@@ -341,7 +341,7 @@ const Column_Search = () => {
                 <p>User Management</p>
               </button>
             </Link>
-          </div><br />
+          </div><br /> */}
         </div>
       </aside>
 

@@ -228,7 +228,7 @@ const NavbarComponent = () => {
                 style={{ ...buttonStyle, backgroundColor: isActive('/home/Select') || hover === 'dashboard' ? '#3b347d' : '#463E96' }}
               >
                 <img src={dash} alt="Dashboard" title="Dashboard" style={imgStyle} />
-                <p style={pStyle}>Dashboard</p>
+                <p style={pStyle}>Home Page</p>
               </button>
             </Link>
           </div>

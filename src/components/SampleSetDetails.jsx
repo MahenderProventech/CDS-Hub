@@ -113,7 +113,7 @@ const SampleSetDetails = () => {
               </button>
             </Link>
           </div><br />
-          <div className="btn-group dropend">
+          {/* <div className="btn-group dropend">
             <Link to={"/home/HPLC_AuditTrail"}>
               <button type="button">
                 <img src={report} alt="Audit Trail" title="Audit Trail" />
@@ -128,8 +128,8 @@ const SampleSetDetails = () => {
                 <p>User Management</p>
               </button>
             </Link>
-          </div><br />
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+          </div><br /> */}
+          <div className="btn-group dropend" style={{ marginTop: "100px" }}>
             <Link to={"/"}>
               <button type="button" title='Logout'>
                 <img src={po} alt="Logout" />

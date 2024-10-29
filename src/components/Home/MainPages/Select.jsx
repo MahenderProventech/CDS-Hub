@@ -129,7 +129,7 @@ const Select = () => {
             <a href="">
               <button type="button">
                 <img src={report} alt="Reports" title="Reports" />
-                <p>Audit Trial</p>
+                <p>Audit Trail</p>
               </button>
             </a>
           </div>
@@ -144,7 +144,7 @@ const Select = () => {
           <img src="../img/po.svg" alt="logout" />
         </a>
       </aside>        */}
-      <section className="select">
+      <section className="select"  style={{marginTop: "100px"}}>
       <div className="container-fluid text-center">
   <div className="row justify-content-md-center sMain">
     <div className="col col-lg-2" >
@@ -206,6 +206,22 @@ const Select = () => {
 
             </div>
 
+            <div className="col col-lg-2">
+        <Link to={"/home/ColumnFailurePredict"}>
+
+              <div className="card nc d-flex flex-column" style={{height:"250px"}}>
+                <div className="checkIcon">
+                  <img src={check} alt="check" />
+                </div>
+                <div className="titles flex-grow-1">
+                  <h3>Instrument Utilization</h3>
+                </div>
+                <p className="text-left">Instrument Utilization</p>
+              </div>
+              </Link>
+
+            </div>
+
             {/* <div className="col-lg-2 mb-4">
               <div className="card lims h-100 d-flex flex-column">
                 <div className="checkIcon">
@@ -218,6 +234,58 @@ const Select = () => {
               </div>
             </div> */}
           </div>
+
+          <br />
+          <br />
+
+          <div className="row justify-content-md-center sMain">
+          <div className="col col-lg-2">
+        <Link to={"/home/ColumnFailurePredict"}>
+
+              <div className="card nc d-flex flex-column" style={{height:"250px"}}>
+                <div className="checkIcon">
+                  <img src={check} alt="check" />
+                </div>
+                <div className="titles flex-grow-1">
+                  <h3>Trends & Overlay Analysis</h3>
+                </div>
+                <p className="text-left">Trends & Overlay Analysis</p>
+              </div>
+              </Link>
+
+            </div>
+            <div className="col col-lg-2">
+        <Link to={"/home/ColumnFailurePredict"}>
+
+              <div className="card nc d-flex flex-column" style={{height:"250px"}}>
+                <div className="checkIcon">
+                  <img src={check} alt="check" />
+                </div>
+                <div className="titles flex-grow-1">
+                  <h3>Peak Integration review</h3>
+                </div>
+                <p className="text-left">Peak Integration review</p>
+              </div>
+              </Link>
+
+            </div>
+            <div className="col col-lg-2">
+        <Link to={"/home/ColumnFailurePredict"}>
+
+              <div className="card nc d-flex flex-column" style={{height:"250px"}}>
+                <div className="checkIcon">
+                  <img src={check} alt="check" />
+                </div>
+                <div className="titles flex-grow-1">
+                  <h3>CDS Leaderoard</h3>
+                </div>
+                <p className="text-left">CDS Leaderoard</p>
+              </div>
+              </Link>
+
+            </div>
+
+</div>
           <div className="row">
             <div className="col text-center">
               <p className="redirectButton">* Click on above tile to redirect</p>

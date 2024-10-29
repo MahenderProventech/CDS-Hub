@@ -408,7 +408,7 @@ const Column_Dashboard1 = () => {
             </Link>
           </div>
           <br />
-          <div className="btn-group dropend">
+          {/* <div className="btn-group dropend">
             <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
                 <img src={report} alt="Audit Trail" title="Audit Trail" />
@@ -428,7 +428,7 @@ const Column_Dashboard1 = () => {
                 <p>User Management</p>
               </button>
             </Link>
-          </div>
+          </div> */}
           <br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
               <button type="button" onClick={handleLogout}>

@@ -386,11 +386,11 @@ const HPLCLog_List = () => {
             </Link>
           </div>
           <br />
-          <div className="btn-group dropend">
+          {/* <div className="btn-group dropend">
             <Link to={"/home/HPLC_AuditTrail"}>
               <button type="button">
                 <img src={report} alt="Audit Trial" title="Audit Trial" />
-                <p>Audit Trial</p>
+                <p>Audit Trail</p>
               </button>
             </Link>
           </div>
@@ -406,7 +406,7 @@ const HPLCLog_List = () => {
                 <p>User Management</p>
               </button>
             </Link>
-          </div>
+          </div> */}
           <br />
           <div className="btn-group dropend" style={{ marginTop: "10px" }}>
             <Link to={"/"}>

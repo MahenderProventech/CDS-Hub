@@ -203,8 +203,7 @@ const fetchSettingsData = async () => {
         <nav aria-label="breadcrumb">
           <ol className="breadcrumb cooseText mb-2">
             <li className="breadcrumb-item active" aria-current="page">
-              21CFR Password Configurations
-            </li>
+            System Policies Configurations      </li>
           </ol>
         </nav>
         <div className="row">

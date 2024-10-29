@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import http from './Http';
-import { Line } from 'react-chartjs-2';
+import { Line,Scatter } from 'react-chartjs-2';
 import { Link } from 'react-router-dom';
 import dash from '../img/dashboard.png';
 import HplcLogList from '../img/hplc_loglist.png';
 import search from '../img/search.png';
 import report from '../img/report.png';
 import usermanagement from '../img/usermanagement.png';
+import { Button, Modal } from 'reactstrap';
+import 'chartjs-plugin-zoom';
+
 const ColumnFailurePredict = () => {
   const [data, setData] = useState([]);
   const [result, setResult] = useState([]);
@@ -25,7 +28,13 @@ const ColumnFailurePredict = () => {
   const [allInjectionIds, setAllInjectionIds] = useState([]);
   const [column_No, setColumnNo] = useState([]); // Ensures it's initialized as an array
   const [selectedColumn, setSelectedColumn] = useState("");
-  
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+
+
+  const openModal = () => setModalIsOpen(true);
+  const closeModal = () => setModalIsOpen(false);
+
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -182,46 +191,70 @@ const ColumnFailurePredict = () => {
   };
   
 
-const createChartData = (data) => {
-  const timeSeries = data.map((item, index) => index + 1);
-  const uspPlateCounts = data.map(item => item.uspPlateCount);
-
-  return {
-    labels: timeSeries,
+ const createChartData = (data) => ({
+    labels: data.map((item, index) => index + 1),
     datasets: [
       {
         label: 'USP Plate Count',
-        data: uspPlateCounts,
+        data: data.map(item => item.uspPlateCount),
         borderColor: 'rgba(75, 192, 192, 1)',
         fill: false,
       },
       {
         label: 'Failure Threshold (4000)',
-        data: new Array(timeSeries.length).fill(4000),
+        data: new Array(data.length).fill(4000),
         borderColor: 'rgba(255, 99, 132, 1)',
         borderDash: [5, 5],
         fill: false,
       },
     ],
-    options: {
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Injection Number', // Label for the X-axis
-          },
+  });
+
+  // Zoom options
+  const scatterChartOptions = {
+    responsive: true,
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Injection Number',
         },
-        y: {
-          title: {
-            display: true,
-            text: 'USP Plate Count', // Label for the Y-axis
-          },
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'USP Plate Count',
+        },
+        grid: {
+          display: false,
+        },
+      },
+    },
+    plugins: {
+      zoom: {
+        zoom: {
+          wheel: { enabled: true },
+          pinch: { enabled: true },
+          drag: { enabled: true },
+          mode: 'xy',
+        },
+        pan: {
+          enabled: true,
+          mode: 'xy',
         },
       },
     },
   };
-};
 
+
+const paginateData = () => {
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const paginatedData = filteredData.slice(startIndex, startIndex + rowsPerPage);
+  return paginatedData;
+};
 
 const predictFailureTime = (data) => {
   const X = data.map((_, index) => index + 1);
@@ -294,7 +327,7 @@ const predictedFailureTime = predictFailureTime(result);
             <Link to={"/home/Column_AuditTrail"}>
               <button type="button">
                 <img src={report} alt="Audit Trial" title="Audit Trial" />
-                <p>Audit Trial</p>
+                <p>Audit Trail</p>
               </button>
             </Link>
           </div><br />
@@ -433,6 +466,12 @@ const predictedFailureTime = predictFailureTime(result);
 
           <div style={{ marginTop: '20px' }}>
   <h2>Column Health Prediction Graph</h2>
+  <Button
+          onClick={openModal}
+          style={{ backgroundColor: "#463E96", color: "white", marginLeft: "1200px" }}
+        >
+          Zoom
+        </Button>
   <Line data={chartData} options={chartData.options} />
   {/* <p>
     Predicted time until failure (USP Plate Count &lt; 4000): 
@@ -485,6 +524,35 @@ const predictedFailureTime = predictFailureTime(result);
         </div>
         </div>
     </section>
+    <Modal
+  isOpen={modalIsOpen}
+  onRequestClose={closeModal}
+  style={{
+    content: {
+      top: "0",
+      left: "0",
+      right: "0",
+      bottom: "0",
+      padding: "0", // Remove padding for better use of space
+      width: "100vw", // Full viewport width
+      height: "100vh", // Full viewport height
+      overflow: "hidden", // Prevent overflow
+    },
+  }}
+  ariaHideApp={false}
+>
+  <Button onClick={closeModal} style={{ position: "absolute", top: "20px", right: "20px", zIndex: 1000 }}>
+    Close
+  </Button>
+  <h2 style={{ textAlign: "center", marginTop: "60px", zIndex: 1000 }}>Zoomed Plot</h2>
+  <div style={{ height: "calc(100% - 80px)", width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <Scatter
+      data={createChartData(filteredData)}
+      options={scatterChartOptions}
+      style={{ height: "100%", width: "100%" }} // Keep scatter plot at 100% of parent div
+    />
+  </div>
+</Modal>
 
       </div>
   );

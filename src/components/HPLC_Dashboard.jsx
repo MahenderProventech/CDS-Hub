@@ -68,7 +68,7 @@ const HPLC_Dashboard = () => {
     setFilteredData(filtered);
   }, [project, sampleType, methodSet, data]);
 
-  const getPleasantColor = () => '#baf977'; // Replace with your preferred color
+  const getPleasantColor = () => '#68b7da'; // Replace with your preferred color
 
   const getBarChartData = (column) => {
     const counts = filteredData.reduce((acc, row) => {
@@ -170,11 +170,11 @@ const HPLC_Dashboard = () => {
               </button>
             </Link>
           </div><br />
-          <div className="btn-group dropend">
+          {/* <div className="btn-group dropend">
             <Link to={"/home/HPLC_AuditTrail"}>
               <button type="button">
                 <img src={report} alt="Audit Trial" title="Audit Trial" />
-                <p>Audit Trial</p>
+                <p>Audit Trail</p>
               </button>
             </Link>
           </div><br />
@@ -185,8 +185,8 @@ const HPLC_Dashboard = () => {
                 <p>User Management</p>
               </button>
             </Link>
-          </div><br />
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+          </div><br /> */}
+          <div className="btn-group dropend" style={{ marginTop: "200px" }}>
                         <Link to={"/"}>
                             <button type="button" title='Logout'>
                                 <img src={po} alt="Logout" />
