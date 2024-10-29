@@ -207,7 +207,7 @@ const Select = () => {
             </div>
 
             <div className="col col-lg-2">
-        <Link to={"/home/ColumnFailurePredict"}>
+        {/* <Link to={"/home/ColumnFailurePredict"}> */}
 
               <div className="card nc d-flex flex-column" style={{height:"250px"}}>
                 <div className="checkIcon">
@@ -218,7 +218,7 @@ const Select = () => {
                 </div>
                 <p className="text-left">Instrument Utilization</p>
               </div>
-              </Link>
+              {/* </Link> */}
 
             </div>
 
@@ -255,7 +255,7 @@ const Select = () => {
 
             </div>
             <div className="col col-lg-2">
-        <Link to={"/home/ColumnFailurePredict"}>
+        {/* <Link to={"/home/ColumnFailurePredict"}> */}
 
               <div className="card nc d-flex flex-column" style={{height:"250px"}}>
                 <div className="checkIcon">
@@ -266,22 +266,22 @@ const Select = () => {
                 </div>
                 <p className="text-left">Peak Integration review</p>
               </div>
-              </Link>
+              {/* </Link> */}
 
             </div>
             <div className="col col-lg-2">
-        <Link to={"/home/ColumnFailurePredict"}>
+        {/* <Link to={"/home/ColumnFailurePredict"}> */}
 
               <div className="card nc d-flex flex-column" style={{height:"250px"}}>
                 <div className="checkIcon">
                   <img src={check} alt="check" />
                 </div>
                 <div className="titles flex-grow-1">
-                  <h3>CDS Leaderoard</h3>
+                  <h3>CDS Leaderboard</h3>
                 </div>
-                <p className="text-left">CDS Leaderoard</p>
+                <p className="text-left">CDS Leaderboard</p>
               </div>
-              </Link>
+              {/* </Link> */}
 
             </div>
 

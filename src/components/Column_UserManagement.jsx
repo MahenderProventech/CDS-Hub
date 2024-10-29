@@ -362,7 +362,7 @@ const Column_UserManagement = () => {
               </button>
             </Link>
           </div><br /> */}
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+          <div className="btn-group dropend" style={{ marginTop: "200px" }}>
                             <button type="button" title='Logout' onClick={handleLogout}>
                                 <img src={po} alt="Logout" />
                             </button>

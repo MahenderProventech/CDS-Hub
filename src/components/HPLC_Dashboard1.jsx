@@ -399,7 +399,7 @@ const HPLC_Dashboard1 = () => {
               </button>
             </Link>
           </div><br /> */}
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+          <div className="btn-group dropend" style={{ marginTop: "200px" }}>
                         <Link to={"/"}>
                             <button type="button" title='Logout'>
                                 <img src={po} alt="Logout" />

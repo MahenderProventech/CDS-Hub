@@ -430,7 +430,7 @@ const Column_Dashboard1 = () => {
             </Link>
           </div> */}
           <br />
-          <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+          <div className="btn-group dropend" style={{ marginTop: "200px" }}>
               <button type="button" onClick={handleLogout}>
                 <img src={po} alt="Logout" />
               </button>

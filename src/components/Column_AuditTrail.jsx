@@ -251,7 +251,7 @@ const Column_AuditTrail = () => {
           </div><br /> */}
           
 
-                    <div className="btn-group dropend" style={{ marginTop: "10px" }}>
+                    <div className="btn-group dropend" style={{ marginTop: "200px" }}>
                             <button type="button" onClick={handleLogout} title='Logout'>
                                 <img src={po} alt="Logout" />
                             </button>
