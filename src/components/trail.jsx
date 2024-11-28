@@ -1,75 +1,94 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Table, Button, Row, Col, Modal, Form } from 'react-bootstrap';
-import Select from 'react-select';
-import axios from 'axios';
+import Dropdown from 'react-bootstrap/Dropdown';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Form, Row, Col, Table } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
-import { IoPencil, IoArchiveSharp } from 'react-icons/io5';
-import CustomPagination from './core/CustomPagination';
 import http from './Http';
-import * as Appconstant from '../services/AppConstantService';
-import MultiSelectComponent from './core/MultiSelectComponent';
-import UserContext from './UserContext';
-import './AuthModal.css';
-const UserList = () => {
-  const [show, setShow] = useState(false);
-  const [deptResponse, setDeptResponse] = useState([]);
-  const [groupResponse, setGroupResponse] = useState([]);
-  const [plantResponse, setPlantResponse] = useState([]);
+import CustomPagination from './core/CustomPagination';
+import { CSVLink } from 'react-csv';
+import { Button } from 'react-bootstrap'; // or wherever you are importing Button from
+import { headerConfig } from '../services/config';
  
-  const [getDesignationResponse, setGetDesignationResponse] = useState([]);
-  const [getRolesResponse, setGetRolesResponse] = useState([]);
-  const [archiveduser, setArchivedUser] = useState(null);
-  const [errors, setErrors] = useState({
-    passwordError: '',
-    confirmPasswordError: ''
-  });
  
-  const [isEdit, isEditMode] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+const AuditTrail = () => {
   const [roleAssignments, setRoleAssignments] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [getResponse, setResponse] = useState([]);
+  const [masterData, setMasterData] = useState([]);
+  const [actionsData, setActionsData] = useState([]);
+  const [searchedData, setSearchData] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items to show per page
+  const [errorMessage, setErrorMessage] = useState('');
+ 
+ 
+   
+ 
  
   // Handle pagination change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
- 
   const navigate = useNavigate();
  
-  // Fetch initial data
-  useEffect(() => {
-    fetchAllUsers();
-    fetConfigurations();
-  }, []);
-  const fetConfigurations = async () => {
-    try {
-      const deptResponse = await axios.get(Appconstant.getDepartments);
-      setDeptResponse(deptResponse.data.item2);
-      const getDesignationResponse = await axios.get(Appconstant.getDesignation);
-      setGetDesignationResponse(getDesignationResponse.data.item2);
-      const plantResponse = await axios.get(Appconstant.getPlants);
-      setPlantResponse(plantResponse.data.item2);
-      const getGroupResponse = await axios.get(Appconstant.getGroups);
-      setGroupResponse(getGroupResponse.data.item2);
-      const getRolesResponse = await axios.get(Appconstant.getRoles);
-      console.log(getRolesResponse);
-      setGetRolesResponse(getRolesResponse.data.item2);
-    } catch (error) {
-      console.error("Error fetching dropdown data:", error);
-    }
+  const updateSearchObject = (e) => {
+    const { name, value } = e.target;
+    setSearchData({
+      ...searchedData,
+      [name]: value
+    });
   }
-  // Fetch all users from API
-  const fetchAllUsers = () => {
-    http.get(Appconstant.getAllUsers)
-      .then((resp) => {
-        setRoleAssignments(resp.data.item2);
-      })
-      .catch((err) => {
-        console.log("Error fetching users:", err);
+  const today = new Date().toISOString().split('T')[0];
+ 
+  const fetchRoleAssignments = async () => {
+    try {
+      setSearchData(null);
+      const response = await http.get("Audit/GetAuditTrails");
+      setResponse(response.data.item1 || []);
+      const columnNames = [...new Set(response.data.item1.filter(item => item.components !== null).map(item => item.components))];
+      setMasterData(columnNames)
+ 
+    } catch (error) {
+      console.error('Error fetching role assignments:', error.response ? error.response.data : error.message);
+    }
+  };
+  useEffect(() => {
+    // Actions
+    if (searchedData) {
+      const actions = [...new Set(getResponse.filter(item => item.actions !== null && item.components == searchedData?.components).map(item => item.actions))];
+      setActionsData(actions)
+    } else {
+      setRoleAssignments([]);
+ 
+    }
+ 
+  }, [searchedData])
+ 
+  const [headers, setHeaders] = useState([]);
+  const submitRole = async () => {
+    try {
+      // console.log(getResponse)
+      console.log(searchedData)
+      console.log(getHeadersFromConfig());
+      const matchedHeaders = getHeadersFromConfig();
+      setHeaders(matchedHeaders);
+      // Ensure filtering is done with proper dates
+      const filteredData = filterArrayOfObjects(getResponse, searchedData);
+      console.log("filteredData ", filteredData)
+      setRoleAssignments(filteredData);
+    } catch (error) {
+      console.error('Error:', error.response ? error.response.data : error.message);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to assign role. Please check the input and try again.',
+        icon: 'error',
+        confirmButtonText: 'Ok',
+        cancelButtonText: 'Close',
+        showCancelButton: true,
+        reverseButtons: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false
       });
+    }
   };
  
   // Handle sorting when clicking on column headers
@@ -82,7 +101,6 @@ const UserList = () => {
   };
  
   // Sorting logic based on sortConfig
-  // Memoized sorting
   const sortedItems = useMemo(() => {
     let sortedData = [...roleAssignments];
     if (sortConfig.key) {
@@ -98,632 +116,439 @@ const UserList = () => {
     }
     return sortedData;
   }, [roleAssignments, sortConfig]);
- 
- 
-  // Handle search input change
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(1); // Reset pagination to first page when searching
-  };
- 
-  // Filter items based on search query
-  const filteredItems = sortedItems.filter((assignment) => {
-    const employeeId = (assignment.employeeId || '').toLowerCase();
-    const emailId = (assignment.emailId || '').toLowerCase();
-    const userRole = (assignment.userRole || '').toLowerCase();
-    const query = searchQuery.toLowerCase();
- 
-    return employeeId.includes(query) ||
-      emailId.includes(query) ||
-      userRole.includes(query);
-  });
- 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = sortedItems.slice(indexOfFirstItem, indexOfLastItem);
+  console.log("currentItems ", currentItems);
+  const filterArrayOfObjects = (array, filterObject) => {
+    let filteredRecords = array.filter(item => {
+      // Convert createdDate from array to a Date object
+      const itemDate = new Date(item.createdDate);
  
-  // Format date function
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return `${date.toLocaleDateString('en-GB')} ${date.toLocaleTimeString([], { hour12: false })}`;
-  };
-  const { userData } = React.useContext(UserContext);
+      // If startDate and endDate are defined, convert them to Date objects
+      if (filterObject.startDate && filterObject.endDate) {
+        const startDate = new Date(filterObject.startDate);
+        const endDate = new Date(filterObject.endDate);
  
-  // Show alert function
-  const showAlert = (msg) => {
-    Swal.fire({
-      title: '',
-      text: msg,
-      icon: 'info',
-      confirmButtonText: 'Ok',
-      cancelButtonText: 'Close',
-      showCancelButton: true,
-      reverseButtons: true,
-      allowOutsideClick: false,
-      allowEscapeKey: false
-    }).then((result) => {
-      if (result.isConfirmed) {
-        navigate("/home/userList");
+        // Set startDate to the beginning of the day (00:00:00)
+        startDate.setHours(0, 0, 0, 0);
+ 
+        // Set endDate to the end of the day (23:59:59.999)
+        endDate.setHours(23, 59, 59, 999);
+ 
+        // Check if item matches the filter criteria, including the date range
+        return (
+          item.components === filterObject.components &&
+          item.actions === filterObject.actions &&
+          itemDate >= startDate &&
+          itemDate <= endDate
+        );
+      } else {
+        // If no date range is provided, just filter by components and actions
+        return (
+          item.components === filterObject.components &&
+          item.actions === filterObject.actions
+        );
       }
     });
+ 
+    // Sort the filtered array by 'createdDate' in descending order
+    filteredRecords.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+    return filteredRecords;
   };
  
-  // Handle form data change
-  const handleFormData = (e) => {
-    const { name, value } = e.target;
-    setSelectedUser({
-      ...selectedUser,
-      [name]: value
-    });
-  };
- 
-  // Handle form data change for dropdowns
-  const handleFormDataDropdown = (e, key) => {
-    setSelectedUser({
-      ...selectedUser,
-      [key]: e.label
-    });
-  };
- 
-  // Submit user form
-  const SubmitUserForm = async () => {
-    console.log(selectedRolesOptions);
-    console.log(selectedPlantsOptions)
-    selectedUser['userRoles'] = selectedRolesOptions;
-    selectedUser['userPlants'] = selectedPlantsOptions;
-    selectedUser['userGroups'] = selectedGroupOptions;
-    if (!isEdit) {
-      const passwordError = validatePassword();
-      if (passwordError) {
-        setErrors({ passwordError });
-        return;
-      }
- 
-      if (selectedUser.password !== selectedUser.confirmPassword) {
-        setErrors({
-          ...errors,
-          confirmPasswordError: "Passwords do not match."
-        });
-        return;
-      }
-    }
-    // delete selectedUser.userConfigurations;
-    console.log(selectedUser)
- 
-    try {
-      const response = await http.post(Appconstant.submitUserForm, selectedUser);
-      if (response) {
-        showAlert('User Saved Successfully.');
-        fetchAllUsers();
-        setShowModal(false);
-        setSelectedRolesOptions([]);
-        setSelectedPlantsOptions([]);
-        setSelectedGroupOptions([]);
-      }
-    } catch (error) {
-      // Handle error
-    }
-  };
-  const validatePassword = () => {
-    const { password } = selectedUser;
-    let passwordError = '';
- 
-    const strongRegex = new RegExp(
-      "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
+  const getHeadersFromConfig = () => {
+    // Find the configuration that matches the `searchedObject`
+    const match = headerConfig.find(
+      config =>
+        config.components === searchedData.components &&
+        config.actions === searchedData.actions
     );
  
-    if (!strongRegex.test(password)) {
-      passwordError = `Password must be alphanumeric with at least one uppercase letter,
-      one special character,
-      and minimum 8 characters long.`;
+    // If a match is found, return the headers, otherwise return a default set of headers
+    return match ? match.headers : ['S.No', 'Components', 'Actions', 'Comments', 'Date & Time']; // Default fallback
+  };
+ 
+ 
+ 
+ 
+  useEffect(() => {
+    fetchRoleAssignments();
+  }, []);
+ 
+  const handleDateChange = (e, key) => {
+    const newValue = e.target.value;
+ 
+    if (key === "endDate" && newValue < searchedData.startDate) {
+      setErrorMessage('End Date cannot be less than Start Date');
+    } else {
+      setErrorMessage(''); // Clear error if valid
     }
- 
-    return passwordError;
-  };
-  const handleClose = () => {
-    setShowModal(false);
-    setSelectedUser([]);
-    setSelectedPlantsOptions([]);
-    setSelectedGroupOptions([]);
-    setSelectedRolesOptions([]);
-  }
- 
-  // Show modal
-  const handleShowModal = async () => {
-    setShowModal(true);
-    isEditMode(false);
-    setSelectedUser([]);
-    setSelectedPlantsOptions([]);
-    setSelectedGroupOptions([]);
-    setSelectedRolesOptions([]);
-  };
- 
-  // Get user data for editing
-  const getUserData = (data) => {
-    console.log(data)
-    setSelectedUser(data);
-    setSelectedPlantsOptions(data.userPlants);
-    setSelectedGroupOptions(data.userGroups);
-    setSelectedRolesOptions(data.userRoles);
-    isEditMode(true);
-    setShowModal(true);
-  };
- 
-  // Show archive modal
-  const handleShowArchiveModal = (data) => {
-    setShow(true);
-    isEditMode(false);
-    setArchivedUser({
-      ...archiveduser,
-      employeeId: data.employeeId
+    setSearchData({
+      ...searchedData,
+      [key]: newValue
     });
   };
  
-  // Close archive modal
-  const handleCloseArchiveModal = () => setShow(false);
-  // const handleCloseArchieveModal = () => setShow(false);
+  const handlePrint = () => {
+    // Create a hidden iframe for printing
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
  
-  // Archive user
-  const handleArchiveUser = async () => {
-    try {
-      const deptResponse = await axios.post(Appconstant.UpdateUserStatus, archiveduser);
-      if (deptResponse) {
-        showAlert('User Archived.');
-        fetchAllUsers();
-        handleCloseArchiveModal();
-      }
-    } catch (error) {
-      console.error("Error archiving user:", error);
-    }
-  };
-  const [selectedRolesOptions, setSelectedRolesOptions] = useState([]);
-  const [selectedPlantsOptions, setSelectedPlantsOptions] = useState([]);
-  const [selectedGroupOptions, setSelectedGroupOptions] = useState([]);
+    // Get iframe document
+    const iframeDoc = iframe.contentWindow.document;
  
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [validationMessage, setValidationMessage] = useState('');
-  const handleShowAuthModal = () => {
-    setShowAuthModal(true);
-  };
- 
-  const handleCloseAuthModal = () => {
-    setShowAuthModal(false);
-  };
- 
-  const handleAuthSubmit = () => {
-    setValidationMessage('');
-    const username = document.getElementById('auth-username').value;
-    const password = document.getElementById('auth-password').value;
-    const comments = document.getElementById('auth-comments').value;
-    console.log(password)
-    if (!password) {
-      setValidationMessage('Please enter password');
-      return;
-    }
- 
-    if (comments === '') {
-      setValidationMessage('Please add comments');
-      return;
-    }
-    if (username === userData.employeeId) {
-      const payload = {
-        LoginId: username,
-        Password: password
-      };
- 
-      http.post("/Login/AuthenticateData", payload)
-        .then((resp) => {
-          if (resp.data.item1) {
-            SubmitUserForm(comments);
-          } else {
-            Swal.fire('Authentication failed', 'Please enter valid details', 'error');
+    // Create CSS styles to be included in the iframe
+    const printStyles = `
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+        }
+        .table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .table th, .table td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+        .table th {
+          background-color: #463E96;
+          color: white;
+        }
+        @media print {
+          @page {
+            size: A4 landscape; /* Change to landscape to increase width */
+            margin: 10mm;
           }
-        })
-        .catch((err) => {
-          console.log(err);
-          Swal.fire('Authentication failed', 'Invalid username or password', 'error');
-        });
-    } else {
-      Swal.fire('Authentication failed', 'Invalid username', 'error');
-    }
+          body {
+            margin: 0;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+          }
+          .table th, .table td {
+            page-break-inside: avoid;
+          }
+        }
+      </style>
+    `;
  
-    // Handle the authentication logic here
+    // Write content to the iframe document
+    iframeDoc.open();
+    iframeDoc.write("<html><head><title>Print</title>");
+    iframeDoc.write(printStyles); // Inject CSS styles
+    iframeDoc.write("</head><body>");
+    iframeDoc.write("<h1>Audit Trail Report</h1>");
  
-    handleCloseAuthModal(); // Close the auth modal after submission
+    // Add table headers
+    iframeDoc.write(`
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th class="text-center">S.No</th>
+            <th class="text-center">Components</th>
+            <th class="text-center">Actions</th>
+            <th class="text-center">User ID</th>
+            <th class="text-center">Created By</th>
+            <th class="text-center">Comments</th>
+            <th class="text-center">DateTime</th>
+          </tr>
+        </thead>
+        <tbody>
+    `);
+ 
+    // Populate table rows with roleAssignments data
+    roleAssignments.forEach((assignment, index) => {
+      iframeDoc.write("<tr>");
+      iframeDoc.write(`<td class="text-center">${index + 1}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.components || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.actions || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.name || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.createdBy || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.modifiedBy || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.reason || "NULL"}</td>`);
+      iframeDoc.write(`<td class="text-center">${assignment.createdDate || "NULL"}</td>`);
+      iframeDoc.write("</tr>");
+    });
+ 
+    iframeDoc.write("</tbody></table>");
+    iframeDoc.write("</body></html>");
+    iframeDoc.close();
+ 
+    // Print the iframe content
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+ 
+    // Remove iframe after printing
+    document.body.removeChild(iframe);
   };
+ 
+ 
+  // CSV data for download
+  const csvData = [
+    ['S.No', 'Components', 'Actions', 'User id', 'Comments', 'DateTime'],
+    ...roleAssignments.map((assignment, index) => [
+      index + 1,
+      assignment.components,
+      assignment.actions,
+      assignment.name,
+      assignment.reason,
+      assignment.createdDate,
+    ]),
+  ];
+ 
+  const renderTableRows = () => {
+    return currentItems.map((assignment, index) => (
+      <tr key={assignment.id}>
+        <td>{index + 1}</td>
+        {headers.map((header, headerIndex) => {
+          // Dynamically map each header to the corresponding assignment property
+          switch (header.toLowerCase()) {
+            case 'components':
+              return <td key={headerIndex}>{assignment.components}</td>;
+            case 'actions':
+              return <td key={headerIndex}>{assignment.actions}</td>;
+            case 'comments':
+              return <td key={headerIndex}>{assignment.reason}</td>;
+            case 'date & time':
+              return <td key={headerIndex}>{assignment.createdDate}</td>;
+            case 'user id':
+              return <td key={headerIndex}>{assignment.referenceId}</td>;
+            case 'user name':
+              return <td key={headerIndex}>{assignment.name}</td>;
+            case 'formula name':
+              return <td key={headerIndex}>{assignment.name}</td>;
+            case 'batch id':
+              return <td key={headerIndex}>{assignment.batchID}</td>;
+            case 'created by':
+              return <td key={headerIndex}>{assignment.createdBy}</td>;
+            case 'saved by':
+              return <td key={headerIndex}>{assignment.createdBy}</td>;
+            case 'modified by':
+              return <td key={headerIndex}>{assignment.createdBy}</td>;
+            case 'generated by':
+              return <td key={headerIndex}>{assignment.createdBy}</td>;
+            case 'reviewed by':
+              return <td key={headerIndex}>{assignment.modifiedBy}</td>;
+            case 'rejected by':
+              return <td key={headerIndex}>{assignment.modifiedBy}</td>;
+            case 'approved by':
+              return <td key={headerIndex}>{assignment.modifiedBy}</td>;
+            case 'group name':
+              return <td key={headerIndex}>{assignment.groupValue}</td>;
+            case 'old value':
+              return <td key={headerIndex}>{assignment.oldValue}</td>;
+            case 'new value':
+              return <td key={headerIndex}>{assignment.newValue}</td>;
+            default:
+              return <td key={headerIndex}>N/A</td>; // Default if unknown header
+          }
+        })}
+      </tr>
+    ));
+  };
+ 
+ 
+ 
   return (
     <section className="full_screen">
-      <div style={{ padding: "30px" }}>
-        {/* <Row>
-          <h6>Users:</h6>
-        </Row> */}
+      <div className="container-fluid" style={{ padding: "30px" }}>
+        <Row>
+          <h6>Audit Trail Search</h6>
+        </Row>
+        <Row className='mt-3'>
+          <Col sm={3}>
+            <Form.Label>Masters <span style={{ color: 'red' }}>*</span></Form.Label>
+            <select
+              className="form-control1"
+              name="components"
+              value={searchedData ? searchedData.components : ''}
+              onChange={updateSearchObject}
+            >
+              <option value="" disabled>
+                --Select Master--
+              </option>
+              {masterData.map((each, i) => (
+                <option key={i} value={each}>
+                  {each}
+                </option>
+              ))}
+            </select>
+          </Col>
+          <Col sm={3}>
+            <Form.Label>Actions <span style={{ color: 'red' }}>*</span></Form.Label>
+            <select
+              className="form-control1"
+              name="actions"
+              value={searchedData ? searchedData.actions : ''}
+              onChange={updateSearchObject}
+              disabled={!searchedData?.components}
+            >
+              <option value=""  >
+                --Select Actions--
+              </option>
+              {actionsData.map((each, i) => (
+                <option key={i} value={each}>
+                  {each}
+                </option>
+              ))}
+            </select>
+          </Col>
+          <Col sm={3}>
+            <Form.Group controlId="startDate">
+              <Form.Label>From Date <span style={{ color: 'red' }}>*</span></Form.Label>
+              <input
+                type="date"
+                className="form-control1"
+                value={searchedData ? searchedData.startDate : ''}
+                max={today}
+                onChange={(e) => handleDateChange(e, 'startDate')}
+              />
+            </Form.Group>
+          </Col>
+          <Col sm={3}>
+            <Form.Group controlId="endDate">
+              <Form.Label>To Date</Form.Label>
+              <input
+                type="date"
+                className="form-control1"
+                value={searchedData ? searchedData.endDate : ''}
+                // min={searchedData?.startDate || ''}
+                max={today}
+                onChange={(e) => handleDateChange(e, "endDate")}
+                disabled={!searchedData?.startDate}
+              />
+              {errorMessage && <div className="text-danger">{errorMessage}</div>}
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+          <Col sm={12}>
+            <button
+              id="submit-btn"
+              className="btn btn-primary mt-4"
+              onClick={submitRole}
+              disabled={
+                (!searchedData?.components) ||
+                (searchedData?.startDate && !searchedData?.endDate) ||
+                (!searchedData?.startDate && searchedData?.endDate)
  
-        <Row className='mb-3'>
-          <Col sm={9}>
-            <h6>Users</h6>
-          </Col>
-          <Col sm={2}>
-            <input
-              type="text"
-              placeholder="Search by User Details"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="formulaName"
-              style={{ width: "300px", border: '1px solid', float: 'right' }}
-            />
-          </Col>
-          <Col sm={1}>
-            <button className='btn btn-primary' onClick={handleShowModal} style={{ marginRight: "15px" }}>
-              Create
+                // || !searchedData?.startDate || !searchedData?.endDate
+              }
+            >
+              Search
+            </button>
+            <button
+              id="clear-btn"
+              className="btn btn-primary mt-4 ms-3"
+              onClick={() => {
+                setSearchData(null);
+              }}
+              disabled={!searchedData}
+            >
+              Clear Search
             </button>
           </Col>
         </Row>
- 
         <Row>
-          <Col sm={12}>
-            {/* <h6 className="mt-5">List of Users</h6> */}
-            <Table striped bordered hover>
-              <thead>
-                <tr>
  
-                  <th>#</th>
-                  <th onClick={() => handleSort('employeeId')} style={{ cursor: 'pointer' }}>
-                    User ID {sortConfig.key === 'employeeId' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th onClick={() => handleSort('emailId')} style={{ cursor: 'pointer' }}>
-                    Email ID {sortConfig.key === 'emailId' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th onClick={() => handleSort('createdOn')} style={{ cursor: 'pointer' }}>
-                    CreatedOn {sortConfig.key === 'createdOn' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th onClick={() => handleSort('userRole')} style={{ cursor: 'pointer' }}>
-                    Role {sortConfig.key === 'userRole' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th onClick={() => handleSort('isActive')} style={{ cursor: 'pointer' }}>
-                    Status {sortConfig.key === 'isActive' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((assignment, index) => (
-                    <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{assignment.employeeId}</td>
-                      <td>{assignment.emailId}</td>
-                      <td>{formatDate(assignment.createdOn)}</td>
-                      <td>{assignment.userRole}</td>
-                      <td>{assignment.isActive ? 'Active' : 'Inactive'}</td>
-                      <td>
-                        <Button variant="primary" size="sm" onClick={() => getUserData(assignment)}>
-                          <IoPencil />
-                        </Button>{' '}
-                        <Button variant="primary" size="sm" onClick={() => handleShowArchiveModal(assignment)}>
-                          <IoArchiveSharp />
-                        </Button>{' '}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
+          {(searchedData && roleAssignments.length > 0) ?
+ 
+            <Col sm={12}>
+              <h6 className="mt-5">Audit Details</h6>
+              <Table striped bordered hover>
+                <thead>
                   <tr>
-                    <td colSpan="7" className="text-center">
-                      No role assignments found
-                    </td>
+                    <th>#</th>
+ 
+                    {headers.map((header, index) => (
+                      <th
+                        key={index}
+                        onClick={() => handleSort(header.toLowerCase())}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {header}
+                        {sortConfig.key === header.toLowerCase() && (
+                          sortConfig.direction === 'asc' ? ' ↑' : ' ↓')
+                        }
+                      </th>
+                    ))}
                   </tr>
-                )}
-              </tbody>
+                </thead>
+                <tbody>
+                  {currentItems.length > 0 && searchedData ? (
+                    // currentItems.map((assignment, index) => (
+                    //   <tr key={index}>
+                    //     <td>{index + 1}</td>
+                    //     <td>{assignment.components}</td>
+                    //     <td>{assignment.actions}</td>
+                    //     <td>{assignment.name}</td>
+                    //     <td>{assignment.createdBy}</td>
+                    //     {/* <td>{assignment.modifiedBy}</td>
+                    //     <td>{assignment.reason}</td> */}
+                    //     <td>{assignment.createdDate}</td>
+                    //   </tr>
+                    // ))
+                    renderTableRows()
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center">No role assignments found</td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
  
-            </Table>
-            <CustomPagination
-              itemsPerPage={itemsPerPage}
-              totalItems={roleAssignments.length}
-              paginate={paginate}
-              currentPage={currentPage}
-              style={{ display: 'flex', float: 'right' }}
-            />
-          </Col>
+              <CustomPagination
+                itemsPerPage={itemsPerPage}
+                totalItems={roleAssignments.length}
+                paginate={paginate}
+                currentPage={currentPage}
+                style={{ display: 'flex', float: 'right' }}
+              />
+ 
+            </Col>
+            : null}
         </Row>
- 
-        {/* Custom Authentication Modal */}
-        <Modal show={showAuthModal} onHide={handleCloseAuthModal} className="auth-modal"
-          backdrop="static" // Prevent closing on outside click
-          keyboard={false} // Optional: Prevent closing with the Esc key
+        <div
+          className="d-flex justify-content-end align-items-center my-3"
+          style={{ marginRight: "20px" }}
         >
-          <Modal.Header closeButton>
-            <Modal.Title style={{ color: 'grey' }}>Authentication Required</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group controlId="auth-username">
-                <Form.Label>Username</Form.Label>
-                <Form.Control type="text" placeholder="Username" value={userData.employeeId} readOnly />
-              </Form.Group>
-              <Form.Group controlId="auth-password">
-                <Form.Label>Password</Form.Label>
-                <Form.Control type="password" placeholder="Password" />
-              </Form.Group>
-              <Form.Group controlId="auth-comments">
-                <Form.Label>Comments</Form.Label>
-                <Form.Control as="textarea" rows={3} placeholder="Comments" />
-              </Form.Group>
+          <Row>
+            <Col sm={12}>
+              <Button
+                variant="success"
+                onClick={handlePrint}
+                className="mt-4"
+                style={{ marginRight: '10px' }}
+              >
+                Export to PDF
+              </Button>
+              <CSVLink data={csvData} filename={'audit_trail_report.csv'}>
+                <Button variant="info" className="mt-4">
+                  Export to CSV
+                </Button>
+              </CSVLink>
  
-              {validationMessage && (
-                <div className="text-danger mt-2">{validationMessage}</div>
-              )}
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="primary" onClick={handleAuthSubmit}>
-              Submit
-            </Button>
-            <Button variant="secondary" onClick={handleCloseAuthModal}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
+            </Col>
+          </Row>
+        </div>
  
  
-        <Modal show={showModal} onHide={handleClose} size='lg'
-          backdrop="static" // Prevent closing on outside click
-          keyboard={false} // Optional: Prevent closing with the Esc key
-        >
-          <Modal.Header closeButton >
-            <Modal.Title>{isEdit ? 'Edit User' : 'Create User'}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <div className="row w-100">
-                <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Employee ID <span className="text-danger">*</span>
-                    </Form.Label>
-                    <Col>
-                      <Form.Control type="text" placeholder="Employee ID" name="employeeId" value={selectedUser?.employeeId}
-                        onChange={handleFormData} disabled={isEdit} />
-                    </Col>
-                  </Form.Group>
-                </div>
- 
-                <div className="col-md-6 ">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Email ID <span className="text-danger">*</span>
-                    </Form.Label>
-                    <Col sm="12">
-                      <Form.Control type="email" placeholder="Email ID" name="emailId" value={selectedUser?.emailId}
-                        onChange={handleFormData}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
-              </div>
- 
-              <div className="row w-100">
-                <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label column >
-                      First Name<span className="text-danger">*</span>
-                    </Form.Label>
-                    <Col sm="12">
-                      <Form.Control style={{ outline: "1px solid black" }} type="text" placeholder="First Name" name="firstName" onChange={handleFormData} value={selectedUser?.firstName || ''}></Form.Control>
-                    </Col>
-                  </Form.Group>
-                </div>
- 
-                <div className="col-md-6">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label column >
-                      Last Name<span className="text-danger">*</span>
-                    </Form.Label>
-                    <Col sm="12">
-                      <Form.Control style={{ outline: "1px solid black" }} type="text" placeholder="Last Name" name="lastName" onChange={handleFormData} value={selectedUser?.lastName || ''}></Form.Control>
-                    </Col>
-                  </Form.Group>
-                </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Role
-                    </Form.Label>
-                    <Col>
- 
-                      <MultiSelectComponent
-                        options={getRolesResponse.map(option => ({
-                          value: option.configureId, label: option.configureValue
-                        }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        name="userRole"
-                        setSelectedOptions={(data) => setSelectedRolesOptions(data)}
-                        selectedOptions={selectedRolesOptions}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label >
-                      Department
-                    </Form.Label>
-                    <Col>
-                      <Select
-                        options={deptResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        value={selectedUser?.department ? { value: selectedUser?.department, label: selectedUser?.department } : null}
-                        name="department"
-                        onChange={(e) => handleFormDataDropdown(e, "department")}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label >
-                      Plants
-                    </Form.Label>
-                    <Col>
-                      <MultiSelectComponent
-                        options={plantResponse.map(option => ({ value: option.configureId, label: option.configureValue, configureId: option.configureId }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        // value={selectedUser?.userRole ? { value: selectedUser?.userRole, label: selectedUser?.userRole } : null}
-                        name="userRole"
-                        setSelectedOptions={(data) => setSelectedPlantsOptions(data)}
-                        selectedOptions={selectedPlantsOptions}
-                      />
- 
-                    </Col>
-                  </Form.Group>
-                </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-12">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label >
-                      Groups
-                    </Form.Label>
-                    <Col>
- 
-                      <MultiSelectComponent
-                        options={groupResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        name="userRole"
-                        setSelectedOptions={(data) => setSelectedGroupOptions(data)}
-                        selectedOptions={selectedGroupOptions}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
-              </div>
-              <div className="row w-100">
-                <div className="col-md-6 mb-3">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                    <Form.Label>
-                      Designation
-                    </Form.Label>
-                    <Col>
-                      <Select
-                        options={getDesignationResponse.map(option => ({ value: option.configureId, label: option.configureValue }))}
-                        placeholder="--Select--"
-                        classNamePrefix="react-select"
-                        className="react-select-container"
-                        value={selectedUser?.designation ? { value: selectedUser?.designation, label: selectedUser?.designation } : null}
-                        name="designation"
-                        onChange={(e) => handleFormDataDropdown(e, "designation")}
-                      />
-                    </Col>
-                  </Form.Group>
-                </div>
- 
-                <div className="col-md-6 mb-3">
-                  <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail" >
-                    <Form.Label>
-                      Status
-                    </Form.Label>
-                    <Col>
-                      <Form.Select name="isActive" value={selectedUser?.isActive} onChange={handleFormData} disabled={!isEdit}>
-                        <option value={true}>Active</option>
-                        <option value={false}>InActive</option>
-                      </Form.Select>
-                    </Col>
-                  </Form.Group>
-                </div>
-              </div>
- 
- 
-              {!isEdit &&
-                <div className="row w-100">
-                  <div className="col-md-6">
-                    <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                      <Form.Label >
-                        Password
-                      </Form.Label>
-                      <Col>
-                        <Form.Control type="password" placeholder="Password" name="password" value={selectedUser?.password} onChange={handleFormData} />
-                        <Form.Text className="text-danger">{errors.passwordError}</Form.Text>
-                      </Col>
-                    </Form.Group>
-                  </div>
- 
-                  <div className="col-md-6">
-                    <Form.Group as={Row} className="mb-3" controlId="formPlaintextEmail">
-                      <Form.Label>
-                        Confirm Password
-                      </Form.Label>
-                      <Col >
-                        <Form.Control type="password" placeholder="Confirm Password" name="confirmPassword" value={selectedUser?.confirmPassword} onChange={handleFormData} />
-                        <Form.Text className="text-danger">{errors.confirmPasswordError}</Form.Text>
-                      </Col>
-                    </Form.Group>
-                  </div>
-                </div>
- 
-              }
- 
- 
- 
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="primary" onClick={handleShowAuthModal} disabled={!selectedUser?.firstName || !selectedUser?.lastName || !selectedUser?.employeeId || !selectedUser?.emailId}>
-              Submit
-            </Button>
-            <Button variant="secondary" onClick={handleClose}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
- 
-        <Modal show={show} onHide={handleCloseArchiveModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Archive User</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form.Group controlId="formEmail">
-              <Form.Label>Employee ID/User ID*</Form.Label>
-              <Form.Control type="text" placeholder="Enter your Employee ID/User ID" name="employeeId" value={archiveduser?.employeeId} readonly disabled />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Reason</Form.Label>
-              <Form.Control as="textarea" rows={3} onChange={(text) => {
-                setArchivedUser({
-                  ...archiveduser,
-                  comments: text.target.value
-                })
-              }} />
-            </Form.Group>
- 
-            {/* </Form> */}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseArchiveModal}>
-              Close
-            </Button>
-            <Button variant="primary" onClick={handleArchiveUser} disabled={!archiveduser?.comments}>
-              Yes
-            </Button>
-          </Modal.Footer>
-        </Modal>
       </div>
     </section>
   );
 };
  
-export default UserList;
+export default AuditTrail;
  
  

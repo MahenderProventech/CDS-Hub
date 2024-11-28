@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import { Table } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import http from './Http';
 
 const ColFail = () => {
     const [data, setData] = useState([]);
@@ -12,6 +13,8 @@ const ColFail = () => {
     const [error, setError] = useState(null);
     const [xAxisLabel, setXAxisLabel] = useState('Injection Count'); // Default x-axis label
     const [yAxisLabel, setYAxisLabel] = useState('USP Plate Count'); // Default y-axis label
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const generateXAxisLabels = (count) => {
         return Array.from({ length: Math.ceil(count / 5) }, (_, i) => (i + 1) * 5);
@@ -21,7 +24,8 @@ const ColFail = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const response = await axios.get("http://localhost:58747/api/Peaks/GetPeaksDetails");
+      const response = await http.get("Peaks/GetPeaksDetails"); 
+                // const response = await axios.get("http://localhost:58747/api/Peaks/GetPeaksDetails");
                 const processedData = processData(response.data);
                 setData(processedData);
             } catch (error) {
@@ -44,7 +48,8 @@ const ColFail = () => {
             ...item,
             SampleSetStartDate: new Date(item.sampleSetStartDate),
             USPPlateCount: Number(item.uspPlateCount),
-        })).filter(item => item.sampleSetId && item.injectionId && item.uspPlateCount);
+            RetentionTime: Number(item.retentionTime), // Include Retention Time
+        })).filter(item => item.sampleSetId && item.injectionId && item.uspPlateCount && item.retentionTime);
 
         updatedData.sort((a, b) => a.sampleSetId - b.sampleSetId);
 
@@ -81,6 +86,28 @@ const ColFail = () => {
         setYAxisLabel(event.target.value);
     };
 
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+    };
+
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
+    const isFirstPage = currentPage === 1;
+    const isLastPage = currentPage === totalPages;
+
+    const pagesToShow = [];
+    if (totalPages > 1) {
+      if (!isFirstPage) pagesToShow.push(currentPage - 1);
+      pagesToShow.push(currentPage);
+      if (!isLastPage) pagesToShow.push(currentPage + 1);
+    }
+
+    const pageData = filteredData.slice(
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+    );
+
+
     if (loading) return <div className="page-loader"><p>{loading && (<div className="page-loader"><div className="loading-dots"><div className="loading-dots--dot"></div><div className="loading-dots--dot"></div><div className="loading-dots--dot"></div></div></div>)}</p></div>;
     if (error) return <p>{error}</p>;
 
@@ -98,12 +125,13 @@ const ColFail = () => {
             </div>
 
             <div className="form-group">
-                <label>Select Y-Axis Label:</label>
-                <select className="form-control" value={yAxisLabel} onChange={handleYAxisLabelChange}>
-                    <option value="USP Plate Count">USP Plate Count</option>
-                    <option value="USP Tailing">USP Tailing</option>
-                </select>
-            </div>
+    <label>Select Y-Axis Label:</label>
+    <select className="form-control" value={yAxisLabel} onChange={handleYAxisLabelChange}>
+        <option value="USP Plate Count">USP Plate Count</option>
+        <option value="USP Tailing">USP Tailing</option>
+        <option value="Retention Time">Retention Time</option>
+    </select>
+</div>
 
             <h2>{yAxisLabel} Over {xAxisLabel}</h2>
             <Line
@@ -113,36 +141,58 @@ const ColFail = () => {
             {
                 label: yAxisLabel,
                 data: filteredData.map(item => {
-                    return yAxisLabel === 'USP Plate Count' ? item.uspPlateCount :
-                           item.uspTailing; // Adjust data based on selected y-axis label
+                    switch (yAxisLabel) {
+                        case 'USP Plate Count':
+                            return item.uspPlateCount;
+                        case 'USP Tailing':
+                            return item.uspTailing;
+                        case 'Retention Time':
+                            return item.retentionTime;
+                        default:
+                            return 0;
+                    }
                 }),
                 borderColor: 'rgba(75,192,192,1)',
                 borderWidth: 2,
                 fill: false,
             },
-            // Only show the failure threshold for USP Plate Count
             ...(yAxisLabel === 'USP Plate Count' ? [
                 {
                     label: 'Failure Threshold',
-                    data: new Array(filteredData.length).fill(4000), // Only show threshold for USP Plate Count
+                    data: new Array(filteredData.length).fill(4000),
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderDash: [5, 5],
                     fill: false,
                 },
             ] : []),
-            // Add threshold lines for USP Tailing
             ...(yAxisLabel === 'USP Tailing' ? [
                 {
                     label: 'Lower Limit (0.8)',
                     data: new Array(filteredData.length).fill(0.8),
-                    borderColor: 'rgba(255, 165, 0, 1)', // Orange color
+                    borderColor: 'rgba(255, 165, 0, 1)',
                     borderDash: [5, 5],
                     fill: false,
                 },
                 {
                     label: 'Upper Limit (1.2)',
                     data: new Array(filteredData.length).fill(1.2),
-                    borderColor: '#c67632', // Green color
+                    borderColor: '#c67632',
+                    borderDash: [5, 5],
+                    fill: false,
+                },
+            ] : []),
+            ...(yAxisLabel === 'Retention Time' ? [
+                {
+                    label: 'Lower Limit (1.5)', // Set the appropriate lower limit
+                    data: new Array(filteredData.length).fill(1.5),
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    borderDash: [5, 5],
+                    fill: false,
+                },
+                {
+                    label: 'Upper Limit (3.0)', // Set the appropriate upper limit
+                    data: new Array(filteredData.length).fill(3.0),
+                    borderColor: 'rgba(40, 167, 69, 1)',
                     borderDash: [5, 5],
                     fill: false,
                 },
@@ -167,7 +217,47 @@ const ColFail = () => {
         },
     }}
 />
+{/* <p>
+    <b>Total Injections Before Failure: </b>
+    {filteredData.reduce((acc, item) => {
+        if (item.IsFailure === 1) {
+            return acc; // Stop counting after a failure
+        }
+        return acc + item.InjectionCount;
+    }, 0)}
+</p> */}
 
+<p>
+    <b>Total Injections Before First Failure: </b>
+    {filteredData.reduce((acc, item) => {
+        if (acc.stopCounting) return acc; // Stop counting once a failure is encountered
+        if (item.IsFailure === 1) {
+            acc.stopCounting = true; // Mark that a failure has occurred
+        } else {
+            acc.total += item.InjectionCount; // Add to the total if no failure yet
+        }
+        return acc;
+    }, { total: 0, stopCounting: false }).total}
+</p>
+
+<div className="row">
+                <div className="col-sm-2">
+                    <div className="mb-2">
+                        <label htmlFor="rowsPerPage" className="form-label"><b>Rows Per Page</b></label>
+                        <select
+                            className="form-select"
+                            id="rowsPerPage"
+                            value={rowsPerPage}
+                            onChange={(e) => setRowsPerPage(parseInt(e.target.value))}
+                        >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
             {filteredData.length > 0 ? (
                 <>
@@ -188,7 +278,9 @@ const ColFail = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredData.map((item, index) => (
+                            {/* {filteredData.map((item, index) => ( */}
+                            {pageData.map((item, index) => (
+
                                 <tr key={index}>
                                     <td>{item.column_No}</td>
                                     <td>{item.sampleSetId}</td>
@@ -204,11 +296,36 @@ const ColFail = () => {
                             ))}
                         </tbody>
                     </Table>
+                   
                 </>
             ) : (
                 <p>No data available for the selected column.</p>
             )}
+            <div className="pagination">
+                <button disabled={isFirstPage} onClick={() => handlePageChange(1)}>
+                    First
+                </button>
+                <button disabled={isFirstPage} onClick={() => handlePageChange(currentPage - 1)}>
+                    Previous
+                </button>
+                {pagesToShow.map(page => (
+                    <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={currentPage === page ? "active" : ""}
+                    >
+                        {page}
+                    </button>
+                ))}
+                <button disabled={isLastPage} onClick={() => handlePageChange(currentPage + 1)}>
+                    Next
+                </button>
+                <button disabled={isLastPage} onClick={() => handlePageChange(totalPages)}>
+                    Last
+                </button>
+            </div>
         </div>
+        // </div>
     );
 };
 

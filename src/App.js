@@ -47,6 +47,7 @@ import Cfr from './components/Cfr.jsx';
 import ChangePassword from './components/ChangePassword.jsx';
 import ColumnFailurePredict from './components/ColumnFailurePredict.jsx';
 import ColFail from './components/ColFail.jsx';
+import NameConfig from './components/NameConfig.jsx';
 
 import ExecutionList from './components/MastersList/ExecutionList';
 
@@ -97,6 +98,7 @@ function App() {
             <Route path='ChangePassword' element={<ChangePassword />} />
             <Route path='ColumnFailurePredict' element={<ColumnFailurePredict />} />
             <Route path='ColFail' element={<ColFail />} />
+            <Route path='NameConfig' element={<NameConfig />} />
 
 
 

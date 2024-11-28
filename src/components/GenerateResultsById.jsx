@@ -142,7 +142,8 @@ const GenerateResultsById = () => {
                     };
                     console.log(payload)
 
-                    http.post("Login/AuthenticateData", payload)
+                    // http.post("Login/AuthenticateData", payload)
+                    http.post("/User/esignAuthenticateData", payload)
                         .then((resp) => {
                             if (resp.data.item1) {
                                 updateSaveData(swalComments);

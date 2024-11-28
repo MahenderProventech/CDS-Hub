@@ -140,7 +140,8 @@ const fetchSettingsData = async () => {
   
         };
    
-        const authResponse = await http.post("/Login/AuthenticateData", authPayload);
+        // const authResponse = await http.post("/Login/AuthenticateData", authPayload);
+        const authResponse = await http.post("/User/esignAuthenticateData", authPayload)
   
         if (authResponse.data.item1) {
   

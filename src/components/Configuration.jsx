@@ -63,7 +63,9 @@ const Configuration = () => {
             navigate('/home/Cfr');
         }else if (masterName === 'Change Password') {
             navigate('/home/ChangePassword');
-        } else {
+        } else if(masterName === 'Name Configuration') {
+            navigate('/home/NameConfig');
+        }else {
             navigate(`/home/configurationEdit/${masterName}`);
         }
     };
@@ -108,7 +110,15 @@ const Configuration = () => {
                                 </div>
                             </div>
                         ))}
-                       
+                       <div className="col-sm-3 mt-5">
+                                <div className="card card-client" onClick={() => handleNewClick()}>
+                                    <div className="checkIcon"><img src={check} alt="check" /></div>
+                                    <div className="titles">
+                                        <h3 style={{ fontSize: "15px" }}>+</h3>
+                                        <p>Add New </p>
+                                    </div>
+                                </div>
+                            </div>
 
                        {/* <div className="col-sm-3 mt-5">
                             <Link to="/home/UsageLogSetting" style={{ textDecoration: 'none' }}>

@@ -58,6 +58,10 @@ const [modalMessage, setModalMessage] = useState("");
 //     }
 // };
 
+const handleForgotPassword = () => {
+    // Navigate to the forgot password page
+    navigate('/forgotpassword');
+};
 
     useEffect(() => {
         let loginDisable = "";
@@ -108,6 +112,21 @@ const [modalMessage, setModalMessage] = useState("");
         sessionStorage.setItem(key, value);
     };
 
+    const showAlert = (text) => {
+        Swal.fire({
+            title: '',
+            text: text,
+
+            icon: 'info',
+            confirmButtonText: 'Ok',
+            //   cancelButtonText: 'Close',
+            //   showCancelButton: true,
+            reverseButtons: true,
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        })
+    };
+  
     const setTokenAndNavigate = (data) => {
         const usernamePromise = setItemPromise("username", data.username);
         const userrolePromise = setItemPromise("userrole", data.userrole);
@@ -149,7 +168,15 @@ const [modalMessage, setModalMessage] = useState("");
     
             // Find the user with the provided username
             const user = users.find(u => u.employeeId === state.username);
+            const expiryDate = new Date(user.expiryDate); 
+            console.log(expiryDate)
+            const today = new Date();
     
+            if (expiryDate < today) {
+                setShowPasswordModal(true);
+                return;
+            }
+
             if (user) {
                 // Check user status
                 if (!user.isActive) {
@@ -189,15 +216,18 @@ const [modalMessage, setModalMessage] = useState("");
 
     const checkForPasswordChange = (userData) => {
         const employeeId = userData.employeeId;
-
+    
         http.get(`User/GetAllChangePasswordRequests?employeeId=${employeeId}`)
             .then((response) => {
                 const changeRequests = response.data;
-                if (changeRequests.length === 1) {
-                    const latestRequest = changeRequests[0];
-                    // const latestRequest = changeRequests[changeRequests.length - 1];
-
-                    if (!latestRequest.OldPassword) {
+                // console.log("in check",changeRequests.length)
+                // const latestRequest = changeRequests[changeRequests.length - 1];
+                // console.log("latestRequest",latestRequest)
+                if (changeRequests.length > 0) {
+                    const latestRequest = changeRequests[changeRequests.length - 1];
+    
+                    // Check if OldPassword is exactly null
+                    if (latestRequest.oldPassword === "") {
                         setShowPasswordModal(true);
                     } else {
                         setTokenAndNavigate(userData);
@@ -210,6 +240,7 @@ const [modalMessage, setModalMessage] = useState("");
                 console.error('Error fetching change password requests:', error);
             });
     };
+    
 
     const validateForm = () => {
         const { oldPassword, newPassword, confirmPassword } = changePasswordData;
@@ -255,53 +286,65 @@ const [modalMessage, setModalMessage] = useState("");
     const handlePasswordChange = async () => {
         // Validate the form before proceeding
         if (!validateForm()) return;
-    
-        const mostRecentPassword = previousPasswords.length > 0 
-            ? previousPasswords[0].newPassword // assuming the most recent password is the first in the array
-            : null;
-    
-        if (changePasswordData.oldPassword !== mostRecentPassword) {
-            setErrors(prevErrors => ({
-                ...prevErrors,
-                oldPassword: 'Old password is incorrect'
-            }));
-            Swal.fire("Error", "Old password is incorrect","Error");
-            return;
-        }
-    
-        if (changePasswordData.newPassword === changePasswordData.oldPassword) {
-            setErrors(prevErrors => ({
-                ...prevErrors,
-                newPassword: 'New password cannot be the same as old password'
-            }));
-            // showModal("Error", "New password cannot be the same as old password");
-            return;
-        }
-    
-        const payload = {
-            employeeId: state.username,
-            oldPassword: changePasswordData.oldPassword,
-            newPassword: changePasswordData.newPassword,
-            confirmPassword: changePasswordData.confirmPassword
-        };
-    
+   
         if (!state.username || !changePasswordData.oldPassword || !changePasswordData.newPassword) {
-            Swal.fire("Error", "Please fill in all fields.","Error");
+            showAlert("Please fill in all fields.");
             return;
         }
-    
+   
         try {
-            const response = await http.post("User/ChangeOldPassword", payload);
-            Swal.fire("Success", "Password changed successfully.","success");
+            // Fetch the most recent password
+            const response = await http.get(`User/GetAllChangePasswordRequests?employeeId=${state.username}`);
+            const previousPasswords = response.data || [];
+            console.log("Previous passwords:", previousPasswords);
+   
+            const mostRecentPassword = previousPasswords.length > 0
+                ? previousPasswords[previousPasswords.length - 1].newPassword
+                : null;
+   
+            console.log("Most recent password:", mostRecentPassword);
+   
+            // Validate old password
+            if (changePasswordData.oldPassword !== mostRecentPassword) {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    oldPassword: 'Old password is incorrect'
+                }));
+                showAlert("Old password is incorrect");
+                return;
+            }
+   
+            // Validate new password
+            if (changePasswordData.newPassword === changePasswordData.oldPassword) {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    newPassword: 'New password cannot be the same as old password'
+                }));
+                return;
+            }
+   
+            // Prepare payload
+            const payload = {
+                employeeId: state.username,
+                oldPassword: changePasswordData.oldPassword,
+                newPassword: changePasswordData.newPassword,
+                confirmPassword: changePasswordData.confirmPassword
+            };
+   
+            // Submit password change request
+            const changePasswordResponse = await http.post("User/ChangeOldPassword", payload);
+            console.log("Password change response:", changePasswordResponse);
+   
+            showAlert("Password changed successfully.");
             setShowPasswordModal(false);
-            // setTokenAndNavigate(state.username);
             navigate("/", { replace: true });
-
+   
         } catch (error) {
-            console.error('Error response:', error.response);
-            Swal.fire("Error", "Failed to change password. Please check the entered information.","Error");
+            console.error("Error during password change:", error.response || error);
+            showAlert("Failed to change password. Please check the entered information.");
         }
     };
+ 
     
     
 
@@ -361,12 +404,11 @@ const [modalMessage, setModalMessage] = useState("");
                             {passwordVisible ? <FaEyeSlash /> : <FaEye />}
                         </span>
                         </div>
-                        <div className="form-check text-start text-white mb-3">
-                            <input className="form-check-input" type="checkbox" value="" id="flexCheckDefault" />
-                            <label className="form-check-label" htmlFor="flexCheckDefault">
-                                Remember password?
-                            </label>
-                        </div>
+                        <div className="forgot-password-link text-start">
+                                <Button variant="link" className="btn-transparent text-white" onClick={handleForgotPassword}>
+                                    Forgot Password
+                                </Button>
+                            </div>
                         <div>
                             <button className={`btn btn-warning w-100 ${state.loginDisable}`} onClick={verifyUser}>Login</button>
                         </div>

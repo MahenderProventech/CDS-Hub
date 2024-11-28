@@ -52,6 +52,19 @@ const AuditTrail = () => {
       setLoading(false); // Hide loader after data is fetched
     }
   };
+
+   useEffect(() => {
+    // Actions
+    if (searchedData) {
+      const actions = [...new Set(getResponse.filter(item => item.actions !== null && item.components == searchedData?.components).map(item => item.actions))];
+      setActionsData(actions)
+    } else {
+      setRoleAssignments([]);
+ 
+    }
+ 
+  }, [searchedData])
+
   useEffect(() => {
     // Actions
     if (searchedData) {
@@ -320,6 +333,25 @@ const AuditTrail = () => {
  
           </Col>
           <Col sm={3}>
+            <Form.Label>Actions <span style={{ color: 'red' }}>*</span></Form.Label>
+            <select
+              className="form-control1"
+              name="actions"
+              value={searchedData ? searchedData.actions : ''}
+              onChange={updateSearchObject}
+              disabled={!searchedData?.components}
+            >
+              <option value=""  >
+                --Select Actions--
+              </option>
+              {actionsData.map((each, i) => (
+                <option key={i} value={each}>
+                  {each}
+                </option>
+              ))}
+            </select>
+          </Col>
+          <Col sm={2}>
             <Form.Label>UserID</Form.Label>
  
             <select
@@ -338,7 +370,7 @@ const AuditTrail = () => {
               ))}
             </select>
           </Col>
-          <Col sm={3}>
+          <Col sm={2}>
             <Form.Group controlId="startDate">
               <Form.Label>From Date</Form.Label>
               <input type="date" className='form-control1'
@@ -346,7 +378,7 @@ const AuditTrail = () => {
                 onChange={(e) => handleDateChange(e, "startDate")} />
             </Form.Group>
           </Col>
-          <Col sm={3}>
+          <Col sm={2}>
             <Form.Group controlId="endDate">
               <Form.Label>To Date</Form.Label>
               <input type="date"  className='form-control1'
@@ -384,53 +416,94 @@ const AuditTrail = () => {
             <Col sm={12}>
               <h6 className="mt-5">Audit Details</h6>
               <Table striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th onClick={() => handleSort('components')} style={{ cursor: 'pointer' }}>
-                     Components {sortConfig.key === 'components' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th>Actions</th>
-                    <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
-                     User id {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }} hidden>
-                      Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th onClick={() => handleSort('createdBy')} style={{ cursor: 'pointer' }}hidden>
-                      Created By {sortConfig.key === 'createdBy' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th onClick={() => handleSort('reason')} style={{ cursor: 'pointer' }}>
-                      Comments {sortConfig.key === 'reason' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th onClick={() => handleSort('dateTime')} style={{ cursor: 'pointer' }}>
-                      DateTime {sortConfig.key === 'dateTime' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                    </th>
-                  </tr>
- 
-                </thead>
-                <tbody>
- 
-                  {currentItems.length > 0 && searchedData ? (
-                    currentItems.map((assignment, index) => (
-                      <tr key={index}>
-                        <td>{index + 1}</td>
-                        <td>{assignment.components}</td>
-                        <td>{assignment.actions}</td>
-                            <td>{assignment.name}</td>
-                        <td hidden>{assignment.name}</td>
-                        <td hidden>{assignment.createdBy}</td>
-                        <td>{assignment.reason}</td>
-                        <td>{assignment.createdDate}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="12" className="text-center">No role assignments found</td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th onClick={() => handleSort('components')} style={{ cursor: 'pointer' }}>
+              Components {sortConfig.key === 'components' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </th>
+            <th>Actions</th>
+            {searchedData.components === 'Login' || searchedData.components === 'Logout' ? (
+              <>
+                <th onClick={() => handleSort('userId')} style={{ cursor: 'pointer' }}>
+                  User ID {sortConfig.key === 'userId' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('userName')} style={{ cursor: 'pointer' }}>
+                  User Name {sortConfig.key === 'userName' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('comments')} style={{ cursor: 'pointer' }}>
+                  Comments {sortConfig.key === 'comments' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('dateTime')} style={{ cursor: 'pointer' }}>
+                  DateTime {sortConfig.key === 'dateTime' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+              </>
+            ) : searchedData.components === 'User' ? (
+              <>
+                <th>Roles</th>
+                <th>Old Value</th>
+                <th>New Value</th>
+                <th>Created By/Modified By</th>
+                <th>Comments</th>
+                <th>Date & Time</th>
+              </>
+            ) : searchedData.components === 'Configuration' ? (
+              <>
+                <th>Name</th>
+                <th>Created By</th>
+                <th>Old Value</th>
+                <th>New Value</th>
+                <th>Modified By</th>
+                <th>Comments</th>
+                <th>Date & Time</th>
+              </>
+            ) : null}
+          </tr>
+        </thead>
+        <tbody>
+          {currentItems.length > 0 && searchedData ? (
+            currentItems.map((assignment, index) => (
+              <tr key={index}>
+                <td>{index + 1}</td>
+                <td>{assignment.components}</td>
+                <td>{assignment.actions}</td>
+                {searchedData.components === 'Login' || searchedData.components === 'Logout' ? (
+                  <>
+                    <td>{assignment.name}</td>
+                    <td hidden>{assignment.name}</td>
+                    <td>{assignment.createdBy}</td>
+                    <td>{assignment.reason}</td>
+                    <td>{assignment.createdDate}</td>
+                  </>
+                ) : searchedData.components === 'User' ? (
+                  <>
+                    <td>{assignment.roles}</td>
+                    <td>{assignment.oldValue}</td>
+                    <td>{assignment.newValue}</td>
+                    <td>{assignment.createdBy}</td>
+                    <td>{assignment.reason}</td>
+                    <td>{assignment.modifiedOn}</td>
+                  </>
+                ) : searchedData.components === 'Configuration' ? (
+                  <>
+                    <td>{assignment.name}</td>
+                    <td>{assignment.createdBy}</td>
+                    <td>{assignment.oldValue}</td>
+                    <td>{assignment.newValue}</td>
+                    <td>{assignment.modifiedBy}</td>
+                    <td>{assignment.reason}</td>
+                    <td>{assignment.modifiedOn}</td>
+                  </>
+                ) : null}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="12" className="text-center">No role assignments found</td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
 
               <CustomPagination
                 itemsPerPage={itemsPerPage}

@@ -5,6 +5,8 @@ import axios from "axios";
 import UserContext from './UserContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import http from './Http';
+import Swal from 'sweetalert2';
+
 const ChangePassword = () => {
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
@@ -20,6 +22,21 @@ const ChangePassword = () => {
   const [previousPasswords, setPreviousPasswords] = useState([]);
   const [modal, setModal] = useState({ show: false, type: "", message: "" });
 
+  const showAlert = (msg, type = "info", callback = null) => {
+    Swal.fire({
+      title: type === "success" ? "Success" : type === "error" ? "Error" : "",
+      text: msg,
+      icon: type,
+      confirmButtonText: "Ok",
+      confirmButtonColor: "#463E96",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    }).then((result) => {
+      if (result.isConfirmed && callback) {
+        callback();
+      }
+    });
+  };
   useEffect(() => {
     if (!userData || !userData.employeeId) {
       navigate('/');
@@ -131,16 +148,16 @@ const ChangePassword = () => {
       });
 
       // Handle the response
-      const { data, status } = response;  // Destructure directly from response
+      const { data, status } = response; // Destructure directly from response
       if (status === 200) {
-        setModal({ show: true, type: "success", message: data || "Password changed successfully!" });
+        showAlert(data || "Password changed successfully!", "success");
       } else {
-        setModal({ show: true, type: "error", message: data || "An error occurred. Please try again." });
+        showAlert(data || "An error occurred. Please try again.", "error");
       }
     } catch (error) {
       console.error("There was an error changing the password:", error);
       const errorMessage = error.response?.data || "Failed to change password. Please try again.";
-      setModal({ show: true, type: "error", message: errorMessage });
+      showAlert(errorMessage, "error");
     }
   };
 

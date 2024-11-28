@@ -573,7 +573,8 @@ const getUserData = (data) => {
       };
   
       // Authenticate user with backend
-      http.post("Login/AuthenticateData", payload)
+      // http.post("Login/AuthenticateData", payload)
+      http.post("/User/esignAuthenticateData", payload)
         .then((resp) => {
           if (resp.data.item1) {
             // Handle archiving or submitting based on isArchiving
