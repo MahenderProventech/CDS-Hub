@@ -61,28 +61,80 @@ const NameConfig = () => {
 
   const handleSaveHPLC = async () => {
     try {
-      const payload = {
-        columnNames: dynamicColumnNames,
-        createdBy: userData?.userRole,
-      };
-      await http.post("/SaveDynamicHPLCNames", payload);
+      // Check if employeeId exists in userData
+      const employeeId = userData?.employeeId;
+      if (!employeeId) {
+        alert("Employee ID is missing. Please log in again.");
+        return;
+      }
+  
+      // Select only the first row of hplcData (or any other specific row)
+      const dataToSend = [hplcData[0]]; // Only the first row, or change the index as needed
+  
+      const payload = dataToSend.map((row, index) => {
+        const rowData = {
+          s_No: index + 1, // Incremental serial number
+          id: dynamicColumnNames["id"] || "id", // Default to "id" if not provided
+          sampleSetId: dynamicColumnNames["sampleSetId"] || "sampleSetId", // Default to "sampleSetId"
+          dateAcquired: dynamicColumnNames["dateAcquired"] || "dateAcquired", // Default to "dateAcquired"
+          instrument_No: dynamicColumnNames["instrument_No"] || "instrument_No", // Default to "instrument_No"
+          product_Name: dynamicColumnNames["product_Name"] || "product_Name", // Default to "product_Name"
+          a_R_No: dynamicColumnNames["a_R_No"] || "a_R_No", // Default to "a_R_No"
+          batch_No: dynamicColumnNames["batch_No"] || "batch_No", // Default to "batch_No"
+          test_Name: dynamicColumnNames["test_Name"] || "test_Name", // Default to "test_Name"
+          sampleSetStartDate: dynamicColumnNames["sampleSetStartDate"] || "sampleSetStartDate", // Default to "sampleSetStartDate"
+          sampleSetFinishDate: dynamicColumnNames["sampleSetFinishDate"] || "sampleSetFinishDate", // Default to "sampleSetFinishDate"
+          noOfInjections: dynamicColumnNames["noOfInjections"] || "noOfInjections", // Default to "noOfInjections"
+          runtime: dynamicColumnNames["runtime"] || "runtime", // Default to "runtime"
+          sampleSetAcquiredBy: dynamicColumnNames["sampleSetAcquiredBy"] || "sampleSetAcquiredBy", // Default to "sampleSetAcquiredBy"
+          employeeId, // Add employeeId to the payload
+          createdOn: new Date().toISOString(), // Capture current timestamp
+        };
+  
+        // Log each row payload for debugging
+        // console.log(`Row ${index + 1} Payload:`, rowData);
+        return rowData;
+      });
+  
+      // Log the full payload to verify all data before sending
+      console.log("HPLC Payload:", payload);
+  
+      // Make the API request to save the data
+      const response = await http.post(
+        "PopulateHPLCUsage/SaveDynamicHplcNames",
+        payload
+      );
+  
+      // Log and alert on successful save
+      // console.log("HPLC Save Response:", response.data);
       alert("HPLC column names saved successfully!");
+  
     } catch (error) {
-      console.error("Error saving HPLC column names:", error);
+      // Enhanced error handling with proper logging
+      console.error("Error saving HPLC column names:", error.response || error);
       alert("Failed to save HPLC column names.");
     }
   };
+  
+  
   
   const handleSaveColumn = async () => {
     try {
       const payload = {
         columnNames: dynamicColumnNames,
-        createdBy: userData?.userRole,
+        createdBy: userData?.employeeId,
       };
-      await http.post("/SaveDynamicColumnNames", payload);
+      console.log("Column Payload:", payload);
+  
+      const response = await http.post(
+        "PopulateColumnUsage/SaveDynamicColumnNames",
+        payload
+      );
+      console.log("Column Save Response:", response.data);
+  
       alert("Column data column names saved successfully!");
     } catch (error) {
-      console.error("Error saving Column column names:", error);
+      console.error("Error saving Column column names:", error.response || error);
       alert("Failed to save Column column names.");
     }
   };
