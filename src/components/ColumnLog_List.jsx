@@ -33,69 +33,89 @@ const ColumnLog_List= () => {
   const [hasSampleSetId, setHasSampleSetId] = useState(false);
   const [filters, setFilters] = useState([]); // To store dynamically fetched filter fields
   const [selectedFilters, setSelectedFilters] = useState({});
-
+  const [dynamicColumnNames, setDynamicColumnNames] = useState({});
+  const [processPeaksData, setProcessPeaksData] = useState([]);
   useEffect(() => {
     setLoading(true);
-
-    // Fetch valid column headers
-    const fetchValidColumns = 
-      http.get("PopulateColumnUsage/GetSavedColumnDetails")
+  
+    // Fetch dynamic column names
+    const fetchDynamicColumnNames = http
+      .get("PopulateColumnUsage/GetDynamicColumnNames")
       .then((response) => {
-        const columns = response.data.map((item) => item.nameOfTheColumn);
-        return columns;
+        const columnNameMap = {};
+        response.data.forEach((item) => {
+          columnNameMap[item.employeeId] = item; // Mapping employeeId to column name data
+        });
+        return columnNameMap;
       })
+      .catch((error) => {
+        console.error("Error fetching dynamic column names:", error);
+        return {};
+      });
+  
+    // Fetch valid column headers (database headers)
+    const fetchValidColumns = http
+      .get("PopulateColumnUsage/GetSavedColumnDetails")
+      .then((response) => response.data.map((item) => item.nameOfTheColumn))
       .catch((error) => {
         console.error("Error fetching valid columns:", error);
         return [];
       });
-
+  
     // Fetch actual data
-    const fetchData = 
-      http.get("ProcessPeaksData/GetProcessPeaksDataDetails"
-      )
-      .then((response) => {
-        return response.data;
-      })
+    const fetchData = http
+      .get("ProcessPeaksData/GetProcessPeaksDataDetails")
+      .then((response) => response.data)
       .catch((error) => {
         console.error("Error fetching data:", error);
         return [];
       });
-
-    // Once both requests are completed, filter the data
-    Promise.all([fetchValidColumns, fetchData])
-      .then(([validColumns, data]) => {
-        if (validColumns.length && data.length) {
-          // Check if any data row contains sampleSetId
-          const hasSampleSetId = data.some(
-            (row) => row.sampleSetId !== undefined
+  
+    // Process fetched data
+    Promise.all([fetchDynamicColumnNames, fetchValidColumns, fetchData])
+      .then(([columnNameMap, columns, data]) => {
+        const loggedInEmployeeId = userData?.employeeId; // Get logged-in user employeeId
+  
+        let dynamicNames = columnNameMap[loggedInEmployeeId]; // Match employeeId
+        if (!dynamicNames) {
+          console.warn(
+            `EmployeeId ${loggedInEmployeeId} not found in dynamic column data. Falling back to database headers.`
           );
-          setHasSampleSetId(hasSampleSetId);
-
-          // Filter the data to only include the valid columns
-          const filteredData = data.map((row) => {
-            let filteredRow = {};
-            validColumns.forEach((column) => {
-              if (column in row) {
-                filteredRow[column] = row[column];
-              }
-            });
-            return filteredRow;
-          });
-
-          // Set state
-          setProcessPeaksDataData(data);
-          setValidColumns(validColumns);
-          setFilteredData(filteredData);
-        } else {
-          console.warn("No valid columns or data found.");
+          dynamicNames = {}; // Fallback to empty object if no match
         }
+  
+        // If dynamic column names are available, map them; otherwise, fallback to default column names (database headers)
+        const columnNamesToUse = dynamicNames && Object.keys(dynamicNames).length > 0
+          ? dynamicNames
+          : columns.reduce((acc, column) => {
+              acc[column] = column; // Fallback: use the column name as the dynamic name
+              return acc;
+            }, {});
+  
+        // Filter data based on valid columns
+        const filteredData = data.map((row) => {
+          let filteredRow = {};
+          columns.forEach((column) => {
+            if (column in row) {
+              filteredRow[column] = row[column];
+            }
+          });
+          return filteredRow;
+        });
+  
+        setValidColumns(columns);
+        setDynamicColumnNames(columnNamesToUse); // Set dynamic column names or default ones
+        setProcessPeaksData(data);
+        setFilteredData(filteredData);
       })
       .catch((error) => {
         console.error("Error processing data:", error);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [userData]);
 
+
+ 
   useEffect(() => {
     // Fetch filter details from the API
       http.get("PopulateColumnUsage/GetFilterColumnDetails")
@@ -549,11 +569,11 @@ const ColumnLog_List= () => {
                     
                   <table>
         <thead>
-          <tr>
-            {validColumns.map((column) => (
-              <th key={column}>{column}</th>
-            ))}
-          </tr>
+        <tr>
+  {validColumns.map((column) => (
+    <th key={column}>{dynamicColumnNames ? dynamicColumnNames[column] : column}</th>
+  ))}
+</tr>
         </thead>
         <tbody>
           {filteredData

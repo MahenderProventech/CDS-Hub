@@ -6,9 +6,9 @@ import Select from "react-select";
 import { Modal, Button } from "react-bootstrap"; // Import Bootstrap Modal
 import http from "./Http";
 import Swal from 'sweetalert2';
-
+ 
 const ItemType = "COLUMN";
-
+ 
 const Column = ({ header, index, moveColumn }) => {
   const [, ref] = useDrag({
     type: ItemType,
@@ -23,14 +23,14 @@ const Column = ({ header, index, moveColumn }) => {
       }
     },
   });
-
+ 
   return (
     <tr ref={(node) => ref(drop(node))}>
       <td>{header}</td>
     </tr>
   );
 };
-
+ 
 const UsageLogSetting = () => {
   const [hplcData, setHplcData] = useState([]);
   const [columnData, setColumnData] = useState([]);
@@ -44,98 +44,215 @@ const UsageLogSetting = () => {
   const [columnSelectedColumns, setColumnSelectedColumns] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [selectedData, setSelectedData] = useState("hplc"); // Default to HPLC Data
-
+ 
   useEffect(() => {
+    const fetchDynamicHPLCColumns = async () => {
+      try {
+        const response = await http.get("PopulateHPLCUsage/GetDynamicHplcNames");
+        const columnNameMap = {};
+        response.data.forEach((item) => {
+          columnNameMap[item.employeeId] = item; // Mapping employeeId to dynamic column data
+        });
+        return columnNameMap;
+      } catch (error) {
+        console.error("Error fetching dynamic HPLC column names:", error);
+        return {};
+      }
+    };
+ 
+    const fetchDynamicColumnNames = async () => {
+      try {
+        const response = await http.get("PopulateColumnUsage/GetDynamicColumnNames");
+        const columnNameMap = {};
+        response.data.forEach((item) => {
+          columnNameMap[item.employeeId] = item; // Mapping employeeId to dynamic column data
+        });
+        return columnNameMap;
+      } catch (error) {
+        console.error("Error fetching dynamic Column names:", error);
+        return {};
+      }
+    };
+ 
     const fetchHPLCData = async () => {
       try {
-        const response = await http.get("PopulateHPLCUsage/GetPopulateHPLCUsageDetails"
-        );
-
-        // const result = await response.json();
-            const result = response.data;
-
-
-        setHplcData(result);
-
-        if (result.length > 0) {
-          const headers = Object.keys(result[0]);
-
-          setHplcColumns(headers);
-
-          setHplcOriginalColumns(headers);
-
-          setHplcSelectedColumns(headers);
-        }
+        const response = await http.get("PopulateHPLCUsage/GetPopulateHPLCUsageDetails");
+        return response.data; // Fetch actual data
       } catch (error) {
         console.error("Error fetching HPLC data:", error);
+        return [];
       }
     };
-
+ 
     const fetchColumnData = async () => {
       try {
-        const response = await http.get("PopulateColumnUsage/GetPopulateColumnUsageDetails"
-        );
-
-        // const result = await response.json();
-        const result = response.data;
-
-
-        setColumnData(result);
-
-        if (result.length > 0) {
-          const headers = Object.keys(result[0]);
-
-          setColumnColumns(headers);
-
-          setColumnOriginalColumns(headers);
-
-          setColumnSelectedColumns(headers);
-        }
+        const response = await http.get("PopulateColumnUsage/GetPopulateColumnUsageDetails");
+        return response.data; // Fetch actual data
       } catch (error) {
         console.error("Error fetching Column data:", error);
+        return [];
       }
     };
-
-    fetchHPLCData();
-
-    fetchColumnData();
-  }, []);
-
+ 
+    const processData = async () => {
+      try {
+        const [dynamicHPLCColumns, dynamicColumnNames, hplcData, columnData] = await Promise.all([
+          fetchDynamicHPLCColumns(),
+          fetchDynamicColumnNames(),
+          fetchHPLCData(),
+          fetchColumnData(),
+        ]);
+ 
+        const loggedInEmployeeId = userData?.employeeId; // Get logged-in user's employeeId
+ 
+        let dynamicHPLC = dynamicHPLCColumns[loggedInEmployeeId];
+        let dynamicColumn = dynamicColumnNames[loggedInEmployeeId];
+ 
+        if (!dynamicHPLC) {
+          console.warn(`EmployeeId ${loggedInEmployeeId} not found in dynamic HPLC column data.`);
+          dynamicHPLC = {}; // Fallback to empty object if no match
+        }
+ 
+        if (!dynamicColumn) {
+          console.warn(`EmployeeId ${loggedInEmployeeId} not found in dynamic Column data.`);
+          dynamicColumn = {}; // Fallback to empty object if no match
+        }
+ 
+        // Create column mappings for dynamic names (for display)
+        const dynamicHPLCColumnsMap = Object.keys(dynamicHPLC).reduce((acc, key) => {
+          acc[key] = dynamicHPLC[key]; // Map dynamic names to database keys
+          return acc;
+        }, {});
+ 
+        const dynamicColumnNamesMap = Object.keys(dynamicColumn).reduce((acc, key) => {
+          acc[key] = dynamicColumn[key]; // Map dynamic names to database keys
+          return acc;
+        }, {});
+ 
+        // Reverse mappings (dynamic name to original name) for saving
+        const reverseHPLCColumnsMap = Object.keys(dynamicHPLCColumnsMap).reduce((acc, key) => {
+          acc[dynamicHPLCColumnsMap[key]] = key; // Reverse the mapping for saving
+          return acc;
+        }, {});
+ 
+        const reverseColumnNamesMap = Object.keys(dynamicColumnNamesMap).reduce((acc, key) => {
+          acc[dynamicColumnNamesMap[key]] = key; // Reverse the mapping for saving
+          return acc;
+        }, {});
+ 
+        // Prepare dynamic headers for display (to show in UI)
+        const dynamicHPLCHeaders = Object.keys(dynamicHPLCColumnsMap).map(
+          (column) => dynamicHPLCColumnsMap[column] || column
+        );
+        const dynamicColumnHeaders = Object.keys(dynamicColumnNamesMap).map(
+          (column) => dynamicColumnNamesMap[column] || column
+        );
+ 
+        // Prepare mapped data with dynamic headers (for display purposes)
+        const mappedHPLCData = hplcData.map((row) => {
+          const mappedRow = {};
+          Object.keys(row).forEach((column) => {
+            const dynamicName = dynamicHPLCColumnsMap[column] || column;
+            mappedRow[dynamicName] = row[column];
+          });
+          return mappedRow;
+        });
+ 
+        const mappedColumnData = columnData.map((row) => {
+          const mappedRow = {};
+          Object.keys(row).forEach((column) => {
+            const dynamicName = dynamicColumnNamesMap[column] || column;
+            mappedRow[dynamicName] = row[column];
+          });
+          return mappedRow;
+        });
+ 
+        // Display dynamic headers in UI
+        setHplcColumns(dynamicHPLCHeaders);
+        setColumnColumns(dynamicColumnHeaders);
+ 
+        // Set original headers for functionality (sorting, filtering, etc.)
+        const hplcHeaders = Object.keys(mappedHPLCData[0] || {});
+        const columnHeaders = Object.keys(mappedColumnData[0] || {});
+ 
+        setHplcOriginalColumns(hplcHeaders);
+        setColumnOriginalColumns(columnHeaders);
+ 
+        setHplcSelectedColumns(hplcHeaders);
+        setColumnSelectedColumns(columnHeaders);
+ 
+        // Set final processed data for display
+        setHplcData(mappedHPLCData);
+        setColumnData(mappedColumnData);
+ 
+        // Save data to database with original headers
+        const saveData = async (data, type) => {
+          const dataToSave = data.map((row) => {
+            const rowToSave = {};
+            Object.keys(row).forEach((column) => {
+              const originalColumnName = type === "hplc"
+                ? reverseHPLCColumnsMap[column] || column
+                : reverseColumnNamesMap[column] || column;
+              rowToSave[originalColumnName] = row[column];
+            });
+            return rowToSave;
+          });
+ 
+          try {
+            await http.post(`/Save${type}Data`, dataToSave); // Adjust endpoint for HPLC/Column data
+          } catch (error) {
+            console.error(`Error saving ${type} data:`, error);
+          }
+        };
+ 
+        // Example save
+        saveData(mappedHPLCData, "HPLC");
+        saveData(mappedColumnData, "Column");
+ 
+      } catch (error) {
+        console.error("Error processing data:", error);
+      }
+    };
+ 
+    processData();
+  }, [userData]); // Re-run when the logged-in user changes
+ 
+ 
   // const [modalMessage, setModalMessage] = useState("");
   // const [showModal, setShowModal] = useState(false);
-
+ 
   // const handleCloseModal = () => setShowModal(false);
   // const handleShowModal = (message) => {
   //   setModalMessage(message);
   //   setShowModal(true);
   // };
-
+ 
   const moveColumn = (fromIndex, toIndex) => {
     const updatedColumns = [
       ...(selectedData === "hplc" ? hplcColumns : columnColumns),
     ];
-
+ 
     const [movedColumn] = updatedColumns.splice(fromIndex, 1);
-
+ 
     updatedColumns.splice(toIndex, 0, movedColumn);
-
+ 
     if (selectedData === "hplc") {
       setHplcColumns(updatedColumns);
     } else {
       setColumnColumns(updatedColumns);
     }
   };
-
+ 
   const saveOrder = async () => {
     await saveOrderToBackend();
   };
-
+ 
   const saveOrderToBackend = async () => {
     const endpoint =
       selectedData === "hplc"
         ? "/PopulateHPLCUsage/SavechangeshplcDetails"
         : "/PopulateColumnUsage/SavechangesColumnDetails";
-  
+ 
     const columnsToSave = (
       selectedData === "hplc" ? hplcColumns : columnColumns
     ).map((header, index) => ({
@@ -145,30 +262,30 @@ const UsageLogSetting = () => {
       createdBy: userData?.employeeId || "unknown",
       createdDate: new Date().toISOString(),
     }));
-  
+ 
     console.log("DATA STORED PATTERN:", columnsToSave);
-  
+ 
     try {
       const response = await http.post(endpoint, columnsToSave);
-  
+ 
       if (response.status !== 200) {
         throw new Error(`Error saving column order: ${response.statusText}`);
       }
-  
+ 
       Swal.fire("Successful","Order saved successfully!","success");
     } catch (error) {
       console.error("Error saving column order:", error.response ? error.response.data : error);
       Swal.fire("Error","Failed to save order.","error");
     }
   };
-  
-
+ 
+ 
   const saveFilters = async () => {
     const endpoint =
       selectedData === "hplc"
         ? "PopulateHPLCUsage/SelectfilterschangeshplcDetails"
         : "PopulateColumnUsage/SelectfilterschangescolumnDetails";
-  
+ 
     const allFilters = [
       { label: 'sampleSetId' },
       { label: 'instrument_No' },
@@ -186,9 +303,9 @@ const UsageLogSetting = () => {
       { label: 'column_No' },
       // Add more filters here
     ];
-  
+ 
     const activeFilters = currentFilters.map(filter => filter.label);
-  
+ 
     const filtersToSave = allFilters.map((filter, index) => ({
       filterName: filter.label,
       orderOfTheColumn: index + 1,
@@ -196,53 +313,53 @@ const UsageLogSetting = () => {
       createdBy: userData?.employeeId || "unknown",
       createdDate: new Date().toISOString(),
     }));
-  
+ 
     console.log("filters stored:", filtersToSave);
-  
+ 
     try {
       const response = await http.post(endpoint, filtersToSave);
-  
+ 
       if (response.status !== 200) {
         throw new Error(`Error saving filters: ${response.statusText}`);
       }
-  
+ 
       Swal.fire("Successful","Filters saved successfully!","success");
     } catch (error) {
       console.error("Error saving filters:", error.response ? error.response.data : error);
       Swal.fire("Error","Failed to save filters.","error");
     }
   };
-  
-
-
+ 
+ 
+ 
   const resetOrder = () => {
     if (selectedData === "hplc") {
       setHplcColumns([...hplcOriginalColumns]);
-
+ 
       setHplcSelectedColumns([...hplcOriginalColumns]);
-
+ 
       setHplcFilters([]); // Reset HPLC filters
     } else {
       setColumnColumns([...columnOriginalColumns]);
-
+ 
       setColumnSelectedColumns([...columnOriginalColumns]);
-
+ 
       setColumnFilters([]); // Reset Column filters
     }
   };
-
+ 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-
+ 
   const handleClickWithDelay = async (callback) => {
     setIsButtonDisabled(true); // Disable the button
-
+ 
     await callback(); // Execute the callback function (saveOrder or saveFilters)
-
+ 
     setTimeout(() => {
       setIsButtonDisabled(false); // Re-enable the button after 1 second
     }, 1000); // 1000 milliseconds = 1 second
   };
-
+ 
   const handleColumnSelection = (header) => {
     if (selectedData === "hplc") {
       if (hplcSelectedColumns.includes(header)) {
@@ -262,13 +379,13 @@ const UsageLogSetting = () => {
       }
     }
   };
-
+ 
   const handleDataSelection = (event) => {
     const dataType = event.target.value;
-
+ 
     setSelectedData(dataType);
   };
-
+ 
   const handleFilterChange = (selectedOptions) => {
     if (selectedData === "hplc") {
       setHplcFilters(selectedOptions || []);
@@ -276,17 +393,17 @@ const UsageLogSetting = () => {
       setColumnFilters(selectedOptions || []);
     }
   };
-
+ 
   const currentColumns = selectedData === "hplc" ? hplcColumns : columnColumns;
-
+ 
   const currentOriginalColumns =
     selectedData === "hplc" ? hplcOriginalColumns : columnOriginalColumns;
-
+ 
   const currentSelectedColumns =
     selectedData === "hplc" ? hplcSelectedColumns : columnSelectedColumns;
-
+ 
   const currentFilters = selectedData === "hplc" ? hplcFilters : columnFilters;
-
+ 
   return (
     <>
       <style>{`
@@ -325,19 +442,19 @@ const UsageLogSetting = () => {
 .usage-log-setting {
     padding: 20px;
 }
-
+ 
 .usage-log-setting h1 {
     font-size: 24px;
     color: #333;
     margin-bottom: 20px;
 }
-
+ 
 .table-container {
     width: 100%;
     border-collapse: collapse;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-
+ 
 .table-container th,
 .table-container td {
     padding: 12px;
@@ -345,36 +462,36 @@ const UsageLogSetting = () => {
     text-align: left;
     font-size: 14px;
 }
-
+ 
 .table-container th {
     background-color: #f4f4f4;
     color: #333;
 }
-
+ 
 .table-container tr:nth-child(even) {
     background-color: #f9f9f9;
 }
-
+ 
 .table-container tr:hover {
     background-color: #f1f1f1;
     cursor: move;
 }
-
+ 
 .table-container input[type="checkbox"] {
     width: 15px;
     height: 15px;
     transform: scale(1.2);
     margin-right: 10px;
 }
-
+ 
 .table-container tr {
     transition: background-color 0.2s ease-in-out;
 }
-
-
+ 
+ 
  
       `}</style>
-
+ 
       <section className="full_screen">
         <div className="container-fluid">
           <nav aria-label="breadcrumb">
@@ -384,7 +501,7 @@ const UsageLogSetting = () => {
               </li>
             </ol>
           </nav>
-
+ 
           {/* Dropdown for selecting data */}
           <div
                   className="card mt-3"
@@ -397,26 +514,26 @@ const UsageLogSetting = () => {
             >
               Select Data:{" "}
             </label>
-
+ 
             <select
               id="dataSelection"
               value={selectedData}
               onChange={handleDataSelection}
               style={{
                 width: "200px", // Increase the width of the dropdown
-
+ 
                 fontSize: "16px", // Adjust font size if needed
-
+ 
                 padding: "8px", // Adjust padding for a larger dropdown
               }}
             >
               <option value="hplc">HPLC Data</option>
-
+ 
               <option value="column">Column Data</option>
             </select>
           </div>
 </div>
-
+ 
           <div className="tables-container">
             <div className="table-container">
               <table>
@@ -425,7 +542,7 @@ const UsageLogSetting = () => {
                     <th>Select the columns</th>
                   </tr>
                 </thead>
-
+ 
                 <tbody>
                   {currentOriginalColumns.map((header, index) => (
                     <tr key={index}>
@@ -436,7 +553,7 @@ const UsageLogSetting = () => {
                             checked={currentSelectedColumns.includes(header)}
                             onChange={() => handleColumnSelection(header)}
                           />
-
+ 
                           {header}
                         </label>
                       </td>
@@ -445,7 +562,7 @@ const UsageLogSetting = () => {
                 </tbody>
               </table>
             </div>
-
+ 
             <div className="table-container">
               <DndProvider backend={HTML5Backend}>
                 <table>
@@ -454,7 +571,7 @@ const UsageLogSetting = () => {
                       <th>Order of the columns</th>
                     </tr>
                   </thead>
-
+ 
                   <tbody>
                     {currentColumns
                       .filter((header) =>
@@ -473,7 +590,7 @@ const UsageLogSetting = () => {
               </DndProvider>
             </div>
           </div>
-
+ 
           <div style={{ marginTop: "20px", marginBottom: "30px" }}>
             <label style={{ fontSize: "17px", marginRight: "10px" }}>
               Select Filters
@@ -529,5 +646,7 @@ const UsageLogSetting = () => {
     </>
   );
 };
-
+ 
 export default UsageLogSetting;
+ 
+ 
